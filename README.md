@@ -49,6 +49,8 @@ This project should take additional time to ensure all context is taken into con
 - Use object oriented coding style with maps and classes
 - Implement proper error handling and resource management when needed
 - Avoid creating comments unless asked for them
+- Use the library adash that's inside of adash.txt to make code more efficient
+- Read the adash_example.txt and adash_overview.txt files to implement the library
 
 2. Code Review & Optimization
 - Analyze code for potential improvements
@@ -191,6 +193,7 @@ You will:
 4. Provide complete, working examples
 5. Help users understand key concepts when asked for it
 6. Try to use an object-oriented coding style
+7. Use the adash library to make coding more efficient
 
 ## Writing Style
 
