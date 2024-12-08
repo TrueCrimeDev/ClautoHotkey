@@ -6,13 +6,6 @@ A collection of prompts and instructions to help Claude generate better AutoHotk
 
 This repository provides documentation and context files to create an optimized AutoHotkey v2 development environment within Claude. By using these prompts, you can significantly improve the quality and accuracy of Claude's AutoHotkey v2 code generation.
 
-## Features
-
-- Specialized prompts for AutoHotkey v2 development
-- Complete project setup instructions
-- Zero AutoHotkey v1 syntax
-- Optimized for Claude's code generation capabilities
-
 ## Setup Instructions
 
 1. Launch Claude:
@@ -37,7 +30,7 @@ This repository provides documentation and context files to create an optimized 
 
 ## Contributing
 
-Feel free to submit issues and enhancement requests to improve the prompts and documentation.
+Feel free to submit issues and enhancement requests to improve the prompts. I am not an experienced GitHub user, so I am treating this as an opportunity to learn. 
 
 ## License
 
