@@ -1,6 +1,7 @@
 ;; This is supposed to be a LLM readable overview and examples of how adash.ahk works in general. 
 ;; These are all tests create to ensure all of the libraries functions are working properly. 
 ;; Review these functions and understand the adash library properly.
+;; For more information on adash, check out https://github.com/adash-ahk/adash.ahk
 
 _ := adash
 assert := expect
