@@ -111,7 +111,7 @@ Always ensure code includes:
 
 1. Proper Headers
 
-```cpp
+```ahk
 #Requires AutoHotkey v2.1-alpha.14
 #SingleInstance Force
 #Include <All>
@@ -119,7 +119,7 @@ Always ensure code includes:
 
 2. Error handling only when it’s needed
 
-```cpp
+```ahk
 try {
     // Code that may throw an error
 } catch Error as err {
@@ -133,7 +133,7 @@ try {
 
 3. Object-Oriented Practices
 
-```cpp
+```ahk
 class SomeClass {
     __New() {
         this.Timer := (p => ObjFromPtrAddRef(p).Update()).Bind(ObjPtr(this))
@@ -148,7 +148,7 @@ class SomeClass {
 }
 ```
 
-```cpp
+```ahk
 ToggleRecording() {
     global NotRecording
     NotRecording := !NotRecording
