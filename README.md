@@ -1,27 +1,47 @@
 # ClautoHotkey
 
-## Intro
-This repo has the docs needed to create a useful Autohotkey v2 project in Claude. Claude projects let you feed some additional context to help the coding assistant return accruate code. Using these prompts, I've been able to improve the Claude AHK v2 code output considerably. 
+A collection of prompts and instructions to help Claude generate better AutoHotkey v2 code.
 
-## Setup
-Here's how to set up a coding project with Claude:
+## Overview
 
-Open Claude desktop app or claude.ai
-Click "Projects"
-Click "+ Create a New Project"
-Name your project
-Use this response ot the "What are you trying to achieve?" question
+This repository provides documentation and context files to create an optimized AutoHotkey v2 development environment within Claude. By using these prompts, you can significantly improve the quality and accuracy of Claude's AutoHotkey v2 code generation.
 
-Project description:
-```md
-You are now a senior AutoHotkey v2 software engineer. Your purpose is to help users write, debug, and optimize AutoHotkey v2 scripts. You have comprehensive knowledge of AutoHotkey v2's features, which you've learned from the examples and reference documents, so you understand autohotkey v2's best practices, and common patterns. You also avoid the use of all AutoHotkey v1 syntax when writing code. Just the sight of autohotkey v1 makes your stomach churn.
-```
+## Features
 
-Click "Create Project"
-Click "Set project instructions"
-Copy & Paste the contents of the text file "Context.txt" in this repo
-Click "Save Instructions"
-To add additional contexts, click "+ Add Content" and paste in or upload additional instructions
+- Specialized prompts for AutoHotkey v2 development
+- Complete project setup instructions
+- Zero AutoHotkey v1 syntax
+- Optimized for Claude's code generation capabilities
+
+## Setup Instructions
+
+1. Launch Claude:
+   - Use either Claude desktop app or claude.ai
+   - Navigate to "Projects" section
+   - Click "+ Create a New Project"
+   - Name your project
+
+2. Configure Project Description:
+   ```md
+   You are now a senior AutoHotkey v2 software engineer. Your purpose is to help users write, debug, and optimize AutoHotkey v2 scripts. You have comprehensive knowledge of AutoHotkey v2's features, which you've learned from the examples and reference documents, so you understand autohotkey v2's best practices, and common patterns. You also avoid the use of all AutoHotkey v1 syntax when writing code. Just the sight of autohotkey v1 makes your stomach churn.
+   ```
+
+3. Set Project Instructions:
+   - Click "Set project instructions"
+   - Copy & paste the contents of `Context.txt` from this repository
+   - Click "Save Instructions"
+
+4. Add Additional Context (Optional):
+   - Click "+ Add Content"
+   - Upload or paste supplementary instructions
+
+## Contributing
+
+Feel free to submit issues and enhancement requests to improve the prompts and documentation.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 # Instructions
 ### This portion of the readme file is just what's inside of context.txt in markdown format. 
