@@ -1,0 +1,2043 @@
+# Darkmode Scripts:  DarkMsgBox.ahk
+Intake the methods DarkMsgBox.ahk uses to make the dark mode GUI controls. 
+/************************************************************************
+ * @description Apply dark theme to the built-in MsgBox and InputBox.
+ * @file Dark_MsgBox.ahk
+ * @link https://github.com/nperovic/DarkMsgBox
+ * @author Nikola Perovic
+ * @date 2024/06/16
+ * @version 1.1.0
+ ***********************************************************************/
+#Requires AutoHotkey v2
+
+#DllLoad gdi32.dll
+
+class DarkMsgBox
+{
+    static __New()
+    {
+        /** Thanks to geekdude & Mr Doge for providing this method to rewrite built-in functions. */
+        static _Msgbox   := MsgBox.Call.Bind(MsgBox)
+        static _InputBox := InputBox.Call.Bind(InputBox)
+        MsgBox.DefineProp("Call", {Call: CallNativeFunc})
+        InputBox.DefineProp("Call", {Call: CallNativeFunc})
+
+        CallNativeFunc(_this, params*)
+        {
+            static WM_COMMNOTIFY := 0x44
+            static WM_INITDIALOG := 0x0110
+            
+            iconNumber := 1
+            iconFile   := ""
+            
+            if (params.length = (_this.MaxParams + 2))
+                iconNumber := params.Pop()
+            
+            if (params.length = (_this.MaxParams + 1)) 
+                iconFile := params.Pop()
+            
+            SetThreadDpiAwarenessContext(-3)
+    
+            if InStr(_this.Name, "MsgBox")
+                OnMessage(WM_COMMNOTIFY, ON_WM_COMMNOTIFY)
+            else
+                OnMessage(WM_INITDIALOG, ON_WM_INITDIALOG, -1)
+    
+            return _%_this.name%(params*)
+    
+            ON_WM_INITDIALOG(wParam, lParam, msg, hwnd)
+            {
+                OnMessage(WM_INITDIALOG, ON_WM_INITDIALOG, 0)
+                WNDENUMPROC(hwnd)
+            }
+            
+            ON_WM_COMMNOTIFY(wParam, lParam, msg, hwnd)
+            {
+                if (msg = 68 && wParam = 1027)
+                    OnMessage(0x44, ON_WM_COMMNOTIFY, 0),                    
+                    EnumThreadWindows(GetCurrentThreadId(), CallbackCreate(WNDENUMPROC), 0)
+            }
+    
+            WNDENUMPROC(hwnd, *)
+            {
+                static SM_CICON         := "W" SysGet(11) " H" SysGet(12)
+                static SM_CSMICON       := "W" SysGet(49) " H" SysGet(50)
+                static ICON_BIG         := 1
+                static ICON_SMALL       := 0
+                static WM_SETICON       := 0x80
+                static WS_CLIPCHILDREN  := 0x02000000
+                static WS_CLIPSIBLINGS  := 0x04000000
+                static WS_EX_COMPOSITED := 0x02000000
+                static winAttrMap       := Map(10, true, 17, true, 20, true, 38, 4, 35, 0x2b2b2b)
+    
+                SetWinDelay(-1)
+                SetControlDelay(-1)
+                DetectHiddenWindows(true)
+    
+                if !WinExist("ahk_class #32770 ahk_id" hwnd)
+                    return 1
+    
+                WinSetStyle("+" (WS_CLIPSIBLINGS | WS_CLIPCHILDREN))
+                WinSetExStyle("+" (WS_EX_COMPOSITED))
+                SetWindowTheme(hwnd, "DarkMode_Explorer")
+    
+                if iconFile {
+                    hICON_SMALL := LoadPicture(iconFile, SM_CSMICON " Icon" iconNumber, &handleType)
+                    hICON_BIG   := LoadPicture(iconFile, SM_CICON " Icon" iconNumber, &handleType)
+                    PostMessage(WM_SETICON, ICON_SMALL, hICON_SMALL)
+                    PostMessage(WM_SETICON, ICON_BIG, hICON_BIG)
+                }
+    
+                for dwAttribute, pvAttribute in winAttrMap
+                    DwmSetWindowAttribute(hwnd, dwAttribute, pvAttribute)
+                
+                GWL_WNDPROC(hwnd, hICON_SMALL?, hICON_BIG?)
+                return 0
+            }
+            
+            GWL_WNDPROC(winId := "", hIcons*)
+            {
+                static SetWindowLong     := DllCall.Bind(A_PtrSize = 8 ? "SetWindowLongPtr" : "SetWindowLong", "ptr",, "int",, "ptr",, "ptr")
+                static BS_FLAT           := 0x8000
+                static BS_BITMAP         := 0x0080
+                static DPI               := (A_ScreenDPI / 96)
+                static WM_CLOSE          := 0x0010
+                static WM_CTLCOLORBTN    := 0x0135
+                static WM_CTLCOLORDLG    := 0x0136
+                static WM_CTLCOLOREDIT   := 0x0133
+                static WM_CTLCOLORSTATIC := 0x0138
+                static WM_DESTROY        := 0x0002
+                static WM_SETREDRAW      := 0x000B
+    
+                SetControlDelay(-1)
+    
+                btns    := []
+                btnHwnd := ""
+    
+                for ctrl in WinGetControlsHwnd(winId)
+                {
+                    classNN := ControlGetClassNN(ctrl)
+                    SetWindowTheme(ctrl, !InStr(classNN, "Edit") ? "DarkMode_Explorer" : "DarkMode_CFD")
+    
+                    if InStr(classNN, "B") 
+                        btns.Push(btnHwnd := ctrl)
+                }
+    
+                WindowProcOld := SetWindowLong(winId, -4, CallbackCreate(WNDPROC))
+                
+                WNDPROC(hwnd, uMsg, wParam, lParam)
+                {
+                    static hbrush := []
+                    SetWinDelay(-1)
+                    SetControlDelay(-1)
+                    
+                    if !hbrush.Length
+                        for clr in [0x202020, 0x2b2b2b]
+                            hbrush.Push(CreateSolidBrush(clr))
+    
+                    switch uMsg {
+                    case WM_CTLCOLORSTATIC: 
+                    {
+                        SelectObject(wParam, hbrush[2])
+                        SetBkMode(wParam, 0)
+                        SetTextColor(wParam, 0xFFFFFF)
+                        SetBkColor(wParam, 0x2b2b2b)
+    
+                        for _hwnd in btns
+                            PostMessage(WM_SETREDRAW,,,_hwnd)
+    
+                        GetClientRect(winId, rcC := this.RECT())
+                        WinGetClientPos(&winX, &winY, &winW, &winH, winId)
+                        ControlGetPos(, &btnY,, &btnH, btnHwnd)
+                        hdc        := GetDC(winId)
+                        rcC.top    := btnY - (rcC.bottom - (btnY+btnH))
+                        rcC.bottom *= 2
+                        rcC.right  *= 2
+                        
+                        SetBkMode(hdc, 0)
+                        FillRect(hdc, rcC, hbrush[1])
+                        ReleaseDC(winId, hdc)
+    
+                        for _hwnd in btns
+                            PostMessage(WM_SETREDRAW, 1,,_hwnd)
+    
+                        return hbrush[2]
+                    }
+                    case WM_CTLCOLORBTN, WM_CTLCOLORDLG, WM_CTLCOLOREDIT: 
+                    {         
+                        brushIndex := !(uMsg = WM_CTLCOLORBTN)
+                        SelectObject(wParam, brush := hbrush[brushIndex+1])
+                        SetBkMode(wParam, 0)
+                        SetTextColor(wParam, 0xFFFFFF)
+                        SetBkColor(wParam, !brushIndex ? 0x202020 : 0x2b2b2b)
+                        return brush
+                    }
+                    case WM_DESTROY: 
+                    {
+                        for v in hIcons
+                            (v??0) && DestroyIcon(v)
+    
+                        while hbrush.Length
+                            DeleteObject(hbrush.Pop())
+                    }}
+    
+                    return CallWindowProc(WindowProcOld, hwnd, uMsg, wParam, lParam) 
+                }
+            }
+    
+            CreateSolidBrush(crColor) => DllCall('Gdi32\CreateSolidBrush', 'uint', crColor, 'ptr')
+            
+            CallWindowProc(lpPrevWndFunc, hWnd, uMsg, wParam, lParam) => DllCall("CallWindowProc", "Ptr", lpPrevWndFunc, "Ptr", hwnd, "UInt", uMsg, "Ptr", wParam, "Ptr", lParam)
+    
+            DestroyIcon(hIcon) => DllCall("DestroyIcon", "ptr", hIcon)
+    
+            /** @see — https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/ne-dwmapi-dwmwindowattribute */
+            DWMSetWindowAttribute(hwnd, dwAttribute, pvAttribute, cbAttribute := 4) => DllCall("Dwmapi\DwmSetWindowAttribute", "Ptr" , hwnd, "UInt", dwAttribute, "Ptr*", &pvAttribute, "UInt", cbAttribute)
+            
+            DeleteObject(hObject) => DllCall('Gdi32\DeleteObject', 'ptr', hObject, 'int')
+            
+            EnumThreadWindows(dwThreadId, lpfn, lParam) => DllCall("User32\EnumThreadWindows", "uint", dwThreadId, "ptr", lpfn, "uptr", lParam, "int")
+            
+            FillRect(hDC, lprc, hbr) => DllCall("User32\FillRect", "ptr", hDC, "ptr", lprc, "ptr", hbr, "int")
+            
+            GetClientRect(hWnd, lpRect) => DllCall("User32\GetClientRect", "ptr", hWnd, "ptr", lpRect, "int")
+            
+            GetCurrentThreadId() => DllCall("Kernel32\GetCurrentThreadId", "uint")
+            
+            GetDC(hwnd := 0) => DllCall("GetDC", "ptr", hwnd, "ptr")
+    
+            ReleaseDC(hWnd, hDC) => DllCall("User32\ReleaseDC", "ptr", hWnd, "ptr", hDC, "int")
+            
+            SelectObject(hdc, hgdiobj) => DllCall('Gdi32\SelectObject', 'ptr', hdc, 'ptr', hgdiobj, 'ptr')
+            
+            SetBkColor(hdc, crColor) => DllCall('Gdi32\SetBkColor', 'ptr', hdc, 'uint', crColor, 'uint')
+            
+            SetBkMode(hdc, iBkMode) => DllCall('Gdi32\SetBkMode', 'ptr', hdc, 'int', iBkMode, 'int')
+    
+            SetTextColor(hdc, crColor) => DllCall('Gdi32\SetTextColor', 'ptr', hdc, 'uint', crColor, 'uint')
+            
+            SetThreadDpiAwarenessContext(dpiContext) => DllCall("SetThreadDpiAwarenessContext", "ptr", dpiContext, "ptr")
+    
+            SetWindowTheme(hwnd, pszSubAppName, pszSubIdList := "") => (!DllCall("uxtheme\SetWindowTheme", "ptr", hwnd, "ptr", StrPtr(pszSubAppName), "ptr", pszSubIdList ? StrPtr(pszSubIdList) : 0) ? true : false)
+        }
+    }
+
+    class RECT extends Buffer {
+        static ofst := Map("left", 0, "top", 4, "right", 8, "bottom", 12)
+
+        __New(left := 0, top := 0, right := 0, bottom := 0) {
+            super.__New(16)
+            NumPut("int", left, "int", top, "int", right, "int", bottom, this)
+        }
+
+        __Set(Key, Params, Value) {
+            if DarkMsgBox.RECT.ofst.Has(k := StrLower(key))
+                NumPut("int", value, this, DarkMsgBox.RECT.ofst[k])
+            else throw PropertyError
+        }
+
+        __Get(Key, Params) {
+            if DarkMsgBox.RECT.ofst.Has(k := StrLower(key))
+                return NumGet(this, DarkMsgBox.RECT.ofst[k], "int")
+            throw PropertyError
+        }
+
+        width  => this.right - this.left
+        height => this.bottom - this.top
+    }
+} 
+
+; Example:
+if (A_LineFile = A_ScriptFullPath && !A_IsCompiled) {
+    ipb := InputBox("Enter something here`nAnd here.", "InputBox Title")
+    MsgBox(123, "Your Input", "0x36")
+    ExitApp()
+}
+# Darkmode Scripts:  DarkListView.ahk
+Intake the methods DarkListView.ahk uses to make the dark mode GUI controls. 
+/************************************************************************
+ * @description Apply dark theme to the ListView control. Note: This script requires AutoHotkey version 2.1-alpha.10 or later.
+ * @file DarkListView.ahk
+ * @author Nikola Perovic
+ * @see https://github.com/nperovic/DarkThemeListView
+ * @date 13 MAY 2024
+ * @version 1.0.1
+ ***********************************************************************/
+
+#requires AutoHotkey v2.1-alpha.10
+
+class RECT {
+    left: i32, top: i32, right: i32, bottom: i32
+}
+
+class NMHDR {
+    hwndFrom: uptr
+    idFrom  : uptr
+    code    : i32
+}
+
+class NMCUSTOMDRAW {
+    hdr        : NMHDR
+    dwDrawStage: u32
+    hdc        : uptr
+    rc         : RECT
+    dwItemSpec : uptr
+    uItemState : u32
+    lItemlParam: iptr
+}
+
+/**
+ * Apply a dark theme to the ListView control.
+ * @example
+ * myGui := Gui()
+ * lv    := myGui.AddListView("Count100 R10 W400 cWhite Background" (myGui.BackColor := 0x202020), ["Select", "Number", "Description"])
+ * lv.SetDarkMode() 
+ */
+class _DarkListView extends Gui.ListView
+{
+    static __New()
+    {
+        static LVM_GETHEADER := 0x101F
+
+        super.Prototype.GetHeader   := SendMessage.Bind(LVM_GETHEADER, 0, 0)
+        super.Prototype.SetDarkMode := this.SetDarkMode.Bind(this)
+    }
+    
+    /**
+     * @param {Gui.ListView} lv "This" object.
+     */
+    static SetDarkMode(lv, style := "Explorer")
+    {
+        static LVS_EX_DOUBLEBUFFER := 0x10000
+        static NM_CUSTOMDRAW       := -12
+        static UIS_SET             := 1
+        static UISF_HIDEFOCUS      := 0x1
+        static WM_CHANGEUISTATE    := 0x0127
+        static WM_NOTIFY           := 0x4E
+        static WM_THEMECHANGED     := 0x031A
+
+        lv.Header := lv.GetHeader()
+		
+        ; Prevent the ListView control from displaying vertical grid line and other rendering issues.
+        lv.OnMessage(WM_THEMECHANGED, (*) => 0)
+        
+		; Set Header texts color
+		lv.OnMessage(WM_NOTIFY, (lv, wParam, lParam, Msg) {
+            static CDDS_ITEMPREPAINT   := 0x10001
+            static CDDS_PREPAINT       := 0x1
+            static CDRF_DODEFAULT      := 0x0
+            static CDRF_NOTIFYITEMDRAW := 0x20
+    
+			if (StructFromPtr(NMHDR, lParam).Code != NM_CUSTOMDRAW) 
+				return 
+
+			nmcd := StructFromPtr(NMCUSTOMDRAW, lParam)
+            
+            if (nmcd.hdr.hWndFrom != lv.Header)
+                return
+
+			switch nmcd.dwDrawStage {
+			case CDDS_PREPAINT    : return CDRF_NOTIFYITEMDRAW
+			case CDDS_ITEMPREPAINT: SetTextColor(nmcd.hdc,  0xFFFFFF)
+			}
+
+            return CDRF_DODEFAULT
+		})
+
+        lv.Opt("+LV" LVS_EX_DOUBLEBUFFER)
+        
+        ; Hide focus dots
+        SendMessage(WM_CHANGEUISTATE, (UIS_SET << 8) | UISF_HIDEFOCUS, 0, lv)
+
+        SetWindowTheme(lv.Header, "DarkMode_ItemsView")
+        SetWindowTheme(lv.Hwnd, "DarkMode_" style)
+
+        ;;{ WINAPI 
+        SetTextColor(hdc, color) => DllCall("SetTextColor", "Ptr", hdc, "UInt", color)
+
+        SetWindowTheme(hwnd, appName, subIdList?) => DllCall("uxtheme\SetWindowTheme", "ptr", hwnd, "ptr", StrPtr(appName), "ptr", subIdList ?? 0)
+        ;;}
+    }
+}
+
+
+
+# Darkmode Scripts:  WindowSpy.ahk
+Intake the methods WindowSpy.ahk uses to make the dark mode GUI controls. 
+
+/************************************************************************
+ * @description Window Spy for AHKv2 in dark mode. [https://github.com/nperovic/Dark_WindowSpy]
+ * @file WindowSpy.ahk
+ * @author nperovic
+ * @date 2024/04/23
+ * @version 1.0.1
+ ***********************************************************************/
+
+#Requires AutoHotkey v2
+#SingleInstance Ignore
+
+try TraySetIcon RegExReplace(A_AhkPath, "iS)^.+?AutoHotkey[^\\]*\\\K.+", "UX\inc\spy.ico")
+A_IconHidden := true
+; #NoTrayIcon
+
+Gui.Prototype.DefineProp("AddDarkCheckBox", {Call: AddDarkCheckBox})
+
+SetWorkingDir(A_ScriptDir)
+CoordMode("Pixel", "Screen")
+WinSpyGui(9, "Segoe UI", false)♣
+
+~*Shift::
+~*Ctrl:: suspend_timer()
+~*Ctrl up::
+~*Shift up:: SetTimer(Update)
+
+WinSpyGui(fontSize := 11, font := "Segoe UI", Wrap := true)
+{
+	global oGui
+    static WM_RBUTTONDOWN   := 0x0204
+    static WM_RBUTTONUP     := 0x0205
+    static SM_CXMENUCHECK   := 71
+    static SM_CYMENUCHECK   := 72
+    static checkBoxW        := SysGet(SM_CXMENUCHECK)
+    static checkBoxH        := SysGet(SM_CYMENUCHECK)
+    static WS_EX_COMPOSITED := 0x02000000
+    
+	DllCall("shell32\SetCurrentProcessExplicitAppUserModelID", "ptr", StrPtr("AutoHotkey.WindowSpy"))
+
+	oGui           := Gui("AlwaysOnTop Resize MinSize MinSizex1 -DPIScale +" WS_EX_COMPOSITED, "Window Spy for AHKv2")
+	oGui.MarginX   := 10
+	oGui.MarginY   := 5
+	oGui.BackColor := "1F1F1F"
+	oGui.SetFont("cF8F8F8 S" fontSize, font)
+	SetDarkMode(oGui)
+
+	oGui.Add("Text", "0x200 h" checkBoxH, "Window Title, Class and Process:").GetPos(,, &tW)
+    oGui.AddDarkCheckBox("yp Right Checked vCtrl_FollowMouse ", "Follow Mouse")
+
+	oGui.Add("Edit", "xm w320 r5 ReadOnly vCtrl_Title" (Wrap ? "" : " -Wrap"))
+	
+	oGui.Add("Text", , "Mouse Position")
+	oGui.Add("Edit", "w320 r4 ReadOnly vCtrl_MousePos")
+	
+	oGui.Add("Text", "w320 vCtrl_CtrlLabel", (txtFocusCtrl := "Focused Control") ":")
+	oGui.Add("Edit", "w320 r4 ReadOnly vCtrl_Ctrl")
+	
+	oGui.Add("Text", , "Active Window Postition:")
+	oGui.Add("Edit", "w320 r2 ReadOnly vCtrl_Pos")
+	
+	oGui.Add("Text", , "Status Bar Text:")
+	oGui.Add("Edit", "w320 r2 ReadOnly vCtrl_SBText")
+	
+	oGui.Add("Text", "xm 0x200 h" checkBoxH, "Visible Text:")
+    oGui.AddDarkCheckBox("yp vCtrl_IsSlow right", "Slow TitleMatchMode")
+
+	oGui.Add("Edit", "xm w320 r2 ReadOnly vCtrl_VisText")
+
+	oGui.Add("Text", , "All Text:")
+	oGui.Add("Edit", "w320 r2 ReadOnly vCtrl_AllText")
+
+	oGui.Add("Text", "w320 r1 vCtrl_Freeze", (txtNotFrozen := "(Hold Ctrl or Shift to suspend updates)"))
+
+	oGui.OnEvent("Close", WinSpyClose)
+	oGui.OnEvent("Size", WinSpySize)
+	OnMessage(WM_RBUTTONUP, Right_Click_Event)
+
+	for ctrl in oGui
+	{
+		if (isEdit := ctrl.Type = "Edit")
+			ctrl.Opt("-VScroll cF8F8F8 Background" oGui.BackColor)
+		ctrl.SetFont("cF8F8F8")
+		SetDarkControl(ctrl, isEdit ? "DarkMode_CFD" : "DarkMode_Explorer")
+	}
+
+	oGui.Show("Hide AutoSize")
+	oGui.GetClientPos(, , &GuiWidth)
+	oGui["Ctrl_FollowMouse"].GetPos(&x_ChBx_FollowMouse)
+	oGui["Follow Mouse"].GetPos(&x_Text_FollowMouse)
+	oGui["Ctrl_IsSlow"].GetPos(&x_ChBx_IsSlow,, &w_ChBx_IsSlow)
+    oGui["Ctrl_IsSlow"].Move(x_ChBx_IsSlow := GuiWidth - w_ChBx_IsSlow - oGui.MarginX)
+
+	oGui.CtrlDistance := Map(
+		"Ctrl_FollowMouse", GuiWidth - x_ChBx_FollowMouse,
+		"Follow Mouse"    , GuiWidth - x_Text_FollowMouse,
+		"Ctrl_IsSlow", GuiWidth - x_ChBx_IsSlow,
+		"Slow TitleMatchMode", GuiWidth - x_ChBx_IsSlow -5)
+
+	oGui.txtNotFrozen := txtNotFrozen       ; create properties for futur use
+	oGui.txtFrozen    := "(Updates suspended)"
+	oGui.txtMouseCtrl := "Control Under Mouse Position"
+	oGui.txtFocusCtrl := txtFocusCtrl
+
+	oGui.GetClientPos(, , &Width, &Height)
+	WinSpySize(oGui, 0, Width, Height)
+	SetTimer(Update, 250)
+	oGui.Show("AutoSize")
+    try PostMessage(0x8, , , ControlGetFocus(oGui))
+
+	return oGui
+}
+
+AddDarkCheckBox(obj, Options, Text)
+{
+    static SM_CXMENUCHECK := 71
+    static SM_CYMENUCHECK := 72
+    static checkBoxW      := SysGet(SM_CXMENUCHECK)
+    static checkBoxH      := SysGet(SM_CYMENUCHECK)
+    
+    chbox := obj.Add("Checkbox", Options " r1.2 +0x4000000", text)
+
+    if !InStr(Options, "right")
+        txt := obj.Add("Text", "xp+" (checkBoxW+5) " yp+1 HP-4 +0x4000200", Text)
+    else
+        txt := obj.Add("Text", "xp+5 yp+1 HP-4 +0x4000200", Text)
+    
+    chbox.Text := ""
+    chbox.DeleteProp("Text")
+    chbox.DefineProp("Text", {
+        Get: this => txt.Text,
+        Set: (this, value) => txt.Text
+    })
+
+    SetWindowPos(txt.hwnd,0,,,,, 0x43)
+    return chbox
+}
+
+SetWindowPos(hWnd, hWndInsertAfter, X := 0, Y := 0, cx := 0, cy := 0, uFlags := 0x40) => DllCall("User32\SetWindowPos", "ptr", hWnd, "ptr", hWndInsertAfter, "int", X, "int", Y, "int", cx, "int", cy, "uint", uFlags, "int")
+ 
+Right_Click_Event(wParam, lParam, msg, hwnd)
+{
+	static WM_RBUTTONDOWN := 0x0204
+	static WM_RBUTTONUP   := 0x0205
+	static WM_COPY        := 0x0301
+
+	GuiCtrl := GuiCtrlFromHwnd(hwnd)
+
+	if (!(GuiCtrl is Gui.Edit) && msg = WM_RBUTTONUP)
+		return 0
+
+	A_Clipboard := ""
+
+	if (GuiCtrl.Name = "Ctrl_Title")
+		A_Clipboard := StrReplace(EditGetSelectedText(GuiCtrl, hwnd), "`r`n", "`s")
+	else
+		PostMessage(WM_COPY, , , hwnd)
+
+	if ClipWait(1)
+	{
+		SetDarkControl(ToolTip("Copied: " A_Clipboard))
+		SetTimer(ToolTip, -1500)
+	}
+	return 0
+}
+
+WinSpySize(GuiObj?, MinMax?, Width?, Height?)
+{
+
+	Critical("Off")
+	Sleep(-1)
+    SetWinDelay(-1)
+    SetControlDelay(-1)
+
+	if !GuiObj.HasProp("txtNotFrozen") ; WinSpyGui() not done yet, return until it is
+		return
+
+	SetTimer(Update, (MinMax = 0) ? 250 : 0) ; suspend updates on minimize
+
+	ctrlW := Width - (GuiObj.MarginX * 2) ; ctrlW := Width - horzMargin
+	list  := "Title,MousePos,Ctrl,Pos,SBText,VisText,AllText,Freeze"
+
+	Loop Parse list, ","
+		GuiObj["Ctrl_" A_LoopField].Move(, , ctrlW)
+
+	for CtrlName, Dist in GuiObj.CtrlDistance
+	{
+		GuiObj[CtrlName].Move(Width - Dist)
+		GuiObj[CtrlName].Redraw()
+	}
+}
+
+WinSpyClose(GuiObj) => ExitApp()
+
+Update(GuiObj?)
+{ ; timer, no params
+	try TryUpdate(GuiObj?) ; try
+}
+
+TryUpdate(GuiObj?)
+{
+	global oGui
+	GuiObj := GuiObj ?? oGui
+
+	if !GuiObj.HasProp("txtNotFrozen") ; WinSpyGui() not done yet, return until it is
+		return
+
+	Ctrl_FollowMouse := GuiObj["Ctrl_FollowMouse"].Value
+	CoordMode("Mouse", "Screen")
+	MouseGetPos(&msX, &msY, &msWin, &msCtrl, 2) ; get ClassNN and hWindow
+	actWin := WinExist("A")
+
+	if (Ctrl_FollowMouse)
+	{
+		curWin := msWin, curCtrl := msCtrl
+		WinExist("ahk_id " curWin) ; updating LastWindowFound?
+	}
+	else
+	{
+		curWin  := actWin
+		curCtrl := ControlGetFocus() ; get focused control hwnd from active win
+	}
+	    curCtrlClassNN := ""
+	try curCtrlClassNN := ControlGetClassNN(curCtrl)
+
+	t1 := WinGetTitle(), t2 := WinGetClass()
+	if (curWin = GuiObj.hwnd || t2 = "MultitaskingViewFrame")
+	{ ; Our Gui || Alt-tab
+		UpdateText("Ctrl_Freeze", GuiObj.txtFrozen)
+		return
+	}
+
+	UpdateText("Ctrl_Freeze", GuiObj.txtNotFrozen)
+	t3 := WinGetProcessName(), t4 := WinGetPID()
+
+	WinDataText := t1 "`n" ; ZZZ
+		. "ahk_class " t2 "`n"
+		. "ahk_exe " t3 "`n"
+		. "ahk_pid " t4 "`n"
+		. "ahk_id " curWin
+
+	UpdateText("Ctrl_Title", WinDataText)
+	CoordMode("Mouse", "Window")
+	MouseGetPos(&mrX, &mrY)
+	CoordMode("Mouse", "Client")
+	MouseGetPos(&mcX, &mcY)
+	mClr := PixelGetColor(msX, msY, "RGB")
+	mClr := SubStr(mClr, 3)
+
+	mpText := "Screen:`t" msX ", " msY "`n"
+		. "Window:`t" mrX ", " mrY "`n"
+		. "Client:`t" mcX ", " mcY " (default)`n"
+		. "Color :`t" mClr " (Red=" SubStr(mClr, 1, 2) " Green=" SubStr(mClr, 3, 2) " Blue=" SubStr(mClr, 5) ")"
+
+	UpdateText("Ctrl_MousePos", mpText)
+
+	UpdateText("Ctrl_CtrlLabel", (Ctrl_FollowMouse ? GuiObj.txtMouseCtrl : GuiObj.txtFocusCtrl) ":")
+
+	if (curCtrl)
+	{
+		ctrlTxt := ControlGetText(curCtrl)
+		WinGetClientPos(&sX, &sY, &sW, &sH, curCtrl)
+		ControlGetPos(&cX, &cY, &cW, &cH, curCtrl)
+
+		cText := "ClassNN:`t" curCtrlClassNN "`n"
+			. "Text   :`t" textMangle(ctrlTxt) "`n"
+			. "Screen :`tx: " sX "`ty: " sY "`tw: " sW "`th: " sH "`n"
+			. "Client :`tx: " cX "`ty: " cY "`tw: " cW "`th: " cH
+	}
+	else
+		cText := ""
+
+	UpdateText("Ctrl_Ctrl", cText)
+	wX := "", wY := "", wW := "", wH := ""
+	WinGetPos(&wX, &wY, &wW, &wH, "ahk_id " curWin)
+	WinGetClientPos(&wcX, &wcY, &wcW, &wcH, "ahk_id " curWin)
+
+	wText := "Screen:`tx: " wX "`ty: " wY "`tw: " wW "`th: " wH "`n"
+		. "Client:`tx: " wcX "`ty: " wcY "`tw: " wcW "`th: " wcH
+
+	UpdateText("Ctrl_Pos", wText)
+	sbTxt := ""
+
+	Loop
+	{
+		ovi := ""
+		try ovi := StatusBarGetText(A_Index)
+		if (ovi = "")
+			break
+		sbTxt .= "(" A_Index "):`t" textMangle(ovi) "`n"
+	}
+
+	sbTxt := SubStr(sbTxt, 1, -1) ; StringTrimRight, sbTxt, sbTxt, 1
+	UpdateText("Ctrl_SBText", sbTxt)
+	bSlow := GuiObj["Ctrl_IsSlow"].Value ; GuiControlGet, bSlow,, Ctrl_IsSlow
+
+	if (bSlow)
+	{
+		DetectHiddenText False
+		ovVisText := WinGetText() ; WinGetText, ovVisText
+		DetectHiddenText True
+		ovAllText := WinGetText() ; WinGetText, ovAllText
+	}
+	else
+	{
+		ovVisText := WinGetTextFast(false)
+		ovAllText := WinGetTextFast(true)
+	}
+
+	UpdateText("Ctrl_VisText", ovVisText)
+	UpdateText("Ctrl_AllText", ovAllText)
+}
+
+; =========================================================================================== 
+; WinGetText ALWAYS uses the "slow" mode - TitleMatchMode only affects
+; WinText/ExcludeText parameters. In "fast" mode, GetWindowText() is used
+; to retrieve the text of each control.
+; =========================================================================================== 
+WinGetTextFast(detect_hidden)
+{
+	controls := WinGetControlsHwnd()
+
+	static WINDOW_TEXT_SIZE := 32767 ; Defined in AutoHotkey source.
+
+	buf := Buffer(WINDOW_TEXT_SIZE * 2, 0)
+
+	text := ""
+
+	Loop controls.Length
+	{
+		hCtl := controls[A_Index]
+		if !detect_hidden && !DllCall("IsWindowVisible", "ptr", hCtl)
+			continue
+		if !DllCall("GetWindowText", "ptr", hCtl, "Ptr", buf.ptr, "int", WINDOW_TEXT_SIZE)
+			continue
+
+		text .= StrGet(buf) "`r`n" ; text .= buf "`r`n"
+	}
+	return text
+}
+
+; =========================================================================================== 
+; Unlike using a pure GuiControl, this function causes the text of the
+; controls to be updated only when the text has changed, preventing periodic
+; flickering (especially on older systems).
+; =========================================================================================== 
+UpdateText(vCtl, NewText)
+{
+	global oGui
+	static OldText := {}
+	       ctl     := oGui[vCtl], hCtl := Integer(ctl.hwnd)
+
+	if (!oldText.HasProp(hCtl) Or OldText.%hCtl% != NewText)
+	{
+		ctl.Value      := NewText
+		OldText.%hCtl% := NewText
+	}
+}
+
+textMangle(x)
+{
+	elli := false
+	if (pos := InStr(x, "`n"))
+		x := SubStr(x, 1, pos - 1), elli := true
+	else if (StrLen(x) > 40)
+		x := SubStr(x, 1, 40), elli := true
+	if elli
+		x .= " (...)"
+	return x
+}
+
+suspend_timer()
+{
+	global oGui
+	SetTimer(Update, 0)
+	UpdateText("Ctrl_Freeze", oGui.txtFrozen)
+}
+
+SetDarkControl(ctrl, style := "DarkMode_Explorer")
+{
+	static IsWin11 := (VerCompare(A_OSVersion, "10.0.22000") > 0)
+	hwnd := IsObject(ctrl) ? ctrl.hwnd : ctrl
+	DllCall("uxtheme\SetWindowTheme", "ptr", hwnd, "ptr", StrPtr(style), "ptr", 0)
+	if IsWin11
+		DllCall("Dwmapi\DwmSetWindowAttribute", "Ptr", hwnd, "UInt", 33, "Ptr*", 3, "UInt", 4)
+}
+
+SetDarkMode(_obj)
+{
+	For v in [135, 136]
+		DllCall(DllCall("GetProcAddress", "ptr", DllCall("GetModuleHandle", "str", "uxtheme", "ptr"), "ptr", v, "ptr"), "int", 2)
+
+	if !(attr := VerCompare(A_OSVersion, "10.0.18985") >= 0 ? 20 : VerCompare(A_OSVersion, "10.0.17763") >= 0 ? 19 : 0)
+		return false
+	
+	DllCall("dwmapi\DwmSetWindowAttribute", "ptr", _obj.hwnd, "int", attr, "int*", true, "int", 4)
+}
+
+
+
+# Darkmode Scripts:  GuiEnhancerKit.ahk
+Intake the methods GuiEnhancerKit.ahk uses to make the dark mode GUI controls. 
+
+/************************************************************************
+ * @description Elevate your AHK Gui development with extended methods and properties.  
+ * @file GuiEnhancerKit.ahk
+ * @author Nikola Perovic
+ * @link https://github.com/nperovic/GuiEnhancerKit
+ * @date 2024/06/16
+ * @version 1.0.0
+ ***********************************************************************/
+
+#Requires AutoHotkey v2
+
+#DllLoad gdi32.dll
+#DllLoad uxtheme.dll
+#DllLoad dwmapi.dll
+
+class GuiExt extends Gui
+{
+    class __Struct extends Buffer
+    {
+        __New(ByteCount?, FillByte?) => super.__New(ByteCount?, FillByte?)
+        
+        Set(ptr?)
+        {
+            if !(ptr??0)
+                return
+            for p, v in ptr.OwnProps()
+                if this.HasProp(p)
+                    this.%p% := v
+        }
+    
+        PropDesc(name, ofst, type, ptr?)
+        {
+            if ((ptr??0) && IsNumber(ptr))
+                NumPut(type, NumGet(ptr, ofst, type), this, ofst)
+            this.DefineProp(name, {
+                Get: NumGet.Bind(, ofst, type),
+                Set: (p, v) => NumPut(type, v, this, ofst)
+            })
+        }
+    }
+    
+    class RECT extends GuiExt.__Struct
+    { 
+        /**
+         * The `RECT` structure defines a rectangle by the coordinates of its upper-left and lower-right corners.
+         * @param {object|integer} [objOrAddress] *Optional:* Create rect object and set values to each property. It can be object or the `ptr` address.  
+         * @example
+         * DllCall("GetWindowRect", "Ptr", WinExist("A"), "ptr", rc := GuiExt.RECT())
+         * MsgBox rc.left " " rc.top " " rc.right " " rc.bottom
+         * 
+         * @example
+         * rc := GuiExt.RECT({top: 10, bottom: 69})
+         * MsgBox "L" rc.left "/ T" rc.top "/ R" rc.right "/ B" rc.bottom ; L0/ T10/ R0/ B69
+         * 
+         * @example
+         * myGui.OnMessage(WM_NCCALCSIZE := 0x0083, NCCALCSIZE)
+         * NCCALCSIZE(guiObj, wParam, lParam, msg)
+         * {
+         *      if !wParam {
+         *          rc := GuiExt.RECT(lParam)
+         *          ToolTip "L" rc.left "/ T" rc.top "/ R" rc.right "/ B" rc.bottom
+         *      }
+         * }
+         * 
+         * @returns The Buffer object that defined the `RECT` structure.
+         * @link [Learn more on MSDN](https://learn.microsoft.com/en-us/windows/win32/api/windef/ns-windef-rect)
+         */
+        __New(objOrAddress?)
+        {
+            super.__New(16)
+            (IsSet(objOrAddress) && IsNumber(objOrAddress) && (ptr := objOrAddress))
+            (IsSet(objOrAddress) && IsObject(objOrAddress) && (objOrAddress := objOrAddress))
+            for i, prop in ["left", "top", "right", "bottom"]
+                this.PropDesc(prop, 4 * (i-1), "int",  ptr?)
+            this.Set(objOrAddress?)
+        }
+         
+        /** @prop {integer} left Specifies the x-coordinate of the upper-left corner of the rectangle. */
+        left := unset
+    
+        /** @prop {integer} top Specifies the y-coordinate of the upper-left corner of the rectangle. */
+        top := unset
+    
+        /** @prop {integer} right Specifies the x-coordinate of the lower-right corner of the rectangle. */
+        right := unset
+    
+        /** @prop {integer} bottom Specifies the y-coordinate of the lower-right corner of the rectangle. */
+        bottom := unset
+        
+        /** @prop {integer} width Rect width. */
+        width => (this.right - this.left)
+
+        /** @prop {integer} width Rect width. */
+        height => (this.bottom - this.top)
+    }
+
+    static __New()
+    {
+        GuiExt.Control.__New(p := this.Prototype, sp := super.Prototype)
+
+        for _p in [sp, this.Control.Prototype, Gui.Control.Prototype]
+            for prop in ["x", "y", "w", "h"]
+                _p.DefineProp(prop, {Get: p.__GetPos.Bind(, prop), Set: p.__SetPos.Bind(, prop)})
+    }
+
+	/**
+	 * Create a new Gui object.
+	 * @param Options AlwaysOnTop Border Caption Disabled -DPIScale LastFound
+	 * MaximizeBox MinimizeBox MinSize600x600 MaxSize800x800 Resize
+	 * OwnDialogs '+Owner' OtherGui.hwnd +Parent
+	 * SysMenu Theme ToolWindow
+	 * @param Title The window title. If omitted, it defaults to the current value of A_ScriptName.
+	 * @param EventObj OnEvent, OnNotify and OnCommand can be used to register methods of EventObj to be called when an event is raised
+     * @returns {GuiExt|Gui}
+	 */
+	__New(Options := '', Title := A_ScriptName, EventObj?) => super.__New(Options?, Title?, EventObj??this)
+
+    /**
+     * @prop {Integer} X X position
+     * @prop {Integer} Y Y position
+     * @prop {Integer} W Width
+     * @prop {Integer} H Height
+     */
+    X := Y := W := H := 0
+
+    /**
+	 * Create controls such as text, buttons or checkboxes, and return a GuiControl object.
+	 * @param {'ActiveX'|'Button'|'Checkbox'|'ComboBox'|'Custom'|'DateTime'|'DropDownList'|'Edit'|'GroupBox'|'Hotkey'|'Link'|'ListBox'|'ListView'|'MonthCal'|'Picture'|'Progress'|'Radio'|'Slider'|'StatusBar'|'Tab'|'Tab2'|'Tab3'|'Text'|'TreeView'|'UpDown'} ControlType
+	 * @param Options V:    Sets the control's Name.
+     * Pos: xn yn wn hn rn Right Left Center Section
+	 *         VScroll HScroll -Tabstop -Wrap
+	 *         BackgroundColor Border Theme Disabled Hidden
+     * @returns {GuiExt.Control|GuiExt.ActiveX|GuiExt.Button|GuiExt.Checkbox|GuiExt.ComboBox|GuiExt.Custom|GuiExt.DateTime|GuiExt.DropDownList|GuiExt.Edit|GuiExt.GroupBox|GuiExt.Hotkey|GuiExt.Link|GuiExt.ListBox|GuiExt.ListView|GuiExt.MonthCal|GuiExt.Picture|GuiExt.Progress|GuiExt.Radio|GuiExt.Slider|GuiExt.StatusBar|GuiExt.Tab|GuiExt.Tab2|GuiExt.Tab3|GuiExt.Text|GuiExt.TreeView|GuiExt.UpDown}
+     */
+    Add(ControlType, Options?, Text?) => super.Add(ControlType, Options?, Text?)
+
+    __GetPos(prop) => (this.GetPos(&x, &y, &w, &h), %prop%)
+
+    __SetPos(prop, value)
+    {
+        SetWinDelay(-1), SetControlDelay(-1)
+        try %prop% := value
+        try this.Move(x?, y?, w?, h?)
+    }
+
+    /**
+     * To create a borderless window with customizable resizing behavior.
+     * @param {Integer} [border=6] The width of the edge of the window where the window size can be adjusted. If this value is `0`, the window will not be resizable.
+     * @param {(guiObj, x, y) => Integer} [DragWndFunc=""] A callback function used to check whether the window is currently in a drag state. If the function returns `true` and the left mouse button is held down on the `Gui` window, the effect is the same as holding down the left button on the window title bar.
+     * @param {number} [cxLeftWidth] The width of the left border that retains its size.
+     * @param {number} [cxRightWidth] The width of the right border that retains its size.
+     * @param {number} [cyTopHeight] The height of the top border that retains its size.
+     * @param {number} [cyBottomHeight] The height of the bottom border that retains its size.
+     */
+    SetBorderless(border := 6, dragWndFunc := "", cxLeftWidth?, cxRightWidth?, cyTopHeight?, cyBottomHeight?)
+    {
+        static WM_NCCALCSIZE := 0x83
+        static WM_NCHITTEST  := 0x84
+        static WM_NCACTIVATE := 0x86
+        static WM_ACTIVATE   := 0x6
+
+        this.SetWindowAttribute(3, 1)
+
+        ; Set Rounded Corner for Windows 11 
+        if (VerCompare(A_OSVersion, "10.0.22000") >= 0)
+            this.SetWindowAttribute(33, 2)
+
+        this.OnMessage(WM_ACTIVATE, CB_ACTIVATE)
+        this.OnMessage(WM_NCACTIVATE, CB_NCACTIVATE)
+        this.OnMessage(WM_NCCALCSIZE, CB_NCCALCSIZE)
+
+        ; Make window resizable. 
+        this.OnMessage(WM_NCHITTEST, CB_NCHITTEST.Bind(dragWndFunc ? dragWndFunc.Bind(this) : 0))
+
+        ExtendFrameIntoClientArea(cxLeftWidth?, cxRightWidth?, cyTopHeight?, cyBottomHeight?)
+
+        CB_ACTIVATE(g, wParam, lParam, Msg)
+        {
+            SetWinDelay(-1), SetControlDelay(-1), WinRedraw(g)
+            if (lParam = g.hwnd && (wParam & 0xFFFF))
+                ExtendFrameIntoClientArea(cxLeftWidth?, cxRightWidth?, cyTopHeight?, cyBottomHeight?)
+        }
+
+        CB_NCCALCSIZE(g, wParam, lParam, Msg)
+        {
+            if wParam
+                return 0
+        }
+
+        CB_NCACTIVATE(g, wParam, lParam, *)
+        {
+            if !wParam
+                return true
+            if (lParam != g.hwnd) && GetKeyState("LButton", "P")
+                return false
+            SetWinDelay(-1)
+            WinRedraw(g)
+        }
+
+        /**
+         * @param {Function} HTFunc 
+         * @param {GuiExt} g 
+         * @param {integer} wParam 
+         * @param {integer} lParam 
+         * @param {integer} Msg 
+         * @returns {Integer | unset} 
+         */
+        CB_NCHITTEST(HTFunc?, g?, wParam?, lParam?, Msg?)
+        {
+            static HTLEFT       := 10, HTRIGHT       := 11
+                 , HTTOP        := 12, HTTOPLEFT     := 13
+                 , HTTOPRIGHT   := 14, HTBOTTOM      := 15
+                 , HTBOTTOMLEFT := 16, HTBOTTOMRIGHT := 17
+                 , TCAPTION     := 2
+            
+            if !(g is Gui)
+                return
+
+            CoordMode("Mouse")
+            MouseGetPos(&x, &y)
+
+            rc := g.GetWindowRect()
+            R  := (x >= rc.right - border)
+            L  := (x < rc.left + border)
+
+            if (B := (y >= rc.bottom - border))
+                return R ? HTBOTTOMRIGHT: L ? HTBOTTOMLEFT: HTBOTTOM
+
+            if (T := (y < rc.top + border))
+                return R ? HTTOPRIGHT: L ? HTTOPLEFT: HTTOP
+
+            return L ? HTLEFT: R ? HTRIGHT: (HTFunc && HTFunc(x, y) ? TCAPTION : (_ := unset))
+        }
+
+        ExtendFrameIntoClientArea(cxLeftWidth?, cxRightWidth?, cyTopHeight?, cyBottomHeight?)
+        {
+            rc := this.GetWindowRect()
+            NumPut('int', cxLeftWidth ?? rc.width,'int', cxRightWidth ?? rc.width,'int', cyTopHeight ?? rc.height,'int', cyBottomHeight ?? rc.height, margin := Buffer(16))
+            DllCall("Dwmapi\DwmExtendFrameIntoClientArea", "Ptr", this.hWnd, "Ptr", margin)
+        }
+    }
+
+    /**
+     * Retrieves the dimensions of the bounding rectangle of the specified window. The dimensions are given in screen coordinates that are relative to the upper-left corner of the screen.  
+     * [Learn more](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowrect)
+     * @returns {RECT} 
+     */
+    GetWindowRect() => (DllCall("GetWindowRect", "ptr", this.hwnd, "ptr", _rc := GuiExt.RECT(), "uptr"), _rc)
+
+    /**
+     * Retrieves the coordinates of a window's client area. The client coordinates specify the upper-left and lower-right corners of the client area. Because client coordinates are relative to the upper-left corner of a window's client area, the coordinates of the upper-left corner are (0,0).  
+     * [Learn more](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getclientrect)
+     * @returns {RECT} 
+     */        
+    GetClientRect() => (DllCall("GetClientRect", "ptr", this.hwnd, "ptr", _rc := GuiExt.RECT(), "uptr"), _rc)
+
+    /**
+     * Sets the attributes of a window. Specifically, it can set the color of the window's caption, text, and border.
+     * @param {integer} [titleText] Specifies the color of the caption text. Specifying `0xFFFFFFFF` will reset to the system's default caption text color.  
+     * @param {integer} [titleBackground] Specifies the color of the caption. Specifying `0xFFFFFFFF` will reset to the system's default caption color.
+     * @param {integer} [border] Specifies the color of the window border.
+     * - Specifying `0xFFFFFFFE` will suppress the drawing of the window border. 
+     * - Specifying `0xFFFFFFFF` will reset to the system's default border color.  
+     * The application is responsible for changing the border color in response to state changes, such as window activation.
+     * @since This is supported starting with Windows 11 Build 22000.
+     * @returns {String} - The result of the attribute setting operation.
+     */
+    SetWindowColor(titleText?, titleBackground?, border?)
+    {
+        static DWMWA_BORDER_COLOR  := 34
+        static DWMWA_CAPTION_COLOR := 35
+        static DWMWA_TEXT_COLOR    := 36
+        static SetClrMap           := Map(DWMWA_BORDER_COLOR, "border", DWMWA_CAPTION_COLOR, "titleBackground", DWMWA_TEXT_COLOR, "titleText")
+        
+        if (VerCompare(A_OSVersion, "10.0.22200") < 0) 
+            throw OSError("This is supported starting with Windows 11 Build 22000.")
+
+        for attr, var in SetClrMap
+            if (%var%??0)
+                this.SetWindowAttribute(attr, RgbToBgr(%var% is string && !InStr(%var%, "0x") ? Number("0x" %var%) : %var%))
+
+        RgbToBgr(color) => (((Color >> 16) & 0xFF) | (Color & 0x00FF00) | ((Color & 0xFF) << 16))
+    }
+
+    /**
+     * Calls the DwmSetWindowAttribute function from the dwmapi library to set attributes of a window.
+     * @param {number} dwAttribute - The attribute constant to set.
+     * @param {number} [pvAttribute] - The value of the attribute to set. Optional parameter.
+     * @returns {number} The result of the DllCall, typically indicating success or failure.
+     * @see [MSDN](https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/nf-dwmapi-dwmsetwindowattribute)
+     */
+    SetWindowAttribute(dwAttribute, pvAttribute?) => DllCall("dwmapi\DwmSetWindowAttribute", 'ptr', this.Hwnd, "uint", dwAttribute, "uint*", pvAttribute, "int", 4)
+
+    /**
+     * Sets the dark mode title bar for the window if the operating system version supports it.
+     * @returns {number|undefined} The result of setting the window attribute, or undefined if not applicable.
+     */
+    SetDarkTitle()
+    {
+        if (attr := ((VerCompare(A_OSVersion, "10.0.18985") >= 0) ? 20 : (VerCompare(A_OSVersion, "10.0.17763") >= 0) ? 19 : 0))
+            return this.SetWindowAttribute(attr, true)
+    }
+
+    ; Apply dark theme to all the context menus that is created by this script. 
+    SetDarkMenu()
+    {
+        uxtheme             := DllCall("GetModuleHandle", "ptr", StrPtr("uxtheme"), "ptr")
+        SetPreferredAppMode := DllCall("GetProcAddress", "ptr", uxtheme, "ptr", 135, "ptr")
+        FlushMenuThemes     := DllCall("GetProcAddress", "ptr", uxtheme, "ptr", 136, "ptr")
+        DllCall(SetPreferredAppMode, "int", 1)	
+        DllCall(FlushMenuThemes)
+    }
+
+    /**
+     * Send the message to the window or control, and then wait for confirmation.
+     * @param {Integer} Msg
+     * @param {Integer} [wParam=0]
+     * @param {Integer} [lParam=0] 
+     * @returns {Integer} 
+     */
+    SendMsg(Msg, wParam := 0, lParam := 0) {
+        return SendMessage(Msg, wParam?, lParam?,, this)
+    }
+
+    /**
+     * Registers a function or method to be called whenever the Gui receives the specified message.
+     * @param {Integer} Msg The number of the message to monitor, which should be between 0 and 4294967295 (0xFFFFFFFF).
+     * @param {String|(GuiObj, wParam, lParam, Msg) => Integer} Callback The function, method or object to call when the event is raised.
+     * If the GUI has an event sink (that is, if Gui()'s EventObj parameter was specified), this parameter may be the name of a method belonging to the event sink.
+     * Otherwise, this parameter must be a function object. (**ahk_h 2.0**)The function may also consult the built-in variable `A_EventInfo`, which contains 0 if the message was sent via SendMessage.
+     * If sent via PostMessage, it contains the tick-count time the message was posted.
+     * @param {Integer} MaxThreads This integer is usually omitted. In this case, the monitoring function can only process one thread at a time. This is usually the best, because otherwise whenever the monitoring function is interrupted, the script will process the messages in chronological order. Therefore, as an alternative to MaxThreads, Critical can be considered, as shown below.
+     * 
+     * Specify 0 to unregister the function previously identified by Function.
+     * 
+     * By default, when multiple functions are registered for a MsgNumber, they will be called in the order of registration. To register a function before the previously registered function, specify a negative value for MaxThreads. For example, OnMessage Msg, Fn, -2 Register Fn to be called before any other functions registered for Msg, and allow Fn to have up to 2 threads. However, if the function has already been registered, the order will not change unless the registration is cancelled and then re-registered.
+     */
+    OnMessage(Msg, Callback, MaxThreads?)
+    {
+        OnMessage(Msg, _callback, MaxThreads?)
+        super.OnEvent("Close", g => OnMessage(Msg, _callback, 0))
+
+        _callback(wParam, lParam, uMsg, hWnd) {
+            try if (uMsg = Msg && hwnd = this.hwnd)
+                return Callback(this, wParam, lParam, uMsg)
+        }
+    }
+
+    class Control extends Gui.Control
+    {
+        static __New(p := this.Prototype, sp?)
+        {
+            sp := sp ?? super.Prototype
+            for prop in p.OwnProps()
+                if (!sp.HasMethod(prop) && !InStr(prop, "__")) 
+                    sp.DefineProp(prop, p.GetOwnPropDesc(prop))
+
+            if sp.HasMethod("OnMessage")
+                p.DeleteProp("OnMessage")
+        }
+
+        /**
+         * @property {Integer} X X position
+         * @property {Integer} Y Y position
+         * @property {Integer} W Width
+         * @property {Integer} H Height
+         */
+        X := unset, Y := unset, W := unset, H := unset
+
+        /**
+         * Retrieves the dimensions of the bounding rectangle of the specified window. The dimensions are given in screen coordinates that are relative to the upper-left corner of the screen.  
+         * [Learn more](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getclientrect)
+         * @returns {RECT} 
+         */
+        GetWindowRect() => (DllCall("GetWindowRect", "ptr", this.hwnd, "ptr", _rc := GuiExt.RECT(), "uptr"), _rc)
+
+        /**
+         * Retrieves the coordinates of a window's client area. The client coordinates specify the upper-left and lower-right corners of the client area. Because client coordinates are relative to the upper-left corner of a window's client area, the coordinates of the upper-left corner are (0,0).  
+         * [Learn more](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getclientrect)
+         * @returns {RECT} 
+         */        
+        GetClientRect() => (DllCall("GetClientRect", "ptr", this.hwnd, "ptr", _rc := GuiExt.RECT(), "uptr"), _rc)
+
+        /**
+         * Registers a function or method to be called whenever the GuiControl receives the specified message.
+         * @param {Integer} Msg The number of the message to monitor, which should be between 0 and 4294967295 (0xFFFFFFFF).
+         * @param {String|(GuiCtrlObj, wParam, lParam, Msg) => Integer} Callback The function, method or object to call when the event is raised.
+         * If the GUI has an event sink (that is, if Gui()'s EventObj parameter was specified), this parameter may be the name of a method belonging to the event sink.
+         * Otherwise, this parameter must be a function object. The function may also consult the built-in variable `A_EventInfo`, which contains 0 if the message was sent via SendMessage.
+         * If sent via PostMessage, it contains the tick-count time the message was posted.
+            * @param {Integer} AddRemove If omitted, it defaults to 1 (call the callback after any previously registered callbacks). Otherwise, specify one of the following numbers: 
+            * - 1  = Call the callback after any previously registered callbacks.
+            * - -1 = Call the callback before any previously registered callbacks.
+            * - 0  = Do not call the callback.
+        */
+        OnMessage(Msg, Callback, AddRemove := 1)
+        {
+            static SubClasses := Map()
+            static HookedMsgs := Map()
+
+            if !SubClasses.Has(this.hwnd) {
+                SubClasses[this.hwnd] := CallbackCreate(SubClassProc,, 6)
+                HookedMsgs[this.hwnd] := Map(Msg, Callback.Bind(this))
+                SetWindowSubclass(this, SubClasses[this.hwnd])
+                OnExit(RemoveWindowSubclass)
+                this.Gui.OnEvent("Close", RemoveWindowSubclass)
+            }
+            
+            hm := HookedMsgs[this.hwnd]
+
+            if AddRemove
+                hm[Msg] := Callback.Bind(this)
+            else if hm.Has(Msg)
+                hm.Delete(Msg)
+
+            SubClassProc(hWnd?, uMsg?, wParam?, lParam?, uIdSubclass?, dwRefData?)
+            {
+                if HookedMsgs.Has(uIdSubclass) && HookedMsgs[uIdSubclass].Has(uMsg) {
+                    reply := HookedMsgs[uIdSubclass][uMsg](wParam?, lParam?, uMsg?)
+                    if IsSet(reply)
+                        return reply
+                }
+
+                return DefSubclassProc(hwnd, uMsg?, wParam?, lParam?)
+            }
+
+            DefSubclassProc(hwnd?, uMsg?, wParam?, lParam?) => DllCall("DefSubclassProc", "Ptr", hwnd, "UInt", uMsg, "Ptr", wParam, "Ptr", lParam, "Ptr")
+
+            SetWindowSubclass(obj, cb) => DllCall("SetWindowSubclass", "Ptr", obj.hwnd, "Ptr", cb, "Ptr", obj.hwnd, "Ptr", 0)
+
+            RemoveWindowSubclass(*)
+            {
+                DetectHiddenWindows true
+                
+                for hwnd, cb in SubClasses.Clone() {
+                    try if WinExist(hwnd) {
+                        DllCall("RemoveWindowSubclass", "Ptr", hWnd, "Ptr", cb, "Ptr", hWnd)
+                        CallbackFree(cb)
+                    }
+                    SubClasses.Delete(hwnd)
+                }
+                OnExit(RemoveWindowSubclass, 0)
+            }
+        }
+
+        /**
+         * Applies a specified theme to the window through the SetWindowTheme function from the uxtheme library.
+         * @param {string} pszSubAppName - The name of the application's subcomponent to apply the theme to.
+         * @param {string} [pszSubIdList] - A semicolon-separated list of class names to apply the theme to. Optional parameter.
+         * @returns {boolean} True if the theme was set successfully, false otherwise.
+         * @link https://learn.microsoft.com/en-us/windows/win32/api/uxtheme/nf-uxtheme-setwindowtheme
+         */
+        SetTheme(pszSubAppName, pszSubIdList := "") => (!DllCall("uxtheme\SetWindowTheme", "ptr", this.hwnd, "ptr", StrPtr(pszSubAppName), "ptr", pszSubIdList ? StrPtr(pszSubIdList) : 0) ? true : false)
+
+        /**
+         * Set the control's border style to rounded corners.
+         * @param {Integer} [corner=9] The radius of the rounded corners.
+         * @returns {void}
+         */
+        SetRounded(corner := 9)
+        {
+            static WM_SIZE := 0x0005
+            
+            SIZING(this)
+            this.OnMessage(WM_SIZE, SIZING)
+
+            SIZING(ctrl, wParam?, lParam?, msg?)
+            {
+                ctrl.Opt("+0x4000000")
+                rc    := ctrl.GetClientRect()
+                rcRgn := DllCall('Gdi32\CreateRoundRectRgn', 'int', rc.left + 3, 'int', rc.top + 3, 'int', rc.right - 3, 'int', rc.bottom - 3, 'int', corner, 'int', corner, 'ptr')
+                DllCall("SetWindowRgn", "ptr", ctrl.hWnd, "ptr", rcRgn, "int", 1, "int")
+                ctrl.Redraw()
+                DllCall('Gdi32\DeleteObject', 'ptr', rcRgn, 'int')
+            }
+        }
+
+        /**
+         * Send the message to the window or control, and then wait for confirmation.
+         * @param {Integer} Msg
+         * @param {Integer} [wParam=0]
+         * @param {Integer} [lParam=0] 
+         * @returns {Integer} 
+         */
+        SendMsg(Msg, wParam := 0, lParam := 0) => (SendMessage(Msg, wParam?, lParam?, this))
+    }
+
+    ;;{ Gui.Addxxx methods:
+
+    /**
+     * Create a text control that the user cannot edit. Often used to label other controls.
+     * @param Options V:    Sets the control's Name.
+     *   Pos:  xn yn wn hn rn  Right Left Center Section
+     *         VScroll  HScroll -Tabstop -Wrap
+     *         BackgroundColor  BackgroundTrans
+     *         Border  Theme  Disabled  Hidden
+     * @param Text The text  
+     * @returns {GuiExt.Control|GuiExt.Text}
+     */
+    AddText(Options?, Text?) => super.AddText(Options?, Text?)
+
+    /**
+     * Create controls such as text, buttons or checkboxes, and return a GuiControl object.
+     * @param Options Limit Lowercase Multi Number Password ReadOnly
+     *        Tn Uppercase WantCtrlA WantReturn WantTab
+     *  V:    Sets the control's Name.
+     *  Pos:  xn yn wn hn rn Right Left Center Section
+     *        VScroll HScroll -Tabstop -Wrap
+     *        BackgroundColor Border Theme Disabled Hidden
+     * @param Text The text in the Edit  
+     * @returns {GuiExt.Control|GuiExt.Edit|Gui.Edit}
+     */
+    AddEdit(Options?, Text?) => super.AddEdit(Options?, Text?)
+
+    /**
+     * Create UpDown control and return a GuiControl object.
+     * @returns {GuiExt.Control|GuiExt.UpDown|Gui.UpDown}
+     */
+    AddUpDown(Options?, Text?) => super.AddUpDown(Options?, Text?)
+
+    /**
+     * Create Picture control and return a GuiControl object.
+     * @returns {GuiExt.Control|GuiExt.Picture|Gui.Picture}
+     */
+    AddPicture(Options?, FileName?) => super.AddPicture(Options?, FileName?)
+
+    /**
+     * Create Picture control and return a GuiControl object.
+     * @returns {GuiExt.Control|GuiExt.Picture|Gui.Picture}
+     */
+    AddPic(Options?, FileName?) => super.AddPicture(Options?, FileName?)
+
+    /**
+     * Adds a Button control and returns a GuiControl object.
+     * @param Options Positioning and Sizing of Controls
+     *   V:  Sets the control's Name.
+     *   Positioning:  xn yn wn hn rn Right Left Center Section -Tabstop -Wrap
+     *   BackgroundColor Border Theme Disabled Hidden
+     * @param Text The text of the button  
+     * @returns {GuiEx.Control}
+     */
+    AddButton(Options?, Text?) => super.AddButton(Options?, Text?)
+
+    /**
+     * Create Checkbox and return a GuiControl object.
+     * GuiCtrl.Value returns the number 1 for checked, 0 for unchecked, and -1 for gray/indeterminate.
+     * @param Options  V:           Sets the control's Name.
+     *  Checked:     Start off checked
+     *  Check3:      Enable a third "indeterminate" state that displays a gray checkmark
+     *  CheckedGray: Start off checked or indeterminate
+     *  CheckedN:    Set state: 0, 1 or -1
+     *  Pos:         xn yn wn Right Left Center Section
+     *               VScroll  HScroll -Tabstop -Wrap
+     *               BackgroundColor  BackgroundTrans
+     *               Border  Theme  Disabled  Hidden
+     * @param Text The text of the Checkbox  
+     * @returns {GuiExt.Control|GuiExt.Checkbox|Gui.Checkbox}
+     */
+    AddCheckbox(Options?, Text?) => super.AddCheckbox(Options?, Text?)
+
+    /**
+     * Create Radio control and return a GuiControl object.
+     * GuiCtrl.Value returns the number 1 for checked, 0 for unchecked, and -1 for gray/indeterminate.
+     * Events:       DoubleClick, Focus & LoseFocus
+     * @param Options  V:           Sets the control's Name.
+     *  Checked:     Start off checked
+     *  CheckedN:    Set state: 0 or 1
+     *  Group:       Start a new group
+     *  Pos:         xn yn wn Right Left Center Section
+     *               VScroll  HScroll -Tabstop -Wrap
+     *               BackgroundColor  BackgroundTrans
+     *               Border  Theme  Disabled  Hidden
+     * @param Text The text of the Checkbox  
+     * @returns {GuiExt.Control|GuiExt.Radio|Gui.Radio}
+     */
+    AddRadio(Options?, Text?) => super.AddRadio(Options?, Text?)
+
+    /**
+     * Create DropDownList control and return a GuiControl object.
+     * @returns {GuiExt.Control|GuiExt.DropDownList|Gui.DropDownList}
+     */
+    AddDropDownList(Options?, Items?) => super.AddDropDownList(Options?, Items?)
+
+    /**
+     * Create DropDownList control and return a GuiControl object.
+     * @returns {GuiExt.Control|GuiExt.DropDownList|Gui.DropDownList}
+     */
+    AddDDL(Options?, Items?) => super.AddDropDownList(Options?, Items?)
+
+
+    /**
+     * Create ComboBox control and return a GuiControl object.
+     * @returns {GuiExt.Control|GuiExt.ComboBox|Gui.ComboBox}
+     */
+    AddComboBox(Options?, Items?) => super.AddComboBox(Options?, Items?)
+
+    /**
+     * Create ListBox control and return a GuiControl object.
+     * @returns {GuiExt.Control|GuiExt.ListBox|Gui.ListBox}
+     */
+    AddListBox(Options?, Items?) => super.AddListBox(Options?, Items?)
+
+    /**
+     * Create ListView control and return a GuiControl object.
+     * @returns {GuiExt.Control|GuiExt.ListView|Gui.ListView}
+     */
+    AddListView(Options?, Titles?) => super.AddListView(Options?, Titles?)
+
+    /**
+     * Create TreeView control and return a GuiControl object.
+     * @returns {GuiExt.Control|GuiExt.TreeView|Gui.TreeView}
+     */
+    AddTreeView(Options?, Text?) => super.AddTreeView(Options?, Text?)
+
+    /**
+     * Create Link control and return a GuiControl object.
+     * @returns {GuiExt.Control|GuiExt.Link|Gui.Link}
+     */
+    AddLink(Options?, Text?) => super.AddLink(Options?, Text?)
+
+    /**
+     * Create Hotkey control and return a GuiControl object.
+     * @returns {GuiExt.Control|GuiExt.Hotkey|Gui.Hotkey}
+     */
+    AddHotkey(Options?, Text?) => super.AddHotkey(Options?, Text?)
+
+    /**
+     * Create DateTime control and return a GuiControl object.
+     * @returns {GuiExt.Control|GuiExt.DateTime|Gui.DateTime}
+     */
+    AddDateTime(Options?, DateTime?) => super.AddDateTime(Options?, DateTime?)
+
+    /**
+     * Create MonthCal control and return a GuiControl object.
+     * @returns {GuiExt.Control|GuiExt.MonthCal|Gui.MonthCal}
+     */
+    AddMonthCal(Options?, YYYYMMDD?) => super.AddMonthCal(Options?, YYYYMMDD?)
+
+    /**
+     * Create Slider control and return a GuiControl object.
+     * @returns {GuiExt.Control|GuiExt.Slider|Gui.Slider}
+     */
+    AddSlider(Options?, Value?) => super.AddSlider(Options?, Value?)
+
+    /**
+     * Create Progress control and return a GuiControl object.
+     * @returns {GuiExt.Control|GuiExt.Progress|Gui.Progress}
+     */
+    AddProgress(Options?, Value?) => super.AddProgress(Options?, Value?)
+
+    /**
+     * Create GroupBox control and return a GuiControl object.
+     * @returns {GuiExt.Control|GuiExt.GroupBox|Gui.GroupBox}
+     */
+    AddGroupBox(Options?, Text?) => super.AddGroupBox(Options?, Text?)
+
+    /**
+     * Create Tab control and return a GuiControl object.
+     * @returns {GuiExt.Control|GuiExt.Tab|Gui.Tab}
+     */
+    AddTab(Options?, Pages?) => super.AddTab(Options?, Pages?)
+
+    /**
+     * Create Tab2 control and return a GuiControl object.
+     * @returns {GuiExt.Control|GuiExt.Tab2|Gui.Tab2}
+     */
+    AddTab2(Options?, Pages?) => super.AddTab2(Options?, Pages?)
+
+    /**
+     * Create Tab3 control and return a GuiControl object.
+     * @returns {GuiExt.Control|GuiExt.Tab3|Gui.Tab3}
+     */
+    AddTab3(Options?, Pages?) => super.AddTab3(Options?, Pages?)
+
+    /**
+     * Create StatusBar control and return a GuiControl object.
+     * @returns {GuiExt.Control|GuiExt.StatusBar|Gui.StatusBar}
+     */
+    AddStatusBar(Options?, Text?) => super.AddStatusBar(Options?, Text?)
+
+    /**
+     * Create ActiveX control and return a GuiControl object.
+     * @returns {GuiExt.Control|GuiExt.ActiveX|Gui.ActiveX}
+     */
+    AddActiveX(Options?, Component?) => super.AddActiveX(Options?, Component?)
+
+    /**
+     * Create Custom controls and return a GuiControl object.
+     * @returns {GuiExt.Control|GuiExt.Custom|Gui.Custom}
+     */
+    AddCustom(Win32Class?, Text?) => super.AddCustom(Win32Class?, Text?)
+
+    ;;}
+}
+
+;; Examples
+
+if !A_IsCompiled && A_LineFile = A_ScriptFullPath
+    Example_GuiExt()
+
+Example_GuiExt()
+{
+    static WM_LBUTTONDOWN   := 0x0201
+    static WM_SETCURSOR     := 0x0020
+    static WM_NCLBUTTONDOWN := 0x00A1
+    static EN_KILLFOCUS     := 0x0200
+    static WM_SIZING        := 0x0214
+    static WM_MOVE          := 0x0003
+    static WM_MOVING        := 0x0216
+    
+    /**
+     * ### To ensure proper functioning of VSCode's Intelligence, you can:  
+     * 1. Replace `Gui` object with `GuiExt`. (Recommended)
+     * 2. Annotate the variable type as GuiExt above the line where you create a new Gui object instance.(Like the example below:)
+     * @var {GuiExt} myGui
+     * */
+    myGui := Gui("-Caption +Resize")
+    ; myGui := GuiExt("-Caption +Resize")
+    
+    myGui.SetFont("cWhite s16", "Segoe UI")
+    myGui.BackColor := 0x202020
+    
+    myGui.OnEvent("Size", Size)
+    myGui.OnMessage(WM_MOVING, (*) => myEdit.UpdatePos())
+
+    myGui.OnEvent("Escape", (*) => ExitApp())
+    
+    ; Registers a function or method to be called whenever the Gui or GuiControl receives the specified message. [Check out the official document for more information.](https://www.autohotkey.com/docs/alpha/lib/GuiOnMessage.htm)
+    myGui.OnMessage(WM_LBUTTONDOWN, DragWindow)
+
+    ; Set Dark Titlebar
+    myGui.SetDarkTitle()
+
+    ; Set Dark ContextMenu
+    myGui.SetDarkMenu()
+    
+    if (VerCompare(A_OSVersion, "10.0.22000") >= 0)
+    {
+        ; Set Rounded Window (Requires win 11)
+        myGui.SetWindowAttribute(33, 2)
+    
+        ; Remove the window border. (Requires win 11)
+        ; Do not set this if you're creating a borderless window with `SetBorderless` method.
+        ; myGui.SetWindowColor(, , -1)
+    
+        ; Set Mica (Alt) background. (Requires win 11 build 22600)
+        ; [Learn more](https://learn.microsoft.com/en-us/windows/apps/design/style/mica#app-layering-with-mica-alt)
+        if (VerCompare(A_OSVersion, "10.0.22600") >= 0)
+            myGui.SetWindowAttribute(38, 4)
+    }
+    
+    ; Set the borderless 
+    myGui.SetBorderless(6, BorderlessCallback, 500, 500, 500, 500)
+    
+    ; Gui Control objects created in this way do not work with VSCode's IntelliSense. Create an Edit control as shown below.
+    text := myGui.Add("Text", "Backgroundcaa2031 cwhite Center R1.5 0x200 w280", "Rounded Text Control")
+    
+    ; Set Rounded Control
+    text.SetRounded()
+     
+    myEdit := myGui.Add("Edit", "vEdit -WantReturn -TabStop w300 h150 -E0x200 -HScroll -VScroll +Multi +ReadOnly cwhite Background" myGui.BackColor)
+    myEdit.SetFont(, "Consolas")
+    
+    ; Set Edit Control theme
+    myEdit.SetTheme("DarkMode_Explorer")
+    
+    myEdit.UpdatePos := (ctrl => (ctrl.Value := 
+    (
+        "x: " myGui.X "
+        y: " myGui.Y "
+        w: " myGui.W "
+        h: " myGui.H
+    )))
+    
+    ; Hide the blinking caret 
+    myEdit.OnEvent("Focus", (gCtrl, *) => (DllCall("HideCaret", "ptr", gCtrl.hWnd, "int"), gCtrl.SendMsg(EN_KILLFOCUS)))
+    
+    myEdit.OnMessage(WM_SETCURSOR, SetCursor)
+    
+    myGui.Show("w300 AutoSize")
+    myGui.Opt("MinSize")
+
+    ; Send Message to the gui or gui control
+    myEdit.SendMsg(EN_KILLFOCUS)
+
+    WinRedraw(myGui)
+    WinWaitClose(myGui)
+    
+    BorderlessCallback(g, x, y) {
+        if !g["Edit"]
+            return 
+        WinGetPos(, &eY,,, g["Edit"])
+        return y <= eY
+    }
+    
+    /**
+     * @param {GuiExt|Gui} GuiObj 
+     * @param {Integer} MinMax 
+     * @param {Integer} Width 
+     * @param {Integer} Height 
+     */
+    Size(GuiObj, MinMax, Width, Height)
+    {
+        Critical("Off")
+        SetWinDelay(-1), SetControlDelay(-1)
+    
+        ; Moving Controls
+        myEdit.W := text.W := Width - (GuiObj.MarginX*2)
+        myEdit.H := Height - (GuiObj.MarginY*2)
+        myEdit.UpdatePos()
+    }
+    
+    /**
+     * Callback function for `GuiCtrl.OnMessage()` [Check out the official document for more information.](https://www.autohotkey.com/docs/alpha/lib/GuiOnMessage.htm)
+     * @param GuiCtrlObj 
+     * @param wParam 
+     * @param lParam 
+     * @param msg 
+     * @returns {Integer} 
+     */
+    DragWindow(GuiCtrlObj, wParam, lParam, msg) {
+        static WM_NCLBUTTONDOWN := 0x00A1
+        PostMessage(WM_NCLBUTTONDOWN, 2,,, GuiCtrlObj is Gui.Control ? GuiCtrlObj.Gui : GuiCtrlObj)
+        return 0
+    }
+    
+    /**
+     * Callback function for `GuiCtrl.OnMessage()` [Check out the official document for more information.](https://www.autohotkey.com/docs/alpha/lib/GuiOnMessage.htm)
+     * @param GuiCtrlObj 
+     * @param wParam 
+     * @param lParam 
+     * @param msg 
+     * @returns {Integer} 
+     */
+    SetCursor(GuiCtrlObj, wParam, lParam, Msg) {
+        static hCursor := DllCall("LoadCursor", "ptr", 0, "ptr", 32512)
+        DllCall("SetCursor", "ptr", hCursor, "ptr")
+        return 0
+    }
+}
+
+/*
+Example_SetBorderless()
+{
+    myGui := GuiExt("-Caption +Resize")
+    myGui.SetFont("cWhite s16", "Segoe UI")
+    myGui.SetDarkTitle()
+    myGui.SetDarkMenu()
+
+    myGui.BackColor := 0x202020
+    text            := myGui.AddText("vTitlebar Backgroundcaa2031 cwhite Center R1.5 0x200 w280", "Titlebar Area")
+    
+    text.Base := GuiExt.Control
+
+    text.SetRounded()
+
+    myGui.OnEvent('Size', Size)
+
+    ;Set Mica (Alt) background. (Supported starting with Windows 11 Build 22000.) 
+    if (VerCompare(A_OSVersion, "10.0.22600") >= 0)
+        myGui.SetWindowAttribute(38, 4)
+
+    myGui.SetBorderless(6, (g, x, y) => (y <= g['Titlebar'].GetWindowRect().bottom), 500, 500, 500, 500)
+
+    myGui.Show("h500")
+
+    Size(g, minmax, width, height)
+    {
+        SetControlDelay(-1)
+        ; Set titlebar's width to fix the gui.
+        g["Titlebar"].W := (width - (g.MarginX*2))
+    }
+}
+
+
+# Darkmode Scripts:  ColorButton.ahk
+Intake the methods ColorButton.ahk uses to make the dark mode GUI controls. 
+
+  /************************************************************************
+ * @description An extended method for changing a button's background color. 
+ * @file ColorButton.ahk
+ * @author Nikola Perovic
+ * @link (https://github.com/nperovic/ColorButton.ahk)
+ * @date 2024/05/30
+ * @version 1.2.1
+ ***********************************************************************/
+
+#Requires AutoHotkey v2.0.15
+#SingleInstance
+
+; ================================================================================ 
+
+; #region For v2.1-alpha.9 or later.
+
+; If you're NOT using v2.1-alpha.9 or later, delete the section BELOW.
+; If you're NOT using v2.1-alpha.9 or later, delete the section BELOW.
+; If you're NOT using v2.1-alpha.9 or later, delete the section BELOW.
+
+; class NMCUSTOMDRAWINFO
+; {
+;     hdr        : NMCUSTOMDRAWINFO.NMHDR
+;     dwDrawStage: u32
+;     hdc        : uptr
+;     rc         : NMCUSTOMDRAWINFO.RECT
+;     dwItemSpec : uptr
+;     uItemState : i32
+;     lItemlParam: iptr
+
+;     class RECT
+;     {
+;         left: i32, top: i32, right: i32, bottom: i32
+;         width  => this.right - this.left
+;         height => this.bottom - this.top
+;     }
+
+;     class NMHDR
+;     {
+;         hwndFrom: uptr
+;         idFrom  : uptr
+;         code    : i32
+;     }
+
+;     __New(ptr?) {
+;         if (ptr??0) {
+;             scc := StructFromPtr(NMCUSTOMDRAWINFO, ptr?)
+;             for p, v in scc.Props() {
+;                 if IsObject(v) {
+;                     for p2, v2 in v.Props()
+;                         try this.%p%.%p2% := v2
+;                 } else
+;                     try this.%p% := v
+;             }
+;         }
+;     }
+
+;     ptr  => ObjGetDataPtr(this)
+;     size => ObjGetDataSize(this)
+; }
+
+; If you're NOT using v2.1-alpha.9 or later, delete the section ABOVE.
+; If you're NOT using v2.1-alpha.9 or later, delete the section ABOVE.
+; If you're NOT using v2.1-alpha.9 or later, delete the section ABOVE.
+
+; #endregion
+
+; ================================================================================ 
+
+; #region For v2.0 user
+
+; If you're using v2.1-alpha.9 or later, delete the section BELOW and uncomment the section ABOVE.
+; If you're using v2.1-alpha.9 or later, delete the section BELOW and uncomment the section ABOVE.
+; If you're using v2.1-alpha.9 or later, delete the section BELOW and uncomment the section ABOVE.
+
+; StructFromPtr(StructClass, Address) => StructClass(Address)
+
+Buffer.Prototype.PropDesc := PropDesc
+PropDesc(buf, name, ofst, type, ptr?) {
+    if (ptr??0)
+        NumPut(type, NumGet(ptr, ofst, type), buf, ofst)
+    buf.DefineProp(name, {
+        Get: NumGet.Bind(, ofst, type),
+        Set: (p, v) => NumPut(type, v, buf, ofst)
+    })
+}
+
+class NMHDR extends Buffer {
+    __New(ptr?) {
+        super.__New(A_PtrSize * 2 + 4)
+        this.PropDesc("hwndFrom", 0, "uptr", ptr?)
+        this.PropDesc("idFrom", A_PtrSize,"uptr", ptr?)   
+        this.PropDesc("code", A_PtrSize * 2 ,"int", ptr?)     
+    }
+}
+
+class RECT extends Buffer { 
+    __New(ptr?) {
+        super.__New(16)
+        for i, prop in ["left", "top", "right", "bottom"]
+            this.PropDesc(prop, 4 * (i-1), "int", ptr?)
+        this.DefineProp("Width", {Get: rc => (rc.right - rc.left)})
+        this.DefineProp("Height", {Get: rc => (rc.bottom - rc.top)})
+    }
+}
+
+class NMCUSTOMDRAWINFO extends Buffer
+{
+    __New(ptr?) {
+        static x64 := (A_PtrSize = 8)
+        super.__New(x64 ? 80 : 48)
+        this.hdr := NMHDR(ptr?)
+        this.rc  := RECT((ptr??0) ? ptr + (x64 ? 40 : 20) : unset)
+        this.PropDesc("dwDrawStage", x64 ? 24 : 12, "uint", ptr?)  
+        this.PropDesc("hdc"        , x64 ? 32 : 16, "uptr", ptr?)          
+        this.PropDesc("dwItemSpec" , x64 ? 56 : 36, "uptr", ptr?)   
+        this.PropDesc("uItemState" , x64 ? 64 : 40, "int", ptr?)   
+        this.PropDesc("lItemlParam", x64 ? 72 : 44, "iptr", ptr?)
+    }
+}
+
+class _Gui extends Gui
+{
+    static __New(p := this.Prototype, sp := Gui.Prototype) {
+        if !sp.HasOwnProp("OnMessage")
+            sp.DefineProp("OnMessage", p.GetOwnPropDesc("OnMessage"))
+        else
+            p.DeleteProp("OnMessage")
+    }
+
+    OnMessage(Msg, Callback, MaxThreads?)
+    {
+        OnMessage(Msg, _callback, MaxThreads?)
+        super.OnEvent("Close", g => OnMessage(Msg, _callback, 0))
+
+        _callback(wParam, lParam, uMsg, hWnd) {
+            try if (uMsg = Msg && hwnd = this.hwnd)
+                return Callback(this, wParam, lParam, uMsg)
+        }
+    }
+
+    class _Control extends Gui.Control
+    {
+        static __New() => _Gui.__New(this.Prototype, super.Prototype)
+
+        OnMessage(Msg, Callback, AddRemove := 1)
+        {
+            static SubClasses := Map()
+            static HookedMsgs := Map()
+    
+            if !SubClasses.Has(this.hwnd) {
+                SubClasses[this.hwnd] := CallbackCreate(SubClassProc,, 6)
+                HookedMsgs[this.hwnd] := Map(Msg, Callback.Bind(this))
+                SetWindowSubclass(this, SubClasses[this.hwnd])
+                this.Gui.OnEvent("Close", RemoveWindowSubclass)
+            }
+            
+            hm := HookedMsgs[this.hwnd]
+    
+            if AddRemove
+                hm[Msg] := Callback.Bind(this)
+            else if hm.Has(Msg)
+                hm.Delete(Msg)
+    
+            SubClassProc(hWnd?, uMsg?, wParam?, lParam?, uIdSubclass?, dwRefData?)
+            {
+                if HookedMsgs.Has(uIdSubclass) && HookedMsgs[uIdSubclass].Has(uMsg) {
+                    reply := HookedMsgs[uIdSubclass][uMsg](wParam?, lParam?, uMsg?)
+                    if IsSet(reply)
+                        return reply
+                }
+    
+                return DefSubclassProc(hwnd, uMsg?, wParam?, lParam?)
+            }
+    
+            DefSubclassProc(hwnd?, uMsg?, wParam?, lParam?) => DllCall("DefSubclassProc", "Ptr", hwnd, "UInt", uMsg, "Ptr", wParam, "Ptr", lParam, "Ptr")
+    
+            SetWindowSubclass(obj, cb) => DllCall("SetWindowSubclass", "Ptr", obj.hwnd, "Ptr", cb, "Ptr", obj.hwnd, "Ptr", 0)
+    
+            RemoveWindowSubclass(*)
+            {
+                for hwnd, cb in SubClasses.Clone() {
+                    try {
+                        DllCall("RemoveWindowSubclass", "Ptr", hWnd, "Ptr", cb, "Ptr", hWnd)
+                        CallbackFree(cb)
+                        SubClasses.Delete(hwnd)
+                    }
+                }
+            }
+        }
+    }
+}
+
+; If you're using v2.1-alpha.9 or later, delete the section ABOVE.
+; If you're using v2.1-alpha.9 or later, delete the section ABOVE.
+; If you're using v2.1-alpha.9 or later, delete the section ABOVE.
+; #endregion
+
+; ================================================================================ 
+
+/**
+ * The extended class for the built-in `Gui.Button` class.
+ * @method SetBackColor Set the button's background color
+ * @example
+ * btn := myGui.AddButton(, "SUPREME")
+ * btn.SetBackColor(0xaa2031)
+ */
+class _BtnColor extends Gui.Button
+{
+    static __New() => super.Prototype.DefineProp("SetBackColor", this.Prototype.GetOwnPropDesc("SetBackColor"))
+    
+    /**
+     * @param {integer} btnBgColor Button's background color. (RGB)
+     * @param {integer} [colorBehindBtn] The color of the button's surrounding area. If omitted, if will be the same as `myGui.BackColor`. **(Usually let it be transparent looks better.)**
+     * @param {integer} [roundedCorner] Specifies the rounded corner preference for the button. If omitted:   
+     * - For Windows 11: Enabled. (value: 9)  
+     * - For Windows 10: Disabled.
+     * @param {Integer} [showFocusedBorder=true] Highlight the border of the button when it's focused. 
+     */
+    SetBackColor(btnBgColor, colorBehindBtn?, roundedCorner?, showFocusedBorder := true)
+    {
+        static BS_BITMAP        := 0x0080
+        static BS_FLAT          := 0x8000
+        static IS_WIN11         := (VerCompare(A_OSVersion, "10.0.22200") >= 0)
+        static NM_CUSTOMDRAW    := -12
+        static WM_CTLCOLORBTN   := 0x0135
+        static WM_DESTROY       := 0x0002
+        static WS_CLIPSIBLINGS  := 0x04000000
+        static WS_EX_COMPOSITED := 0x02000000
+        static BTN_STYLE        := (WS_CLIPSIBLINGS | BS_FLAT | BS_BITMAP)
+
+        clr         := IsNumber(btnBgColor) ? btnBgColor : ColorHex(btnBgColor)
+        isDark      := IsColorDark(clr)
+        hoverColor  := RgbToBgr(BrightenColor(clr, isDark ? 15 : -15))
+        pushedColor := RgbToBgr(BrightenColor(clr, isDark ? -10 : 10))
+        clr         := RgbToBgr(clr)
+        btnBkColr   := (colorBehindBtn ?? !IS_WIN11) && RgbToBgr(ColorHex(this.Gui.BackColor))
+        hbrush      := (colorBehindBtn ?? !IS_WIN11) ? CreateSolidBrush(btnBkColr) : GetStockObject(5)
+
+        this.Gui.OnMessage(WM_CTLCOLORBTN, ON_WM_CTLCOLORBTN)
+
+        if btnBkColr
+            this.Gui.OnEvent("Close", (*) => DeleteObject(hbrush))
+
+        this.Opt(BTN_STYLE (IsSet(colorBehindBtn) ? " Background" colorBehindBtn : "")) ;  
+        this.OnNotify(NM_CUSTOMDRAW, (gCtrl, lParam) => ON_NM_CUSTOMDRAW(gCtrl, lParam))
+        SetWindowTheme(this.hwnd, isDark ? "DarkMode_Explorer" : "Explorer")
+        this.Redraw()
+        SetWindowPos(this.hwnd, 0,,,,, 0x43)
+
+        ON_WM_CTLCOLORBTN(GuiObj, wParam, lParam, Msg)
+        {
+            if (lParam != this.hwnd || !this.Focused)
+                return
+
+            SelectObject(wParam, hbrush)
+            SetBkMode(wParam, 0)
+
+            if (colorBehindBtn ?? !IS_WIN11) 
+                SetBkColor(wParam, btnBkColr)
+
+            return hbrush 
+        }
+
+        first := 1
+
+        ON_NM_CUSTOMDRAW(gCtrl, lParam)
+        {
+            static CDDS_POSTPAINT       := 0x000002
+            static CDDS_PREERASE        := 0x3
+            static CDDS_PREPAINT        := 0x1
+            static CDIS_HOT             := 0x40
+            static CDRF_DODEFAULT       := 0x0
+            static CDRF_DOERASE         := 0x0008
+            static CDRF_NOTIFYPOSTERASE := 0x40
+            static CDRF_NOTIFYPOSTPAINT := 0x10
+            static CDRF_SKIPDEFAULT     := 0x0004
+            static CDRF_SKIPDEFAULT     := 0x4
+            static CDRF_SKIPPOSTPAINT   := 0x100
+            static DC_BRUSH             := GetStockObject(18)
+            static DC_PEN               := GetStockObject(19)
+
+            lpnmCD := NMCUSTOMDRAWINFO(lParam)
+
+            if (lpnmCD.hdr.code != NM_CUSTOMDRAW ||lpnmCD.hdr.hwndFrom != gCtrl.hwnd)
+                return CDRF_DODEFAULT
+            
+            switch lpnmCD.dwDrawStage {
+            case CDDS_POSTPAINT: return CDRF_SKIPDEFAULT
+            case CDDS_PREPAINT : 
+            {
+                isPressed   := GetKeyState("LButton", "P")
+                isHot       := (lpnmCD.uItemState & CDIS_HOT)
+                corner      := (roundedCorner ?? (IS_WIN11 ? 9 : 0))
+                drawFocused := (showFocusedBorder && !first && gCtrl.Focused && !isPressed)
+
+                brushColor := (!isHot || first ? clr : isPressed ? pushedColor : hoverColor)
+                penColor   := (drawFocused ? 0xFFFFFF : brushColor)
+
+                rc    := lpnmCD.rc
+                rcRgn := CreateRoundRectRgn(rc.left, rc.top, rc.right, rc.bottom, corner, corner)
+                SetWindowRgn(gCtrl.hwnd, rcRgn, 1)
+                DeleteObject(rcRgn)
+
+                SelectObject(lpnmCD.hdc, DC_BRUSH)
+                SetDCBrushColor(lpnmCD.hdc, brushColor)
+
+                SelectObject(lpnmCD.hdc, DC_PEN)
+                SetDCPenColor(lpnmCD.hdc, penColor)
+
+                SetBkMode(lpnmCD.hdc, 0)
+
+                if drawFocused 
+                    FrameRgn(lpnmCD.hdc, rcRgn, DC_PEN, rc.Width, rc.Height)
+
+                RoundRect(lpnmCD.hdc, rc.left, rc.top, rc.right-1, rc.bottom-1, corner, corner)
+
+                if first
+                    first := 0
+
+                SetWindowPos(this.hwnd, 0, 0, 0, 0, 0, 0x4043)
+
+                return CDRF_NOTIFYPOSTPAINT
+            }}
+            
+            return CDRF_DODEFAULT
+        }
+
+        BrightenColor(clr, perc := 5) => ((p := perc / 100 + 1), RGB(Round(Min(255, (clr >> 16 & 0xFF) * p)), Round(Min(255, (clr >> 8 & 0xFF) * p)), Round(Min(255, (clr & 0xFF) * p))))
+
+        ColorHex(clr) => Number((!InStr(clr, "0x") ? "0x" : "") clr)
+
+        CreateRoundRectRgn(nLeftRect, nTopRect, nRightRect, nBottomRect, nWidthEllipse, nHeightEllipse) => DllCall('Gdi32\CreateRoundRectRgn', 'int', nLeftRect, 'int', nTopRect, 'int', nRightRect, 'int', nBottomRect, 'int', nWidthEllipse, 'int', nHeightEllipse, 'ptr')
+
+        CreateSolidBrush(crColor) => DllCall('Gdi32\CreateSolidBrush', 'uint', crColor, 'ptr')
+
+        DeleteObject(hObject) => DllCall('Gdi32\DeleteObject', 'ptr', hObject, 'int')
+
+        FrameRgn(hdc, hrgn, hbr, nWidth, nHeight) => DllCall('Gdi32\FrameRgn', 'ptr', hdc, 'ptr', hrgn, 'ptr', hbr, 'int', nWidth, 'int', nHeight, 'int')
+
+        GetStockObject(fnObject) => DllCall('Gdi32\GetStockObject', 'int', fnObject, 'ptr')
+
+        IsColorDark(clr) => ((clr >> 16 & 0xFF) / 255 * 0.2126 + (clr >> 8 & 0xFF) / 255 * 0.7152 + (clr & 0xFF) / 255 * 0.0722 < 0.5)
+
+        RGB(R := 255, G := 255, B := 255) => ((R << 16) | (G << 8) | B)
+
+        RgbToBgr(color) => (IsInteger(color) ? ((Color >> 16) & 0xFF) | (Color & 0x00FF00) | ((Color & 0xFF) << 16) : NUMBER(RegExReplace(STRING(color), "Si)c?(?:0x)?(?<R>\w{2})(?<G>\w{2})(?<B>\w{2})", "0x${B}${G}${R}")))
+
+        RoundRect(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect, nWidth, nHeight) => DllCall('Gdi32\RoundRect', 'ptr', hdc, 'int', nLeftRect, 'int', nTopRect, 'int', nRightRect, 'int', nBottomRect, 'int', nWidth, 'int', nHeight, 'int')
+
+        SelectObject(hdc, hgdiobj) => DllCall('Gdi32\SelectObject', 'ptr', hdc, 'ptr', hgdiobj, 'ptr')
+
+        SetBkColor(hdc, crColor) => DllCall('Gdi32\SetBkColor', 'ptr', hdc, 'uint', crColor, 'uint')
+
+        SetBkMode(hdc, iBkMode) => DllCall('Gdi32\SetBkMode', 'ptr', hdc, 'int', iBkMode, 'int')
+
+        SetDCBrushColor(hdc, crColor) => DllCall('Gdi32\SetDCBrushColor', 'ptr', hdc, 'uint', crColor, 'uint')
+
+        SetDCPenColor(hdc, crColor) => DllCall('Gdi32\SetDCPenColor', 'ptr', hdc, 'uint', crColor, 'uint')
+
+        SetTextColor(hdc, color) => DllCall("SetTextColor", "Ptr", hdc, "UInt", color)
+
+        SetWindowPos(hWnd, hWndInsertAfter, X := 0, Y := 0, cx := 0, cy := 0, uFlags := 0x40) => DllCall("User32\SetWindowPos", "ptr", hWnd, "ptr", hWndInsertAfter, "int", X, "int", Y, "int", cx, "int", cy, "uint", uFlags, "int")
+
+        SetWindowRgn(hWnd, hRgn, bRedraw) => DllCall("User32\SetWindowRgn", "ptr", hWnd, "ptr", hRgn, "int", bRedraw, "int")
+
+        SetWindowTheme(hwnd, appName, subIdList?) => DllCall("uxtheme\SetWindowTheme", "ptr", hwnd, "ptr", StrPtr(appName), "ptr", subIdList ?? 0)
+    }
+}
+
+; Example
+myGui := Gui()
+myGui.SetFont("cWhite s20", "Segoe UI")
+myGui.BackColor := 0x2c2c2c
+
+btnL := myGui.AddButton("w300 Background" myGui.BackColor, "Default Button")
+btnD := myGui.AddButton("wp Background" myGui.BackColor, "Default Button")
+DllCall("uxtheme\SetWindowTheme", "ptr", btnD.hwnd, "ptr", StrPtr("DarkMode_Explorer"), "ptr", 0)
+
+/** @type {_BtnColor} */
+btn := myGui.AddButton("wp", "Rounded Button")
+btn.SetBackColor(0xaa2031,, 9)
+
+/** @type {_BtnColor} */
+btn2 := myGui.AddButton("wp", "No Focused Outline")
+btn2.SetBackColor(0xffd155,, 9, false)
+
+/** @type {_BtnColor} */
+btn3 := myGui.AddButton("wp", "Rectangle Button")
+btn3.SetBackColor("0x7755ff",, 0)
+
+/** @type {_BtnColor} */
+btn4 := myGui.AddButton("wp", "No Focused Outline")
+btn4.SetBackColor("0x55ffd4", , 0, 0)
+
+myGui.Show("w280 AutoSize")
