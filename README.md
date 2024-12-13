@@ -36,14 +36,19 @@ Feel free to submit issues and enhancement requests to improve the prompts. I am
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
+<div style="border: 2px solid #f00; border-radius:5px; padding:15px; background-color:#fff5f5;">
+  <p style="font-size:18px; font-weight:bold; margin:0;">
+    :warning: Alert
+  </p>
+  <p style="margin:5px 0 0 0;">
+      This portion of the readme file is just what's inside of context.txt in markdown format. 
+  </p>
+</div>
+
 :wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash:
 
 <div align="center" style="font-size:64px; font-weight:bold;">
 Instructions
-   <p></p>
-</div>
-<div align="center" style="font-size:14px; font-weight:bold;">
-This portion of the readme file is just what's inside of context.txt in markdown format. 
    <p></p>
 </div>
 
