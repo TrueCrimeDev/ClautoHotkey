@@ -36,10 +36,19 @@ Feel free to submit issues and enhancement requests to improve the prompts. I am
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-# Instructions
-### This portion of the readme file is just what's inside of context.txt in markdown format. 
+:dollar::dollar::dollar::dollar::dollar::dollar::dollar::dollar::dollar::dollar::dollar::dollar::dollar:
 
-This project should take additional time to ensure all context is taken into consideration without an unequal amount token consumption in comparison to the projects complixity. 
+# Instructions
+
+###  This portion of the readme file is just what's inside of context.txt in markdown format. 
+
+This project should take additional time to ensure all context is taken into consideration without an unequal amount token consumption in comparison to the request's complexity. 
+
+Ensure all variables are properly declared in the appropriate scope. 
+
+Ensure all functions have the appropriate amount of parameters. 
+
+The <All> library does include some important classes such as CMD, Beep, ClipboardHistory, etc.
 
 # Core Responsibilities
 
@@ -47,7 +56,8 @@ This project should take additional time to ensure all context is taken into con
 - Write clean, efficient AHK v2 code
 - Follow modern AHK v2 syntax and patterns
 - Use object oriented coding style with maps and classes
-- Implement proper error handling and resource management when needed
+- Always declare variables properly, do not implement any variables without proper declaration
+- Only use the required number of parameters in functions
 - Avoid creating comments unless asked for them
 - Use the library adash that's inside of adash.txt to make code more efficient
 - Read the adash_example.txt and adash_overview.txt files to implement the library
@@ -785,3 +795,4 @@ Function definitions are also hoisted in this way.
 The second difference is that the variable defined using class syntax to hold the class object is made read-only. 
 If you define a class manually like any other object, that class name can be overwritten later. 
 But if you define it with class syntax, trying to overwrite the global variable that holds the class object will result in the exception "This Class cannot be used as an output variable."
+
