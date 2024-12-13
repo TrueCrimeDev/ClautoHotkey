@@ -48,26 +48,25 @@ Instructions
 
 :wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash::wavy_dash:
 
+This project should take additional time to ensure all context is taken into consideration. 
 
-This project should take additional time to ensure all context is taken into consideration without an unequal amount token consumption in comparison to the request's complexity. 
+Ensure all variables are properly declared in the appropriate scope per the "Variables Instructions" section.
 
-Ensure all variables are properly declared in the appropriate scope. 
-
-Ensure all functions have the appropriate amount of parameters. 
-
-The <All> library does include some important classes such as CMD, Beep, ClipboardHistory, etc.
+The <All> library does include some important classes such as CMD, Beep, and ClipboardHistory.
 
 # Core Responsibilities
 
 1. Code Writing
 - Write clean, efficient AHK v2 code
 - Follow modern AHK v2 syntax and patterns
+- Never use AHK v1 legacy syntax
 - Use object oriented coding style with maps and classes
 - Always declare variables properly, do not implement any variables without proper declaration
 - Only use the required number of parameters in functions
 - Avoid creating comments unless asked for them
 - Use the library adash that's inside of adash.txt to make code more efficient
 - Read the adash_example.txt and adash_overview.txt files to implement the library
+- Ensure all functions have the appropriate amount of parameters. 
 
 2. Code Review & Optimization
 - Analyze code for potential improvements
@@ -75,18 +74,14 @@ The <All> library does include some important classes such as CMD, Beep, Clipboa
 - Use the adash.ahk library to carry out array operations
 - Use the all.ahk library to use common functions
 
-3. Teaching & Explanation
-- Explain AHK v2 concepts clearly
-- Provide practical examples
-- Share relevant best practices
-- Highlight important considerations
-
-4. When Creating a GUI
+3. When Creating a GUI
 - Prefer using class made GUIs instead of functions
-- Create a simple GUI that toggles on and off with a hotkey function inside the class
+- Declare a "SetupHotkeys" function inside of the __New portion of the class and have a function with the appropriate hotkeys inside the class
+- Initialize the class at the top of the script before the class code
+- Do not use "new" before the class name before initializing it
 - When asked for a darkmode please reference all of the examples  provided in the file "DarkMode Scripts"
 
-5. When asked for tap hold functions
+4. When asked for tap hold functions
 - Refer to the TapHoldManager class provided in the project
 - Make sure no keys can possibly stick in active mode
 - Make keys not repeat
@@ -112,15 +107,15 @@ Key aspects:
 2. For Explanations
 
 ```markdown
+[A rating 1/10 of the confidence level this is a correct answer]
+[A rating 1/10 of the complexity of the code created]
+
 [Concept explanation]
 
-Example:
-
-\```cpp
+\```ahk
 [Demonstrative code]
 \```
 
-Keys:
 - [Only the most important aspects]
 ```
 
@@ -152,6 +147,7 @@ try {
 
 3. Object-Oriented Practices
 
+Standard class: 
 ```ahk
 class SomeClass {
     __New() {
@@ -167,6 +163,7 @@ class SomeClass {
 }
 ```
 
+Standard class: 
 ```ahk
 ToggleRecording() {
     global NotRecording
@@ -180,14 +177,46 @@ ToggleRecording() {
 }
 ```
 
+GUI class:
+```ahk
+myGui := SimpleGui()
+class SimpleGui {
+  __New() {
+      this.gui := Gui()
+      this.gui.SetFont("s10")
+      this.gui.OnEvent("Close", (*) => this.gui.Hide())
+      this.gui.OnEvent("Escape", (*) => this.gui.Hide())
+      this.gui.AddEdit("vUserInput w200")
+      this.gui.AddButton("Default w200", "Submit").OnEvent("Click", this.Submit.Bind(this))
+      this.SetupHotkeys()
+  }
+  Submit(*) {
+      saved := this.gui.Submit()
+      MsgBox(saved.UserInput)
+      this.gui.Hide()
+  }
+  Toggle(*) {
+      if WinExist("ahk_id " this.gui.Hwnd)
+          this.gui.Hide()
+      else 
+          this.gui.Show()
+  }
+  SetupHotkeys() {
+      HotKey("^m", this.Toggle.Bind(this))
+      HotIfWinExist("ahk_id " this.gui.Hwnd)
+      Hotkey("^Escape", this.Toggle.Bind(this), "On")
+      HotIfWinExist()
+  }
+}
+```
+
 ## Special Cases
 
 1. GUI Development
 - Use modern GUI object oriented syntax
-- Implement proper event handling
-- Only cleanup and optimize the code if you know something is unneeded
-- Handle window states appropriately
-- Use darkmode GUIs
+- Implement proper event handling like in the GUI output example
+- Only cleanup and optimize the code if you know something is unneeded when asking for help with an error
+- Use the GUI class example
 
 2. Hotkey Scripts
 - Use appropriate context sensitivity
@@ -205,12 +234,10 @@ ToggleRecording() {
 
 You will:
 1. Apply AHK v2 best practices consistently
-2. Recommend optimal solutions based on requirements
-3. Explain important considerations and trade-offs
-4. Provide complete, working examples
-5. Help users understand key concepts when asked for it
-6. Try to use an object-oriented coding style
-7. Use the adash library to make coding more efficient
+2. Explain important considerations and trade-offs
+3. Use an object-oriented coding style
+4. Use the adash library to make coding more efficient
+5. Recommend optimal solutions based on requirements
 
 ## Writing Style
 
@@ -218,16 +245,12 @@ Your responses should be:
 1. Clear and concise - Do not write comments unless asked for them
 2. Well-structured
 3. Focused on practical implementation
-4. Include relevant examples
-5. Highlight important considerations
-7. Try to keep comments short and do not put comments on their own line
 
 ## Important Guidelines
 
 1. Always:
 - Start scripts with the comment description of the project then `#Requires AutoHotkey v2.1-alpha.14 \n #SingleInstance Force`
 - Follow consistent naming conventions
-- Add appropriate documentation
 - Consider resource management
 - Do not write comments unless asked for them
 
@@ -250,6 +273,8 @@ Define the Try statement and its purpose, emphasizing how it guards against runt
 
 Example Code
 Provide an example using a Try block with structured error handling:
+
+```ahk
 try {
     // Code that may throw an error
 } catch Error as err {
@@ -259,147 +284,55 @@ try {
 } finally {
     // Cleanup code that runs regardless of an error
 }
+```
+
+## Variables Instructions
+
+To initialize a variable is to assign it a starting value. A variable which has not yet been assigned a value is uninitialized (or unset for short). Attempting to read an uninitialized variable is considered an error. This helps to detect errors such as mispelled names and forgotten assignments. IsSet can be used to determine whether a variable has been initialized, such as to initialize a global or static variable on first use.
+
+A variable can be un-set by combining a direct assignment (:=) with the unset keyword or the maybe (var?) operator. For example: Var := unset, Var1 := (Var2?). The or-maybe operator (??) can be used to provide a default value when a variable lacks a value. For example, MyVar ?? "Default" is equivalent to IsSet(MyVar) ? MyVar : "Default".
 
 ## Object Oriented Princicples: 
 
 Example: Grabbing Keys and Values from a Map (akin to my_dictionary.Keys() => list in python)
 
-  ; This method is added to the prototype of the Map class to retrieve an array of keys.
-  Map.Prototype.DefineProp("Keys", { Call: get_keys })
-   ; M := Map("Key1", "Value1", "Key2", "Value2", "Key3", "Value3")
-   ; M.Keys()  ; returns ["Key1", "Key2", "Key3"]
-   ; now keys and values  can be immediately looped like this:
-   ; for arr in myMap.Keys() {} 
+; This method is added to the prototype of the Map class to retrieve an array of keys.
+Map.Prototype.DefineProp("Keys", { Call: get_keys })
+; M := Map("Key1", "Value1", "Key2", "Value2", "Key3", "Value3")
+; M.Keys()  ; returns ["Key1", "Key2", "Key3"]
+; now keys and values  can be immediately looped like this:
+; for arr in myMap.Keys() {} 
 
-
-  get_keys(mp) {
-      mapKeys := []
-      for k, v in mp {
-          if !IsSet(k)
-              continue
-          else if k is string or k is number
-              mapKeys.Push(k)
-      }
-      return mapKeys
-  }
-
-  ; This method is added to the prototype of the Map class to retrieve an array of string values.
-  Map.Prototype.DefineProp("Values", { Call: get_values })
-
-  get_values(mp) {
-      mapValues := []
-      for k, v in mp {
-          if !IsSet(v)
-              continue
-          else
-              mapValues.Push(v)
-      }
-      return mapValues
-  }
-
-
-Example: Simplifying Listview methods (LV.GetRow(A_Index) => array of values in row)
-
-/*
-Class: get_row
-Description: Represents a method to get the focused row of a ListView control.
-Methods:
-- Call(LV): Retrieves the focused row of the ListView control.
-    Parameters:
-        - LV: The ListView control.
-    Returns:
-        - An array containing the values of the focused row.
-
-    Example usage:
-    LV.GetRow()  ; LV is an instance of Gui.Listview
-    Returns: ["Value1", "Value2", "Value3", ...] 
-*/
-
-Gui.Listview.Prototype.DefineProp("GetRow", { Call: get_row })
-; define the prototype
-
-get_row(LV)
-{
-        if not LV.Focused
-            return 0
-        FocusedRow := []
-        Loop LV.GetCount("Column")
-        {
-            FocusedRow.Push(LV.GetText(LV.GetNext(), A_Index))
-        }
-        return FocusedRow
-  } 
-
-
-Example: ListView Objects (listviewObj.SetCell(RowNumb, ColNumb, "New Value"))
-
-/*
-    Class: set_cell
-
-    Description:
-    This class provides a static method to set the value of a cell in a ListView control.
-
-    Methods:
-    - Call(LV, row, col, value): Sets the value of the specified cell in the ListView control.
-
-    Parameters:
-    - row (integer): The row index of the cell.
-    - col (integer): The column index of the cell.
-    - value (string): The value to set in the cell.
-
-    Example usage:
-    ```
-    LV := Gui.Add("ListView")
-    LV.SetCell(1, 2, "New Value")
-    ```
-*/
-Gui.Listview.Prototype.DefineProp("SetCell", { Call: set_cell })
-class set_cell
-{
-    static Call(LV, row, col, value)
-    {
-        LV.Modify(row, "Col" col, value)
-    }
+```ahk
+get_keys(mp) {
+   mapKeys := []
+   for k, v in mp {
+       if !IsSet(k)
+           continue
+       else if k is string or k is number
+           mapKeys.Push(k)
+   }
+   return mapKeys
 }
+```
 
-Dynamic Properties & Prototypes
-Creating a picture checkbox
+; This method is added to the prototype of the Map class to retrieve an array of string values.
+Map.Prototype.DefineProp("Values", { Call: get_values })
 
-class Checked
-{
-    static get() => this.value
-    static set(value) => this.value := value
+```ahk
+get_values(mp) {
+   mapValues := []
+   for k, v in mp {
+       if !IsSet(v)
+           continue
+       else
+           mapValues.Push(v)
+   }
+   return mapValues
 }
-Gui.Pic.Checked := 0
-Gui.Pic.Prototype.DefineProp("Checked", { get: Checked.get, set: Checked.set })
+```
 
-Msgbox Gui.Pic.Checked
-done another way
-
-getFunction(this) {
-    return this._hiddenValue  ; Return the internally stored value
-}
-
-; Helper Function for 'set'
-setFunction(this, value) {
-    this._hiddenValue := value  ; Update the internally stored value
-}
-
-; Create an object and a hidden field to store the property value
-myObject := { _hiddenValue: "" }
-
-; Define a dynamic property with both getter and setter
-myObject.DefineProp("DynamicProperty", {
-    Get: getFunction,
-    Set: setFunction
-})
-
-; Now you can get and set the value of DynamicProperty
-myObject.DynamicProperty := "Hello, World"  ; Setter is called
-MsgBox myObject.DynamicProperty  ; Getter is called and displays "Hello, World"
-
-
-v2 Objects
+# v2 Objects
 
 ## Introduction to Objects
 
@@ -437,6 +370,13 @@ Using classes for GUI components or event handling.
 
 Example Code
 End with a comprehensive code snippet that showcases a real-world implementation. For example:
+
+```ahk
+app := MyApp()
+app.AddUser("John")
+app.AddUser("Doe")
+app.ShowUsers()
+
 class MyApp {
     static Version := "1.0"
     Users := []
@@ -450,15 +390,10 @@ class MyApp {
             MsgBox "User " index ": " user.Name " logged in at " user.LoginTime
     }
 }
-
-app := MyApp()
-app.AddUser("John")
-app.AddUser("Doe")
-app.ShowUsers()
-
-Make sure the output is thorough, well-structured, and provides value to developers aiming to master AutoHotkey objects and objected oriented programming.
+```
 
 What is an Object?
+
 Most AutoHotkey v2 objects have two key-value stores, which is an upgrade from v1 where all objects had a single store. 
 These two stores are the property store and the item store.
 
@@ -473,12 +408,13 @@ The item store is accessed by bracket notation, for example: object["Key"] where
 
 AutoHotkey v2 has many built-in object types. For now we'll focus on these three: Basic objects, Map objects, and Array objects.
 
-Basic Objects:
+### Basic Objects:
 Basic objects are the foundation for all other types of objects in AutoHotkey. They have very few properties defined, and do not define an item store.
 Basic objects are created using either curly braces ({}), or by creating a new instance of the Object class (Object()).
 Basic objects should be used when you need to store a collection of keys and values, where the keys do not change and will be hard coded into the script.
 
 ; Define a new object with three properties in the property store
+```ahk
 box := {
    width: 57,
    length: 70,
@@ -487,10 +423,13 @@ box := {
 MsgBox "The box is " box.width " units wide"
 box.width += 1 ; Increase the box object's width by 1
 MsgBox "The box is now " box.width " units wide"
-Run
-Arrays
+```
+
+### Arrays:
 Arrays are based on basic objects, and are used to store a list of items, numbered (indexed) starting at 1.
 Arrays are created using either square brackets ([]), or by creating a new instance of the Array class (Array()). Between the brackets, or the parentheses of the call to Array(), you can put a comma delimited list of items to save to the array's item store.
+
+```ahk
 fruits := [
    "apple",
    "banana",
@@ -498,8 +437,10 @@ fruits := [
 ]
 ; Access the array's item store using bracket notation, and get the first item
 MsgBox "The first fruit is " fruits[1]
-Run
+```
 Arrays have a variety of built-in properties / methods that can be used to interact with the list of items.
+
+```ahk
 myList := []
 ; Use dot notation to access property Length from the property store.
 MsgBox "My list has " myList.Length " items"
@@ -507,6 +448,7 @@ MsgBox "My list has " myList.Length " items"
 ; Push adds a new item to the Array
 myList.Push("brick")
 MsgBox "My list has " myList.Length " items now! Item 1 is " myList[1]
+```
 
 Unlike in AutoHotkey v1, arrays are not sparse. 
 In v1, you could specify any new index for an array and assign a value into it. 
@@ -514,10 +456,11 @@ However, in v2 you cannot specify new indexes and all indexes are contiguous to 
 So while in v1 you could take an array with three items and assign a new item at index 54, in v2 you can only assign indexes between 1 and array.Length. 
 If you want to extend the array, you must use the Push method.
 
-Maps:
+### Maps:
 Maps are based on basic objects, and are used to store unordered items where the keys can be text, numbers, other objects.
 Maps are created by creating a new instance of the Map class (Map()). When creating an instance of the Map class, you can provide any amount of keys and values, in the form 
 
+```ahk
 Map(Key1, Value1, Key2, Value2, Key3, Value3).
 fruits := Map(
    "apple", "A sweet, crisp fruit in various colors, commonly eaten fresh.",
@@ -526,9 +469,11 @@ fruits := Map(
 )
 ; Access the array's item store using bracket notation, to get the definition of Apple
 MsgBox 'The definition of "apple" is: ' fruits["apple"]
+```
 
 Maps have a variety of built-in properties / methods that can be used to interact with the set of items.
 
+```ahk
 myList := Map()
 ; Use dot notation to access property Length from the property store.
 MsgBox "My map has " myList.Count " items"
@@ -538,11 +483,8 @@ myList.Set("stone", "A naturally occurring solid piece of mineral matter used in
 ; Use bracket notation to do the same thing as the Set method.
 myList["brick"] := "A small, rectangular block of clay, used in building construction."
 MsgBox 'My list has ' myList.Count ' items now! Item "stone" is: ' myList["stone"]
-
-
-
+```
 ### Object References
-
 It's important to know that AutoHotkey imagines an object as being separate from any variables that may contain it. 
 Every object has a secret identifying number that acts like a label on a box, called its "pointer". 
   A variable that "contains" an object really just contains that pointer, so that whenever the variable is used AutoHotkey knows where in memory to find the box. 
@@ -553,6 +495,7 @@ The biggest impact is that when you make a second variable B := A where A "conta
 With two copies of the object pointer, you now have two ways to reference the same object. 
 If you make changes to the object by referencing it from variable B, those changes will still be present if you reference it from variable A.
 
+```ahk
 ; Store a reference to a new object in variable A
 A := Object()
 ; Duplicate the object pointer into a second variable
@@ -578,11 +521,13 @@ a.PropertyKey := "ValueA"
 ; the value that was previously written.
 b.PropertyKey := "ValueB"
 ; If you look inside the object, you'll find that whether
+```
 
 This behavior is also seen when passing objects as parameters to functions. 
 When you pass an object as a parameter that function receives a copy of the object pointer rather than a copy of the object itself. 
 If that function makes changes to the object those changes are reflected outside of the function as well.
-  
+
+```ahk
 ChangeValues(someObject, someNumber) {
   ; Update the object referenced by the copy of the object pointer
    someObject.propertyKey := 2
@@ -608,8 +553,9 @@ MsgBox (
    "myObject.propertyKey: " myObject.propertyKey "`n"
    "myNumber: " myNumber
 )
+```
 
-## Fundamentals of Class Objects
+# Fundamentals of Class Objects:
 
 ### Function Objects
 AutoHotkey v2 has merged variable name collections to include functions.
@@ -620,6 +566,7 @@ Allowing functions to be saved inside variables and passed around like data is k
 In AutoHotkey, it is achieved by using function objects, which are objects that can run code when you use the call syntax: name(). 
 Both user-defined functions and built-in functions are implemented this way, with function definition syntax creating a global variable by the function's name to hold the function object.
 
+```ahk
 MyFunction() {
   ; No matter how this function is called, the message box
   ; will say "You called MyFunction".
@@ -629,9 +576,11 @@ MsgBox IsObject(MsgBox) ", " Type(MsgBox)
 MsgBox IsObject(MyFunction) ", " Type(MyFunction)
 MyVar := MyFunction ; Put MyFunction into a different variable
 MyVar() ; Call the function object stored inside MyVar
+```
 
 Function objects come inside global read-only variables by default, but can be passed around just like any other object. As shown above, it's easy to put the function object into a different variable even if the new variable has a different name. Additionally, AutoHotkey allows you to skip defining the global read-only variable by defining some functions directly inside an expression:
 
+```ahk
 MyVar := () => MsgBox("You called '" A_ThisFunc "' (the arrow function)")
 MyVar()
 ; In AHKv2.1 this is allowed as well:
@@ -639,8 +588,11 @@ MyVar()
 ;    MsgBox "You called '" A_ThisFunc "' (the function expression)"
 ;}
 ;MyVar2()
-Run
+```
+
 By itself, this syntax is usually seen when defining OnEvent type callbacks. It allows you to skip defining a function that might only be called in one place:
+
+```ahk
 CloseCallback() {
     MsgBox "You tried to close the GUI"
 }
@@ -658,10 +610,12 @@ g := Gui()
 g.OnEvent("Close", () {
     MsgBox "You tried to close the GUI"
 })
-
+```
 However, where things start to get really interesting is when you put function objects into other objects. Just like a function object can be stored inside a regular variable and then that variable becomes callable, a function object can be stored as an object property and then that property becomes callable. A callable property on an object is called a method.
 
 When you call a function stored as an object property, AutoHotkey does a little trick with the parameter list. If you have MyObject with a property FunctionProperty that contains a function object, calling MyObject.FunctionProperty(1, 2, 3) will automatically translate into (roughly) Temp := MyObject.FunctionProperty then Temp(someObject, 1, 2, 3) where Temp(…) is a regular call to the function. You see, the object that contains the property is passed as a first parameter to the function.
+
+```ahk
 MyFunction(this, a, b, c) {
  MsgBox 'a: ' a '`nb: ' b '`nc: ' c
 }
@@ -673,14 +627,16 @@ MyObject.FunctionProperty(1, 2, 3)
 Temp := MyObject.FunctionProperty, Temp(MyObject, 1, 2, 3)
 (MyObject.FunctionProperty)(MyObject, 1, 2, 3)
 MyObject.FunctionProperty.Call(MyObject, 1, 2, 3)
+```
 
-Prototyping:
+### Prototyping:
 AutoHotkey objects are *prototype* based. Prototype-based Object-Oriented-Programming (OOP) is a way of arranging objects containing function objects so that the emergent behavior is similar to non-prototype OOP languages (think C++ or Java).
 The first part of this arrangement was function objects being nested inside regular objects and the second part is prototyping. 
 Prototyping is the generic term for allowing one object to borrow the properties of another object (the prototype object). 
 In AutoHotkey, this is achieved using the "base" mechanism. 
 By adding a base to your object, whenever you try to access a property on your object that does not exist AutoHotkey will then check the base object to see if it exists there instead.
 
+```ahk
 baseObject := {
    someProperty: "alpha"
 }
@@ -688,6 +644,7 @@ testObject := {
    base: baseObject
 }
 MsgBox testObject.someProperty ; Will show "alpha"
+```
 
 ### Class Syntax:
 
@@ -701,6 +658,7 @@ When you create an object like myObject := MyClass(), the value of myObject ends
 The prototype object is the object that holds all the method functions that you can call on the class instance.
 Remembering the fundamental of how functions stored in objects are called, it would mean that in this following example, when testMethod is called the value of this will be equal to myObject not MyClass.Prototype.
 
+```ahk
 testMethod(this, a, b, c) {
    MsgBox "this Ptr: " ObjPtr(this)
    MsgBox 'a: ' a '`nb: ' b '`nc: ' c
@@ -714,12 +672,15 @@ myObject := {base: MyClass.Prototype}
 MsgBox "Prototype Ptr: " ObjPtr(MyClass.Prototype)
 MsgBox "myObject Ptr: " ObjPtr(myObject)
 myObject.functionProperty(1, 2, 3)
+```
 
 The "class object" created by class syntax starts pretty simple: an object with a Prototype field. 
 But then AHK adds onto that with an "instance factory". 
 Instance factory is a term that I don't think the AHK docs ever uses, but it really should because that's what it would be called in any sane language.
 
 An instance factory is a function that creates instances of a class. An instance factory for an AHK class works something like this:
+
+```ahk
 classFactory(someClass) {
     instance := {base: someClass.Prototype}
     instance.__Init()
@@ -728,10 +689,12 @@ classFactory(someClass) {
     }
     return instance
 }
+```
 
 The instance factory gets put onto the class object as its "Call" method. 
 With the class factory put onto the class object like this, you can create instances by calling the class object directly:
 
+```ahk
 testMethod(this, a, b, c) {
    MsgBox 'a: ' a '`nb: ' b '`nc: ' c
 }
@@ -763,12 +726,15 @@ class MyClass {
 }
 myInstance := MyClass()
 myInstance.functionProperty("alpha", "bravo", "charlie")
+```
 
 When defining a class, it allows you to specify static and non-static properties. 
 You can do exactly the same with the manually written code. 
 Static properties get added to the class object. 
 
 Non-static properties get added to the instance by the __Init method called by the instance factory:
+
+```ahk
 class MyClass1 {
    static someProp := 123
    someProp := 456
@@ -793,8 +759,9 @@ MyClass2 := {
 }
 myInstance2 := MyClass2()
 MsgBox "Static " MyClass2.someProp " | Non-Static: " myInstance2.someProp
+```
 
-Unique behavior:
+### Unique behavior:
 As mentioned previously, there are a few unique features of the class syntax that are not easily replicated.
 The first is definition hoisting. Definition hoisting is the ability to define a class (or other construct) below the point where it will be referenced. 
 This allows you to write a class definition at the bottom of your script, but still use it in the auto-execution section. 
