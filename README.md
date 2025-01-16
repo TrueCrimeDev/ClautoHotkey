@@ -4,7 +4,7 @@ A collection of prompts and instructions to help Claude generate better AutoHotk
 
 ## Overview
 
-This repository provides documentation and context files to create an optimized AutoHotkey v2 development environment within Claude. By using these prompts, you can significantly improve the quality and accuracy of Claude's AutoHotkey v2 code generation.
+This repository provides documentation and context files to create an optimized AutoHotkey v2 development environment within Claude. By using these prompts, you can significantly improve the quality and accuracy of Claude's AutoHotkey v2 code generation. You can also check out my ChatGPT custom GPT here: https://chatgpt.com/g/g-673a87acb08081918fe4bfc012d6d098-ahk-v2
 
 ## Setup Instructions
 
