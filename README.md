@@ -1,6 +1,6 @@
 # ClautoHotkey
 
-A collection of prompts and instructions to help Claude generate better AutoHotkey v2 code.
+A collection of prompts and instructions to help Claude generate better AutoHotkey v2 code. This collection does also have additional context prompts for Deepskeek, Gemini, and ChatGPT, but these are just single shot context prompts. The supplemental files are additional libraries or context you can give to the coding agent to improve their prompting. 
 
 ## Overview
 
