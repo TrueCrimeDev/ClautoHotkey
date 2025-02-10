@@ -11,20 +11,20 @@ MyFunc() => MsgBox(i)
 
 ## Answers
 
-Claude 3.5 Sonnet-New (Custom AHK v2 Project)
+### Claude 3.5 Sonnet-New (Custom AHK v2 Project)
 The code will display 4 message boxes, each showing the number 3. This is because:
 The global variable i is modified by the for loop
 All message boxes are queued after the loop completes
 The arrow function references the global i, not a copy
 When the message boxes are shown, i will have the value 3
 
-ChatGPT 4o (CustomGPT Named AHK v2)
+### ChatGPT 4o (CustomGPT Named AHK v2)
 Predicted Output:
 A total of five message boxes appear, showing:
 1, 2, 3, 3, 3
 This happens because `i` is modified by the loop and retains its last assigned value after the loop completes.
 
-ChatGPT o3-mini-high (Asked in AHK v2 what would be the result)
+### ChatGPT o3-mini-high (Asked in AHK v2 what would be the result)
 First Message Box: Displays 1
 Second Message Box: Displays 2
 Third Message Box: Displays 3
@@ -32,7 +32,7 @@ Fourth Message Box: Displays 3
 Fifth Message Box: Displays 3
 So, the code will display a total of five message boxes in the following order: 1, 2, 3, 3, 3.
 
-DeepSeek-R1 & DeepResearch (Asked in AHK v2 what would be the result)
+### DeepSeek-R1 & DeepResearch (Asked in AHK v2 what would be the result)
 The code will display five message boxes in sequence with the values 1, 2, 3, 3, 3. Here's the breakdown:
 Global Variable Initialization:
 global i := 0 sets i to 0 initially, but this value is immediately overwritten by the loop.
@@ -48,7 +48,7 @@ MyFunc() always references the global i, reflecting its latest value.
 Output Sequence:
 1 → 2 → 3 → 3 → 3.
 
-Gemini 2.0 Pro Expirimental 
+### Gemini 2.0 Pro Expirimental 
 Because i is a global variable.
 The loop iterates three times:
 i becomes 1.
