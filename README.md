@@ -5,6 +5,8 @@
 
 A collection of prompts and instructions to help Claude generate better AutoHotkey v2 code. This collection does also have additional context prompts for Deepskeek, Gemini, and ChatGPT, but these are just single shot context prompts. The supplemental files are additional libraries or context you can give to the coding agent to improve their prompting. 
 
+Big thanks to [g.ahk](https://github.com/G33kDude), [Descolada](https://github.com/Descolada), and [Panaku](https://github.com/The-CoDingman), [Nperovic](https://github.com/nperovic) and everyone else who have assisted with code samples and feedback. 
+
 ## Overview
 
 This repository provides documentation and context files to create an optimized AutoHotkey v2 development environment within Claude. By using these prompts, you can significantly improve the quality and accuracy of Claude's AutoHotkey v2 code generation. You can also check out my ChatGPT custom GPT here: https://chatgpt.com/g/g-673a87acb08081918fe4bfc012d6d098-ahk-v2
