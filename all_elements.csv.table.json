@@ -1,0 +1,94 @@
+{
+  "columns": [
+    {
+      "minWidth": 40,
+      "download": false,
+      "formatter": "rowSelection",
+      "titleFormatter": "rowSelection",
+      "resizable": true,
+      "headerSort": false,
+      "width": 51
+    },
+    {
+      "field": "SourceFile",
+      "title": "SourceFile",
+      "minWidth": 40,
+      "resizable": true,
+      "sorter": "string",
+      "headerSort": true,
+      "width": 129
+    },
+    {
+      "field": "ElementType",
+      "title": "ElementType",
+      "minWidth": 40,
+      "resizable": true,
+      "sorter": "string",
+      "headerSort": true,
+      "width": 135
+    },
+    {
+      "field": "Name",
+      "title": "Name",
+      "minWidth": 40,
+      "resizable": true,
+      "sorter": "string",
+      "headerSort": true,
+      "width": 314
+    },
+    {
+      "field": "Type",
+      "title": "Type",
+      "minWidth": 40,
+      "resizable": true,
+      "sorter": "string",
+      "headerSort": true,
+      "width": 85
+    },
+    {
+      "field": "ReturnType",
+      "title": "ReturnType",
+      "minWidth": 40,
+      "resizable": true,
+      "sorter": "string",
+      "headerSort": true,
+      "width": 126
+    },
+    {
+      "field": "Symbol",
+      "title": "Symbol",
+      "minWidth": 40,
+      "resizable": true,
+      "sorter": "string",
+      "headerSort": true,
+      "width": 102
+    },
+    {
+      "field": "Path",
+      "title": "Path",
+      "minWidth": 40,
+      "resizable": true,
+      "sorter": "string",
+      "headerSort": true,
+      "width": 84
+    },
+    {
+      "field": "Description",
+      "title": "Description",
+      "minWidth": 40,
+      "resizable": true,
+      "sorter": "string",
+      "headerSort": true,
+      "width": 932
+    },
+    {
+      "field": "Parameters",
+      "title": "Parameters",
+      "minWidth": 40,
+      "resizable": true,
+      "sorter": "string",
+      "headerSort": true,
+      "width": 447
+    }
+  ]
+}

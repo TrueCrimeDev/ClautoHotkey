@@ -1,0 +1,52 @@
+{
+  "fields": [
+    {
+      "name": "SourceFile",
+      "type": "string",
+      "format": "default"
+    },
+    {
+      "name": "ElementType",
+      "type": "string",
+      "format": "default"
+    },
+    {
+      "name": "Name",
+      "type": "string",
+      "format": "default"
+    },
+    {
+      "name": "Type",
+      "type": "string",
+      "format": "default"
+    },
+    {
+      "name": "ReturnType",
+      "type": "string",
+      "format": "default"
+    },
+    {
+      "name": "Symbol",
+      "type": "string",
+      "format": "default"
+    },
+    {
+      "name": "Path",
+      "type": "string",
+      "format": "default"
+    },
+    {
+      "name": "Description",
+      "type": "string",
+      "format": "default"
+    },
+    {
+      "name": "Parameters",
+      "type": "string",
+      "format": "default"
+    }
+  ],
+  "missingValues": [
+    ""
+  ]
+}
