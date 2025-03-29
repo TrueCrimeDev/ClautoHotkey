@@ -14,7 +14,7 @@
 #z:: MsgBox("You pressed Win+Z!")
 
 ; Ctrl+Alt+T to display the current time
-^!t::ShowCurrentTime()
+!t::ShowCurrentTime()
 
 ShowCurrentTime() {
     currentTime := FormatTime(, "h:mm:ss tt")
