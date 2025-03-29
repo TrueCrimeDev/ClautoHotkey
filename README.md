@@ -1,50 +1,106 @@
 # ClautoHotkey
 
 > [!IMPORTANT]
-> I just updated the Claude prompt 03/29/25 with a big improvement using new prompts for Sonnet 3.7, and Gemini 2.5. It's been working really well. 
+> Updated March 29, 2025: Major improvements with new rules system for Sonnet 3.7, Gemini 2.5, and other LLMs for writing high-quality AHK v2 code.
 
-A collection of prompts and instructions to help Claude generate better AutoHotkey v2 code. This collection does also have additional context prompts for Deepskeek, Gemini, and ChatGPT, but these are just single shot context prompts. The supplemental files are additional libraries or context you can give to the coding agent to improve their prompting. 
+A comprehensive framework for generating correct, consistent AutoHotkey v2 code with Claude and other LLMs. This repository features rule sets, examples, and guidance to ensure proper AHK v2 syntax and best practices in AI-generated code.
 
-Big thanks to [g.ahk](https://github.com/G33kDude), [Descolada](https://github.com/Descolada), [Panaku](https://github.com/The-CoDingman), and [Nperovic](https://github.com/nperovic) and everyone else who have assisted with code samples and feedback. 
+The system also includes context prompts for Deepseek, Gemini, and ChatGPT, but the main focus is on the `.clinerules` system that enables structured, reliable code generation across different AI assistants.
+
+Big thanks to [g.ahk](https://github.com/G33kDude), [Descolada](https://github.com/Descolada), [Panaku](https://github.com/The-CoDingman), [Nperovic](https://github.com/nperovic) and everyone else who have assisted with code samples and feedback.
 
 ## Overview
 
 This repository provides documentation and context files to create an optimized AutoHotkey v2 development environment within Claude. By using these prompts, you can significantly improve the quality and accuracy of Claude's AutoHotkey v2 code generation. You can also check out my ChatGPT custom GPT here: https://chatgpt.com/g/g-673a87acb08081918fe4bfc012d6d098-ahk-v2
 
+## Repository Structure
+
+```
+ClautoHotkey/
+├── .clinerules             # Core rules file for Claude
+├── .clinerules.md          # Documentation explaining the rules system
+├── AHKv2_Example.ahk       # Comprehensive example demonstrating best practices
+├── AHKv2_Code_Examples.ahk # Additional pattern examples
+├── AHKv2_Rules.md          # Detailed coding standards documentation
+├── AHKv2_Rules_README.md   # Guide to the rules system
+├── CHANGELOG.md            # Project version history
+├── Context_Claude.md       # Main context file for Claude prompts
+├── README.md               # This file
+├── Simple_AHKv2_Examples.ahk # Beginner-friendly examples
+├── Using_Cline_for_AHKv2.md # Guide for effective prompting
+│
+├── Data/                   # Reference data and examples
+├── Modules/                # Modular AHK components
+├── System_Prompts/         # Various AI assistant prompts
+├── Tests/                  # Example test scripts
+└── XML/                    # XML templates and data
+```
+
 ## Setup Instructions
 
-1. Launch Claude:
-   - Use either the Claude desktop app or claude.ai
+1. **For Claude Desktop or Web App**:
    - Navigate to the **"Projects"** section
    - Click **"+ Create a New Project"**
-   - Name your project
-
-2. Configure Project Description:
-   ```md
-   You are now a senior AutoHotkey v2 software engineer. Your purpose is to help users write, debug, and optimize AutoHotkey v2 scripts. You have comprehensive knowledge of AutoHotkey v2's features, which you've learned from the examples and reference documents, so you understand AutoHotkey v2's best practices and common patterns. You also avoid all AutoHotkey v1 syntax when writing code. Just the sight of AutoHotkey v1 makes your stomach churn.
-   ```
-
-3. Set Project Instructions:
+   - Name your project (e.g., "AHK v2 Development")
+   - In the project description, use:
+     ```md
+     You are now a senior AutoHotkey v2 software engineer. Your purpose is to help users write, debug, and optimize AutoHotkey v2 scripts. You have comprehensive knowledge of AutoHotkey v2's features, which you've learned from the examples and reference documents, so you understand AutoHotkey v2's best practices and common patterns. You also avoid all AutoHotkey v1 syntax when writing code.
+     ```
    - Click **"Set project instructions"**
    - Copy & paste the contents of `Context_Claude.md` from this repository
-   - Click **"Save Instructions"**
+   - Add additional module files as needed
 
-4. Add Additional Modules (Optional):
-   - Click **"+ Add Content"**
-   - Choose one of the following methods to add supplementary modules:
-     - **GitHub Method:**
-       - Fork or clone this repository
-       - Navigate to your forked/cloned repository and select the modules you want
-       - Directly paste or upload the module files into Claude
+2. **For Cline IDE Integration**:
+   - Clone this repository to your local machine
+   - Configure your .clinerules integration through the Cline VS Code extension
+   - Ensure the rules are available in your project context
 
-     - **Google Drive Method:**
-       - Download the supplementary modules from this repository
-       - Upload them to your Google Drive
-       - Directly paste or upload the module files into Claude from Google Drive
+## Usage Examples
+
+### Basic AHK v2 Script Generation
+
+Ask Claude to generate a basic script while following the rules:
+
+```
+Generate a simple AutoHotkey v2 script that creates a basic GUI with an edit field and button that displays the text when clicked.
+```
+
+### Checking Existing Code
+
+Have Claude analyze existing code against the rules:
+
+```
+Check this code against our .clinerules and suggest improvements:
+
+[your code here]
+```
+
+### Focused Rule Application
+
+Reference specific rule categories:
+
+```
+Following our rules for error handling in AHK v2, create a function that safely attempts to read a settings file and returns default values if it fails.
+```
 
 ## Contributing
 
-Feel free to submit issues and enhancement requests to improve the prompts. I am not an experienced GitHub user, so I am treating this as an opportunity to learn. 
+Contributions are welcome! To contribute:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-improvement`)
+3. Commit your changes (`git commit -am 'Add some amazing improvement'`)
+4. Push to the branch (`git push origin feature/amazing-improvement`)
+5. Create a new Pull Request
+
+Please ensure your contributions:
+- Follow the established code style
+- Include examples where appropriate
+- Update documentation as needed
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a history of changes and improvements.
 
 ## License
 

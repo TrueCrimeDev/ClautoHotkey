@@ -1,0 +1,38 @@
+# AutoHotkey specific
+*.exe
+*.ahk.bak
+*.ahk~
+compiled/
+
+# Debug logs and temporary files
+*.log
+debug.txt
+error_log.txt
+temp/
+*.tmp
+
+# User-specific files
+settings.ini
+user_config.json
+personal_settings.ahk
+
+# Editor specific files
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
+.idea/
+*.sublime-*
+*.code-workspace
+
+# OS specific files
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Project specific
+Data/Private/
+*.private.ahk
+
+# Dependency directories
+node_modules/
+vendor/
