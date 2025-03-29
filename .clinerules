@@ -1,0 +1,615 @@
+{
+    "name": "AutoHotkey v2 Rules",
+    "description": "Guidelines for generating high-quality AHK v2 code",
+    "version": "1.0.0",
+    "categories": [
+        {
+            "name": "Core Syntax",
+            "rules": [
+                {
+                    "id": "ahk-v2-version-header",
+                    "name": "Proper Version Header",
+                    "description": "Always include proper version header and single instance directive",
+                    "pattern": {
+                        "positiveExample": [
+                            "#Requires AutoHotkey v2.1-alpha.16\n#SingleInstance Force"
+                        ],
+                        "negativeExample": [
+                            "; Missing version header"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "#Requires AutoHotkey v2.1-alpha.16\n#SingleInstance Force",
+                            "explanation": "Proper header ensures script runs with the correct AHK version"
+                        }
+                    ],
+                    "severity": "error"
+                },
+                {
+                    "id": "ahk-v2-variable-declaration",
+                    "name": "Explicit Variable Declarations",
+                    "description": "Use explicit global/local declarations and define variables before use",
+                    "pattern": {
+                        "positiveExample": [
+                            "global configVersion := \"1.0\"\nMyFunction() {\n    local counter := 0\n}"
+                        ],
+                        "negativeExample": [
+                            "counter := 0 ; Missing explicit declaration"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "global configVersion := \"1.0\"\nMyFunction() {\n    local counter := 0\n}",
+                            "explanation": "Explicit declarations make variable scope clear and prevent errors"
+                        }
+                    ],
+                    "severity": "warning"
+                },
+                {
+                    "id": "ahk-v2-class-initialization",
+                    "name": "Proper Class Initialization",
+                    "description": "Initialize classes correctly without the 'new' keyword",
+                    "pattern": {
+                        "positiveExample": [
+                            "MyClass() ; Correct class initialization\nclass MyClass {\n    __New() {\n        ; Constructor code\n    }\n}"
+                        ],
+                        "negativeExample": [
+                            "myVar := new MyClass() ; Incorrect - 'new' keyword not needed"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "MyClass() ; Initialize at the top\nclass MyClass {\n    __New() {\n        ; Constructor code\n    }\n}",
+                            "explanation": "In AHK v2, classes are initialized with MyClass(), not new MyClass()"
+                        }
+                    ],
+                    "severity": "error"
+                },
+                {
+                    "id": "ahk-v2-avoid-object-literals",
+                    "name": "Avoid Object Literals for Data Storage",
+                    "description": "Use Map() instead of object literals for key-value data storage",
+                    "pattern": {
+                        "positiveExample": [
+                            "config := Map(\"width\", 800, \"height\", 600)"
+                        ],
+                        "negativeExample": [
+                            "config := {width: 800, height: 600} ; Incorrect object literal"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "config := Map(\"width\", 800, \"height\", 600)",
+                            "explanation": "Using Map() for key-value data is the correct pattern in AHK v2"
+                        }
+                    ],
+                    "severity": "error"
+                },
+                {
+                    "id": "ahk-v2-comment-syntax",
+                    "name": "Proper Comment Syntax",
+                    "description": "Use semicolons for comments, not C-style comments",
+                    "pattern": {
+                        "positiveExample": [
+                            "; This is a correct comment\n/* This is also acceptable\nfor multi-line */",
+                            "; Single line comment"
+                        ],
+                        "negativeExample": [
+                            "// This is incorrect C-style comment"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "; This is a correct comment\n/* This is also acceptable\nfor multi-line */",
+                            "explanation": "Use semicolons for single-line comments and /* */ for multi-line comments"
+                        }
+                    ],
+                    "severity": "warning"
+                },
+                {
+                    "id": "ahk-v2-string-escaping",
+                    "name": "Proper String Escaping",
+                    "description": "Use backtick (`) to escape quotes, not backslash",
+                    "pattern": {
+                        "positiveExample": [
+                            "MsgBox \"He said `\"Hello`\" to me\" ; Correct"
+                        ],
+                        "negativeExample": [
+                            "MsgBox \"He said \\\"Hello\\\" to me\" ; Incorrect"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "MsgBox \"He said `\"Hello`\" to me\"",
+                            "explanation": "AHK v2 uses backtick for escaping, not backslash"
+                        }
+                    ],
+                    "severity": "error"
+                }
+            ]
+        },
+        {
+            "name": "OOP and Class Design",
+            "rules": [
+                {
+                    "id": "ahk-v2-method-binding",
+                    "name": "Proper Method Binding",
+                    "description": "Bind event callbacks to preserve 'this' context",
+                    "pattern": {
+                        "positiveExample": [
+                            "button.OnEvent(\"Click\", this.HandleClick.Bind(this))"
+                        ],
+                        "negativeExample": [
+                            "button.OnEvent(\"Click\", this.HandleClick) ; Will lose 'this' context"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "button.OnEvent(\"Click\", this.HandleClick.Bind(this))",
+                            "explanation": "Using .Bind(this) preserves the class instance context in callbacks"
+                        }
+                    ],
+                    "severity": "error"
+                },
+                {
+                    "id": "ahk-v2-arrow-function-usage",
+                    "name": "Arrow Function Usage",
+                    "description": "Use arrow functions only for simple, single-line expressions",
+                    "pattern": {
+                        "positiveExample": [
+                            "button.OnEvent(\"Click\", (*) => this.gui.Hide())"
+                        ],
+                        "negativeExample": [
+                            "button.OnEvent(\"Click\", (*) => {\n    this.SaveData()\n    this.gui.Hide()\n})"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "button.OnEvent(\"Click\", (*) => this.gui.Hide())",
+                            "explanation": "Arrow functions should only be used for simple expressions, not complex multi-line logic"
+                        }
+                    ],
+                    "severity": "warning"
+                },
+                {
+                    "id": "ahk-v2-property-accessors",
+                    "name": "Proper Property Accessors",
+                    "description": "Use arrow syntax for property accessors",
+                    "pattern": {
+                        "positiveExample": [
+                            "property {\n    get => this._property\n    set => this._property := value\n}"
+                        ],
+                        "negativeExample": [
+                            "property {\n    get {\n        return this._property\n    }\n}"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "property {\n    get => this._property\n    set => this._property := value\n}",
+                            "explanation": "Arrow syntax makes property accessors more concise and readable"
+                        }
+                    ],
+                    "severity": "info"
+                },
+                {
+                    "id": "ahk-v2-static-properties",
+                    "name": "Static Properties for Configuration",
+                    "description": "Use static maps for configuration data that is shared across instances",
+                    "pattern": {
+                        "positiveExample": [
+                            "class Config {\n    static Settings := Map(\n        \"width\", 800,\n        \"height\", 600\n    )\n}"
+                        ],
+                        "negativeExample": [
+                            "class Config {\n    Settings := Map(\n        \"width\", 800,\n        \"height\", 600\n    )\n}"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "class Config {\n    static Settings := Map(\n        \"width\", 800,\n        \"height\", 600\n    )\n}",
+                            "explanation": "Static properties are shared across all instances and are ideal for configuration data"
+                        }
+                    ],
+                    "severity": "info"
+                }
+            ]
+        },
+        {
+            "name": "Data Structures",
+            "rules": [
+                {
+                    "id": "ahk-v2-maps-for-key-value",
+                    "name": "Maps for Key-Value Data",
+                    "description": "Use Maps for key-value data structures",
+                    "pattern": {
+                        "positiveExample": [
+                            "settings := Map(\n    \"title\", \"My Application\",\n    \"version\", \"1.0.0\",\n    \"debug\", true\n)"
+                        ],
+                        "negativeExample": [
+                            "settings := {title: \"My Application\", version: \"1.0.0\", debug: true}"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "settings := Map(\n    \"title\", \"My Application\",\n    \"version\", \"1.0.0\",\n    \"debug\", true\n)",
+                            "explanation": "Maps are the correct data structure for key-value pairs in AHK v2"
+                        }
+                    ],
+                    "severity": "error"
+                },
+                {
+                    "id": "ahk-v2-arrays-for-sequential",
+                    "name": "Arrays for Sequential Data",
+                    "description": "Use arrays for sequential data collections",
+                    "pattern": {
+                        "positiveExample": [
+                            "fruits := [\"apple\", \"banana\", \"orange\"]\nfruits.Push(\"grape\")"
+                        ],
+                        "negativeExample": [
+                            "fruits := {1: \"apple\", 2: \"banana\", 3: \"orange\"}"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "fruits := [\"apple\", \"banana\", \"orange\"]\nfruits.Push(\"grape\")",
+                            "explanation": "Arrays provide indexed access and built-in methods like Push() for sequential data"
+                        }
+                    ],
+                    "severity": "warning"
+                },
+                {
+                    "id": "ahk-v2-classes-for-complex-data",
+                    "name": "Classes for Complex Data",
+                    "description": "Use classes for complex data structures with behavior",
+                    "pattern": {
+                        "positiveExample": [
+                            "class User {\n    Name := \"\"\n    Email := \"\"\n    \n    __New(name, email) {\n        this.Name := name\n        this.Email := email\n    }\n}\n\nusers := []\nusers.Push(User(\"John\", \"john@example.com\"))"
+                        ],
+                        "negativeExample": [
+                            "users := []\nusers.Push(Map(\"name\", \"John\", \"email\", \"john@example.com\"))"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "class User {\n    Name := \"\"\n    Email := \"\"\n    \n    __New(name, email) {\n        this.Name := name\n        this.Email := email\n    }\n}\n\nusers := []\nusers.Push(User(\"John\", \"john@example.com\"))",
+                            "explanation": "Classes provide structure, validation, and behavior for complex data models"
+                        }
+                    ],
+                    "severity": "info"
+                }
+            ]
+        },
+        {
+            "name": "GUI Best Practices",
+            "rules": [
+                {
+                    "id": "ahk-v2-gui-construction",
+                    "name": "OOP GUI Construction",
+                    "description": "Use OOP patterns for GUI construction",
+                    "pattern": {
+                        "positiveExample": [
+                            "class MyGui {\n    __New() {\n        this.gui := Gui(\"+Resize\", \"My Application\")\n        this.gui.SetFont(\"s10\")\n        \n        ; Add controls\n        this.gui.AddText(\"w200\", \"Enter your name:\")\n        this.gui.AddEdit(\"w200 vUserName\")\n        this.gui.AddButton(\"w100 Default\", \"Submit\").OnEvent(\"Click\", this.Submit.Bind(this))\n        \n        ; Set events\n        this.gui.OnEvent(\"Close\", (*) => this.gui.Hide())\n        this.gui.OnEvent(\"Escape\", (*) => this.gui.Hide())\n    }\n    \n    Submit(*) {\n        saved := this.gui.Submit()\n        MsgBox \"Hello, \" saved.UserName\n    }\n    \n    Show(*) => this.gui.Show()\n}"
+                        ],
+                        "negativeExample": [
+                            "myGui := Gui(\"+Resize\", \"My Application\")\nmyGui.AddButton(\"w100\", \"OK\").OnEvent(\"Click\", OkButton)"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "class MyGui {\n    __New() {\n        this.gui := Gui(\"+Resize\", \"My Application\")\n        this.gui.SetFont(\"s10\")\n        \n        ; Add controls\n        this.gui.AddText(\"w200\", \"Enter your name:\")\n        this.gui.AddEdit(\"w200 vUserName\")\n        this.gui.AddButton(\"w100 Default\", \"Submit\").OnEvent(\"Click\", this.Submit.Bind(this))\n        \n        ; Set events\n        this.gui.OnEvent(\"Close\", (*) => this.gui.Hide())\n        this.gui.OnEvent(\"Escape\", (*) => this.gui.Hide())\n    }\n    \n    Submit(*) {\n        saved := this.gui.Submit()\n        MsgBox \"Hello, \" saved.UserName\n    }\n    \n    Show(*) => this.gui.Show()\n}",
+                            "explanation": "Encapsulating GUI creation in classes provides better organization and state management"
+                        }
+                    ],
+                    "severity": "warning"
+                },
+                {
+                    "id": "ahk-v2-event-handling",
+                    "name": "Event Handling",
+                    "description": "Use proper event handling with OnEvent and binding",
+                    "pattern": {
+                        "positiveExample": [
+                            "button.OnEvent(\"Click\", this.HandleClick.Bind(this))",
+                            "this.gui.OnEvent(\"Close\", (*) => this.gui.Hide())"
+                        ],
+                        "negativeExample": [
+                            "button.OnEvent(\"Click\", HandleClick) ; Missing binding and context"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "button.OnEvent(\"Click\", this.HandleClick.Bind(this))",
+                            "explanation": "Event handlers should be bound to maintain the 'this' context"
+                        }
+                    ],
+                    "severity": "error"
+                }
+            ]
+        },
+        {
+            "name": "Error Handling",
+            "rules": [
+                {
+                    "id": "ahk-v2-try-catch",
+                    "name": "Try/Catch Blocks",
+                    "description": "Use try/catch blocks for error handling",
+                    "pattern": {
+                        "positiveExample": [
+                            "try {\n    result := RiskyOperation()\n} catch Error as e {\n    MsgBox \"Error: \" e.Message\n}"
+                        ],
+                        "negativeExample": [
+                            "result := RiskyOperation() ; Missing error handling"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "try {\n    result := RiskyOperation()\n} catch Error as e {\n    MsgBox \"Error: \" e.Message\n}",
+                            "explanation": "Try/catch blocks provide structured error handling for robust code"
+                        }
+                    ],
+                    "severity": "warning"
+                },
+                {
+                    "id": "ahk-v2-error-messages",
+                    "name": "Structured Error Messages",
+                    "description": "Store error messages in static Maps for consistency",
+                    "pattern": {
+                        "positiveExample": [
+                            "class ErrorMessages {\n    static Errors := Map(\n        \"FILE_NOT_FOUND\", \"The specified file could not be found: {1}\",\n        \"INVALID_FORMAT\", \"The file format is invalid\"\n    )\n}\n\ntry {\n    ; Code that might fail\n} catch Error as e {\n    MsgBox ErrorMessages.Errors[\"FILE_NOT_FOUND\"]\n}"
+                        ],
+                        "negativeExample": [
+                            "try {\n    ; Code that might fail\n} catch Error as e {\n    MsgBox \"File not found\"\n}"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "class ErrorMessages {\n    static Errors := Map(\n        \"FILE_NOT_FOUND\", \"The specified file could not be found: {1}\",\n        \"INVALID_FORMAT\", \"The file format is invalid\"\n    )\n}",
+                            "explanation": "Centralizing error messages improves consistency and maintenance"
+                        }
+                    ],
+                    "severity": "info"
+                }
+            ]
+        },
+        {
+            "name": "Common Pitfalls",
+            "rules": [
+                {
+                    "id": "ahk-v2-vs-v1-syntax",
+                    "name": "v2 vs v1 Syntax",
+                    "description": "AHK v2 uses function call syntax with parentheses",
+                    "pattern": {
+                        "positiveExample": [
+                            "MsgBox(\"Text\") ; Correct",
+                            "FileExist(\"file.txt\") ; Returns string, not 1/0"
+                        ],
+                        "negativeExample": [
+                            "MsgBox Text ; Incorrect v1 syntax"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "MsgBox(\"Text\") ; Correct v2 syntax",
+                            "explanation": "AHK v2 uses explicit function call syntax with parentheses"
+                        }
+                    ],
+                    "severity": "error"
+                },
+                {
+                    "id": "ahk-v2-variable-references",
+                    "name": "Variable References",
+                    "description": "No %var% syntax in v2, use direct variable references",
+                    "pattern": {
+                        "positiveExample": [
+                            "MsgBox var ; Correct"
+                        ],
+                        "negativeExample": [
+                            "MsgBox %var% ; Incorrect v1 syntax"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "MsgBox var ; Correct v2 syntax",
+                            "explanation": "AHK v2 uses direct variable references, not %var% syntax"
+                        }
+                    ],
+                    "severity": "error"
+                },
+                {
+                    "id": "ahk-v2-object-access",
+                    "name": "Object Access",
+                    "description": "Use dot notation for methods/properties, bracket notation for Maps",
+                    "pattern": {
+                        "positiveExample": [
+                            "obj.Method() ; For methods and properties",
+                            "map[\"key\"] ; For Map access"
+                        ],
+                        "negativeExample": [
+                            "obj[\"Method\"]() ; Incorrect for methods"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "obj.Method() ; For methods and properties\nmap[\"key\"] ; For Map access",
+                            "explanation": "Use appropriate access syntax for different object types"
+                        }
+                    ],
+                    "severity": "warning"
+                }
+            ]
+        },
+        {
+            "name": "Documentation and Style",
+            "rules": [
+                {
+                    "id": "ahk-v2-code-organization",
+                    "name": "Code Organization",
+                    "description": "Organize code with initialization at the top, grouped methods",
+                    "pattern": {
+                        "positiveExample": [
+                            "MyClass() ; Initialize at the top\n\nclass MyClass {\n    ; Constructor\n    __New() {\n        ; Constructor code\n    }\n    \n    ; Public methods\n    PublicMethod() {\n        this._PrivateMethod()\n    }\n    \n    ; Private methods\n    _PrivateMethod() {\n        ; Implementation\n    }\n}"
+                        ],
+                        "negativeExample": [
+                            "class MyClass {\n    ; Mixed organization\n    _PrivateMethod() {\n        ; Implementation\n    }\n    \n    __New() {\n        ; Constructor code\n    }\n    \n    PublicMethod() {\n        this._PrivateMethod()\n    }\n}"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "MyClass() ; Initialize at the top\n\nclass MyClass {\n    ; Constructor\n    __New() {\n        ; Constructor code\n    }\n    \n    ; Public methods\n    PublicMethod() {\n        this._PrivateMethod()\n    }\n    \n    ; Private methods\n    _PrivateMethod() {\n        ; Implementation\n    }\n}",
+                            "explanation": "Logical organization makes code more readable and maintainable"
+                        }
+                    ],
+                    "severity": "info"
+                },
+                {
+                    "id": "ahk-v2-naming-conventions",
+                    "name": "Naming Conventions",
+                    "description": "Use consistent naming conventions for different elements",
+                    "pattern": {
+                        "positiveExample": [
+                            "class ClassName {\n    methodName() {\n        local _privateVar := 0\n    }\n    \n    _privateMethod() {\n        ; Implementation\n    }\n}"
+                        ],
+                        "negativeExample": [
+                            "class classname {\n    MethodName() {\n        local privateVar := 0\n    }\n}"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "class ClassName {\n    methodName() {\n        local _privateVar := 0\n    }\n    \n    _privateMethod() {\n        ; Implementation\n    }\n}",
+                            "explanation": "Use PascalCase for class names, camelCase for methods, underscore prefix for private elements"
+                        }
+                    ],
+                    "severity": "info"
+                }
+            ]
+        },
+        {
+            "name": "Performance Tips",
+            "rules": [
+                {
+                    "id": "ahk-v2-avoid-unnecessary-object-creation",
+                    "name": "Avoid Unnecessary Object Creation",
+                    "description": "Reuse objects when possible to improve performance",
+                    "pattern": {
+                        "positiveExample": [
+                            "; Initialize once\nthis.settings := Map(\n    \"title\", \"My App\",\n    \"width\", 800\n)\n\n; Reuse the object\nthis.settings[\"height\"] := 600"
+                        ],
+                        "negativeExample": [
+                            "; Recreating objects unnecessarily\nUpdateSettings() {\n    this.settings := Map(\n        \"title\", \"My App\",\n        \"width\", 800,\n        \"height\", 600\n    )\n}"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "; Initialize once\nthis.settings := Map(\n    \"title\", \"My App\",\n    \"width\", 800\n)\n\n; Reuse the object\nthis.settings[\"height\"] := 600",
+                            "explanation": "Reusing objects improves performance by reducing unnecessary allocations"
+                        }
+                    ],
+                    "severity": "info"
+                },
+                {
+                    "id": "ahk-v2-optimize-loops",
+                    "name": "Optimize Loops",
+                    "description": "Use efficient loop patterns and early exits",
+                    "pattern": {
+                        "positiveExample": [
+                            "for key, value in array {\n    if (condition)\n        break ; Exit early\n}"
+                        ],
+                        "negativeExample": [
+                            "Loop array.Length {\n    value := array[A_Index] ; Less efficient indexed access\n}"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "for key, value in array {\n    if (condition)\n        break ; Exit early\n}",
+                            "explanation": "Using for...in loops with early exits optimizes performance"
+                        }
+                    ],
+                    "severity": "info"
+                },
+                {
+                    "id": "ahk-v2-cache-repeated-calculations",
+                    "name": "Cache Repeated Calculations",
+                    "description": "Store results of expensive operations rather than recomputing",
+                    "pattern": {
+                        "positiveExample": [
+                            "; Cache result once\nresult := ExpensiveCalculation()\n\n; Use cached result multiple times\nif (result > 10)\n    DoSomething()\nelse if (result < 5)\n    DoSomethingElse()"
+                        ],
+                        "negativeExample": [
+                            "; Repeated calculations\nif (ExpensiveCalculation() > 10)\n    DoSomething()\nelse if (ExpensiveCalculation() < 5)\n    DoSomethingElse()"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "; Cache result once\nresult := ExpensiveCalculation()\n\n; Use cached result multiple times\nif (result > 10)\n    DoSomething()\nelse if (result < 5)\n    DoSomethingElse()",
+                            "explanation": "Caching results of expensive operations improves performance"
+                        }
+                    ],
+                    "severity": "info"
+                }
+            ]
+        },
+        {
+            "name": "Cline Prompting",
+            "rules": [
+                {
+                    "id": "cline-specify-ahk-v2",
+                    "name": "Specify AHK v2 in Prompts",
+                    "description": "Always explicitly mention AutoHotkey v2 in your prompts",
+                    "pattern": {
+                        "positiveExample": [
+                            "Create an AutoHotkey v2 script (using pure v2 syntax, not v1) that shows a tooltip when pressing Ctrl+Shift+T"
+                        ],
+                        "negativeExample": [
+                            "Create an AutoHotkey script that shows a tooltip when pressing Ctrl+Shift+T"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "Create an AutoHotkey v2 script (using pure v2 syntax, not v1) that shows a tooltip when pressing Ctrl+Shift+T. Use OOP patterns with proper class initialization.",
+                            "explanation": "Being specific about AHK v2 helps ensure you receive modern v2 syntax"
+                        }
+                    ],
+                    "severity": "info"
+                },
+                {
+                    "id": "cline-request-oop",
+                    "name": "Request OOP Approaches",
+                    "description": "Specifically request object-oriented programming patterns",
+                    "pattern": {
+                        "positiveExample": [
+                            "Write an AutoHotkey v2 script that implements a simple note-taking application using OOP principles with proper class structures and Map() for data storage"
+                        ],
+                        "negativeExample": [
+                            "Write an AutoHotkey script for a simple note-taking application"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "Write an AutoHotkey v2 script that implements a simple note-taking application using OOP principles with proper class structures and Map() for data storage.",
+                            "explanation": "Requesting OOP approaches results in more maintainable, modern code"
+                        }
+                    ],
+                    "severity": "info"
+                },
+                {
+                    "id": "cline-request-error-handling",
+                    "name": "Request Specific Error Handling",
+                    "description": "Specify error handling implementation for robust code",
+                    "pattern": {
+                        "positiveExample": [
+                            "Write an AutoHotkey v2 function that reads a JSON file with proper error handling using try/catch and descriptive error messages stored in a Map"
+                        ],
+                        "negativeExample": [
+                            "Write an AutoHotkey function that reads a JSON file"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "code": "Write an AutoHotkey v2 function that reads a JSON file with proper error handling using try/catch and descriptive error messages stored in a Map.",
+                            "explanation": "Requesting specific error handling improves code robustness"
+                        }
+                    ],
+                    "severity": "info"
+                },
+                {
+                    "id": "cline-troubleshooting-requests",
+                    "

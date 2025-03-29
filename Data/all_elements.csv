@@ -1,0 +1,1496 @@
+SourceFile,ElementType,Name,Type,ReturnType,Symbol,Path,Description,Parameters
+BuiltInVariables.xml,Variable,A_Desktop,String,,,,The full path and name of the current user's desktop folder. For example: C:\Users\YourName\Desktop,
+BuiltInVariables.xml,Variable,A_DesktopCommon,String,,,,The full path and name of the all-users desktop folder. For example: C:\Users\Public\Desktop,
+BuiltInVariables.xml,Variable,A_IsAdmin,Integer,,,,"Contains 1 if the current user has admin rights, otherwise 0.",
+BuiltInVariables.xml,Variable,A_AppData,String,,,,The full path and name of the folder containing the current user's application-specific data.,
+BuiltInVariables.xml,Variable,A_AppDataCommon,String,,,,The full path and name of the folder containing the all-users application-specific data.,
+BuiltInVariables.xml,Variable,A_ComputerName,String,,,,The name of the computer as seen on the network.,
+BuiltInVariables.xml,Variable,A_UserName,String,,,,The logon name of the user who launched this script.,
+BuiltInVariables.xml,Variable,A_WinDir,String,,,,The Windows directory. For example: C:\Windows,
+BuiltInVariables.xml,Variable,A_ProgramFiles,String,,,,The Program Files directory (e.g. C:\Program Files or C:\Program Files (x86)). This is usually the same as the ProgramFiles environment variable.,
+BuiltInVariables.xml,Variable,A_Temp,String,,,,The full path and name of the folder designated to hold temporary files.,
+BuiltInVariables.xml,Variable,A_WorkingDir,String,,,,"Can be used to get or set the script's current working directory, which is where files will be accessed by default.",
+Classes.xml,Method,.Base,,Prototype,,,; Retrieves the value's base object.,
+Directives.xml,Directive,#ClipboardTimeout,,,,,Changes how long the script keeps trying to access the clipboard when the first attempt fails.,Required Milliseconds(Unknown)
+Directives.xml,Directive,#DllLoad,,,,,Loads a DLL or EXE file before the script starts executing.,Optional FileOrDirName(Unknown)
+Directives.xml,Directive,#ErrorStdOut,,,,,Sends any syntax error that prevents a script from launching to the standard error stream (stderr) rather than displaying a dialog.,Optional Encoding(Unknown)
+Directives.xml,Directive,#Hotstring,,,,,Changes hotstring options or ending characters.,Required NoMouse(Unknown)
+Directives.xml,Directive,#Hotstring,,,,,Changes hotstring options or ending characters.,Required EndChars NewChars(Unknown)
+Directives.xml,Directive,#Hotstring,,,,,Changes hotstring options or ending characters.,Required NewOptions(Unknown)
+Directives.xml,Directive,#HotIf,,,,,Creates context-sensitive hotkeys and hotstrings. Such hotkeys perform a different action (or none at all) depending on any condition (an expression).,Optional Expression(Unknown)
+Directives.xml,Directive,#HotIfTimeout,,,,,Sets the maximum time that may be spent evaluating a single #HotIf expression.,Required Timeout(Unknown)
+Directives.xml,Directive,#Include,,,,,Causes the script to behave as though the specified file's contents are present at this exact position.,Required FileOrDirName(Unknown)
+Directives.xml,Directive,#Include,,,,,Causes the script to behave as though the specified file's contents are present at this exact position.,Required LibName(Unknown)
+Directives.xml,Directive,#IncludeAgain,,,,,Causes the script to behave as though the specified file's contents are present at this exact position.,Required FileOrDirName(Unknown)
+Directives.xml,Directive,#InputLevel,,,,,Controls which artificial keyboard and mouse events are ignored by hotkeys and hotstrings.,Optional Level(Unknown)
+Directives.xml,Directive,#MaxThreads,,,,,Sets the maximum number of simultaneous threads.,Required Value(Unknown)
+Directives.xml,Directive,#MaxThreadsBuffer,,,,,Causes some or all hotkeys to buffer rather than ignore keypresses when their #MaxThreadsPerHotkey limit has been reached.,Optional Setting(Unknown)
+Directives.xml,Directive,#MaxThreadsPerHotkey,,,,,Sets the maximum number of simultaneous threads per hotkey or hotstring.,Required Value(Unknown)
+Directives.xml,Directive,#NoTrayIcon,,,,,Disables the showing of a tray icon.,
+Directives.xml,Directive,#Requires,,,,,Displays an error and quits if a version requirement is not met.,Required Requirement(Unknown)
+Directives.xml,Directive,#SingleInstance,,,,,Determines whether a script is allowed to run again when it is already running.,Optional ForceIgnorePromptOff(Unknown)
+Directives.xml,Directive,#SuspendExempt,,,,,Exempts subsequent hotkeys and hotstrings from suspension.,Optional Setting(Unknown)
+Directives.xml,Directive,#UseHook,,,,,Forces the use of the hook to implement all or some keyboard hotkeys.,Optional Setting(Unknown)
+Directives.xml,Directive,#Warn,,,,,"Enables or disables warnings for specific conditions which may indicate an error, such as a typo or missing ""global"" declaration.",Required [WarningType(Unknown); Required WarningMode](Unknown)
+Directives.xml,Directive,#WinActivateForce,,,,,Skips the gentle method of activating a window and goes straight to the forceful method.,
+FlowControls.xml,FlowControl,Break,,,,,,Optional label(Unknown)
+FlowControls.xml,FlowControl,Catch,,,,,,
+FlowControls.xml,FlowControl,Continue,,,,,,Optional LoopLabel(Unknown)
+FlowControls.xml,FlowControl,Else,,,,,,
+FlowControls.xml,FlowControl,Finally,,,,,,
+FlowControls.xml,FlowControl,For,,,,,,
+FlowControls.xml,FlowControl,Goto,,,,,,Required Label(Unknown)
+FlowControls.xml,FlowControl,If,,,,,,
+FlowControls.xml,FlowControl,Loop,,,,,,Optional Count(Unknown)
+FlowControls.xml,FlowControl,Loop,,,,,,
+FlowControls.xml,FlowControl,Loop,,,,,,
+FlowControls.xml,FlowControl,Loop,,,,,,
+FlowControls.xml,FlowControl,Loop,,,,,,
+FlowControls.xml,FlowControl,Return,,,,,,
+FlowControls.xml,FlowControl,Switch,,,,,,
+FlowControls.xml,FlowControl,Throw,,,,,,Optional Value(Unknown)
+FlowControls.xml,FlowControl,Try,,,,,,
+FlowControls.xml,FlowControl,Until,,,,,,Required Expression(Unknown)
+FlowControls.xml,FlowControl,While,,,,,,Required Expression(Unknown)
+Functions.xml,Parameters,Parameters_{},,,,,,
+Functions.xml,Method,ACos(Num),,Number,,,; Returns the arccosine (the number whose cosine is the specified number) in radians.,
+Functions.xml,Method,ASin(Num),,Number,,,; Returns the arcsine (the number whose sine is the specified number) in radians.,
+Functions.xml,Method,ATan(Num),,Number,,,; Returns the arctangent (the number whose tangent is the specified number) in radians.,
+Functions.xml,Method,BlockInput(OnOff/SendMouse/MouseMove),,Empty,,,String                                                                                       ; Disables or enables the user's ability to interact with the computer via keyboard and mouse.,
+Functions.xml,Method,"CallbackCreate(Function [, Options, ParamCount])",,Integer,,,"; Creates a machine-code address that when called, redirects the call to a function in the script.",
+Functions.xml,Method,CallbackFree(Address),,EmptyString,,,; Deletes a callback and releases its reference to the function object.,
+Functions.xml,Method,"CaretGetPos([&OutX, &OutY])",,Integer,,,; Retrieves the current position of the caret (text insertion point).,
+Functions.xml,Method,Ceil(Num),,Number,,,; Returns the specified number rounded up to the nearest integer (without any .00 suffix).,
+Functions.xml,Method,Chr(Num),,String,,,; Returns the string (usually a single character) corresponding to the character code indicated by the specified number.,
+Functions.xml,Method,Click(options),,Integer,,,"; Clicks a mouse button at the specified coordinates. It can also hold down a mouse button, turn the mouse wheel, or move the mouse.",
+Functions.xml,Method,"ClipWait([Timeout, WaitFor])",,Integer,,,; Waits until the clipboard contains data.,
+Functions.xml,Method,"ComCall(Index, ComObj [, Type1, Arg1, TypeN, ArgN, ReturnType])",,Primitive,,,; Calls a native COM interface method by index.,
+Functions.xml,Method,ComObjActive(CLSID),,ComObject,,,; Retrieves a registered COM object.,
+Functions.xml,Method,"ComObjConnect(ComObj [, PrefixOrSink])",,Any,,,"; Connects a COM object's event source to the script, enabling events to be handled.",
+Functions.xml,Method,"ComObjFlags(ComObj [, NewFlags, Mask])",,Integer,,,; Retrieves or changes flags which control a COM wrapper object's behaviour.,
+Functions.xml,Method,ComObjFromPtr(DispPtr),,ComObject,,,; Wraps a raw IDispatch pointer (COM object) for use by the script.,
+Functions.xml,Method,ComObjGet(Name),,ComObject,,,; Returns a reference to an object provided by a COM component.,
+Functions.xml,Method,"ComObjQuery(ComObj, IID)",,ComObject,,,OR ComValue                                                                                           ; Queries a COM object for an interface. Return value type is based on IID.,
+Functions.xml,Method,"ComObjQuery(ComObj, SID, IID)",,ComObject,,,OR ComValue                                                                                      ; Queries a COM object for a service. Return value type is based on IID.,
+Functions.xml,Method,"ComObjType(ComObj [, InfoType])",,Primitive,,,; Retrieves type information from a COM object.,
+Functions.xml,Method,ComObjValue(ComObj),,Integer,,,; Retrieves the value or pointer stored in a COM wrapper object.,
+Functions.xml,Method,"ControlAddItem(String, Control [, WinTitle, WinText, NotInTitle, NotInText])",,Integer,,,; Adds the specified string as a new entry at the bottom of a ListBox or ComboBox.,
+Functions.xml,Method,"ControlChooseIndex(N, Control [, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,"; Sets the selection in a ListBox, ComboBox or Tab control to be the Nth item.",
+Functions.xml,Method,"ControlChooseString(String, Control [, WinTitle, WinText, NotInTitle, NotInText])",,Integer,,,; Sets the selection in a ListBox or ComboBox to be the first entry whose leading part matches the specified string.,
+Functions.xml,Method,"ControlClick([ControlOrPos, WinTitle, WinText, Button, ClickCount, Options, NotInTitle, NotInText])",,EmptyString,,,; Sends a mouse button or mouse wheel event to a control.,
+Functions.xml,Method,"ControlDeleteItem(N, Control [, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Deletes the specified entry number from a ListBox or ComboBox.,
+Functions.xml,Method,"ControlFindItem(String, Control [, WinTitle, WinText, NotInTitle, NotInText])",,Integer,,,; Returns the entry number of a ListBox or ComboBox that is a complete match for the specified string.,
+Functions.xml,Method,"ControlFocus(Control [, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Sets input focus to a given control on a window.,
+Functions.xml,Method,"ControlGetChecked(Control [, WinTitle, WinText, NotInTitle, NotInText])",,Integer,,,; Returns a non-zero value if the checkbox or radio button is checked.,
+Functions.xml,Method,"ControlGetChoice(Control [, WinTitle, WinText, NotInTitle, NotInText])",,String,,,; Returns the name of the currently selected entry in a ListBox or ComboBox.,
+Functions.xml,Method,"ControlGetClassNN(Control [, WinTitle, WinText, NotInTitle, NotInText])",,String,,,; Returns the ClassNN (class name and sequence number) of the specified control.,
+Functions.xml,Method,"ControlGetEnabled(Control [, WinTitle, WinText, NotInTitle, NotInText])",,Integer,,,; Returns a non-zero value if the specified control is enabled.,
+Functions.xml,Method,"ControlGetExStyle(Control [, WinTitle, WinText, NotInTitle, NotInText])",,Integer,,,; Returns an integer representing the style or extended style of the specified control.,
+Functions.xml,Method,"ControlGetFocus([WinTitle, WinText, NotInTitle, NotInText])",,Integer,,,"; Retrieves which control of the target window has keyboard focus, if any.",
+Functions.xml,Method,"ControlGetHwnd(Control [, WinTitle, WinText, NotInTitle, NotInText])",,Integer,,,; Returns the unique ID number of the specified control.,
+Functions.xml,Method,"ControlGetIndex(Control [, WinTitle, WinText, NotInTitle, NotInText])",,Integer,,,"; Returns the index of the currently selected entry or tab in a ListBox, ComboBox or Tab control.",
+Functions.xml,Method,"ControlGetItems(Control [, WinTitle, WinText, NotInTitle, NotInText])",,Array,,,"; Returns an array of items/rows from a ListBox, ComboBox, or DropDownList.",
+Functions.xml,Method,"ControlGetPos([&OutX, &OutY, &OutWidth, &OutHeight, Control, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Retrieves the position and size of a control.,
+Functions.xml,Method,"ControlGetStyle(Control [, WinTitle, WinText, NotInTitle, NotInText])",,Integer,,,; Returns an integer representing the style or extended style of the specified control.,
+Functions.xml,Method,"ControlGetText(Control [, WinTitle, WinText, NotInTitle, NotInText])",,String,,,; Retrieves text from a control.,
+Functions.xml,Method,"ControlGetVisible(Control [, WinTitle, WinText, NotInTitle, NotInText])",,Integer,,,; Returns a non-zero value if the specified control is visible.,
+Functions.xml,Method,"ControlHide(Control [, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Hides the specified control.,
+Functions.xml,Method,"ControlHideDropDown(Control [, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Hides the drop-down list of a ComboBox control.,
+Functions.xml,Method,"ControlMove([X, Y, Width, Height, Control, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Moves or resizes a control.,
+Functions.xml,Method,"ControlSend(Keys [, Control, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Sends simulated keystrokes to a window or control.,
+Functions.xml,Method,"ControlSendText(Keys [, Control, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Sends text to a window or control.,
+Functions.xml,Method,"ControlSetChecked(NewSetting, Control [, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Turns on (checks) or turns off (unchecks) a checkbox or radio button.,
+Functions.xml,Method,"ControlSetEnabled(NewSetting, Control [, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Enables or disables the specified control.,
+Functions.xml,Method,"ControlSetExStyle(Value, Control [, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Changes the extended style of the specified control.,
+Functions.xml,Method,"ControlSetStyle(Value, Control [, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Changes the style of the specified control.,
+Functions.xml,Method,"ControlSetText(NewText, Control [, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Changes the text of a control.,
+Functions.xml,Method,"ControlShow(Control [, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Shows the specified control if it was previously hidden.,
+Functions.xml,Method,"ControlShowDropDown(Control [, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Shows the drop-down list of a ComboBox control.,
+Functions.xml,Method,"CoordMode(TargetType [, RelativeTo])",,String,,,; Sets coordinate mode for various built-in functions to be relative to either the active window or the screen.,
+Functions.xml,Method,Cos(num),,Number,,,; Returns the trigonometric cosine of the specified number.,
+Functions.xml,Method,Critical(OnOffNumeric),,Integer,,,"; Prevents the current thread from being interrupted by other threads, or enables it to be interrupted.",
+Functions.xml,Method,"DateAdd(DateTime, Time, TimeUnits)",,String,,,; Adds or subtracts time from a date-time value.,
+Functions.xml,Method,"DateDiff(DateTime1, DateTime2, TimeUnits)",,Integer,,,; Compares two date-time values and returns the difference.,
+Functions.xml,Method,DetectHiddenText(Mode),,Integer,,,"; Determines whether invisible text in a window is ""seen"" for the purpose of finding the window. This affects windowing functions such as WinExist and WinActivate.",
+Functions.xml,Method,DetectHiddenWindows(Mode),,Integer,,,"; Determines whether invisible windows are ""seen"" by the script.",
+Functions.xml,Method,"DirCopy(Source, Dest [, Overwrite])",,EmptyString,,,; Copies a folder along with all its sub-folders and files (similar to xcopy).,
+Functions.xml,Method,DirCreate(DirName),,EmptyString,,,; Creates a folder.,
+Functions.xml,Method,"DirDelete(DirName [, Recurse])",,EmptyString,,,; Deletes a folder.,
+Functions.xml,Method,DirExist(FilePattern),,String,,,; Checks for the existence of a folder and returns its attributes.,
+Functions.xml,Method,"DirMove(Source, Dest [, OverwriteOrRename])",,EmptyString,,,; Moves a folder along with all its sub-folders and files. It can also rename a folder.,
+Functions.xml,Method,"DirSelect([StartingFolder, Options, Prompt])",,String,,,; Displays a standard dialog that allows the user to select a folder.,
+Functions.xml,Method,"DllCall(['DllNameOrPath\'] Function [, Type1, Arg1, TypeN, ArgM, CdeclReturnType])",,Primitive,,,"; Calls a function inside a DLL, such as a standard Windows API function.",
+Functions.xml,Method,"Download(URL, Filename)",,EmptyString,,,; Downloads a file from the Internet.,
+Functions.xml,Method,DriveEject(Drive),,EmptyString,,,; Ejects the tray of the specified CD/DVD drive. DriveEject can also eject a removable drive like a USB stick.,
+Functions.xml,Method,DriveGetCapacity(Path),,Integer,,,"; Returns the total capacity of the drive which contains the specified path, in megabytes.",
+Functions.xml,Method,DriveGetFileSystem(Drive),,String,,,; Returns the type of the specified drive's file system.,
+Functions.xml,Method,DriveGetLabel(Drive),,String,,,; Returns the volume label of the specified drive.,
+Functions.xml,Method,DriveGetList(DriveType),,String,,,"; Returns a string of letters, one character for each drive letter in the system.",
+Functions.xml,Method,DriveGetSerial(Drive),,Integer,,,; Returns the volume serial number of the specified drive.,
+Functions.xml,Method,DriveGetSpaceFree(Path),,Integer,,,"; Returns the free disk space of the drive which contains the specified path, in megabytes.",
+Functions.xml,Method,DriveGetStatus(Path),,String,,,; Returns the status of the drive which contains the specified path.,
+Functions.xml,Method,DriveGetStatusCD([Drive]),,String,,,; Returns the media status of the specified CD/DVD drive.,
+Functions.xml,Method,DriveGetType(Path),,String,,,; Returns the type of the drive which contains the specified path.,
+Functions.xml,Method,DriveLock(Drive),,EmptyString,,,; Prevents the eject feature of the specified drive from working.,
+Functions.xml,Method,DriveRetract(Drive),,EmptyString,,,; Retracts the tray of the specified CD/DVD drive.,
+Functions.xml,Method,"DriveSetLabel(Drive [, NewLabel])",,EmptyString,,,; Changes the volume label of the specified drive.,
+Functions.xml,Method,DriveUnlock(Drive),,EmptyString,,,; Restores the eject feature of the specified drive.,
+Functions.xml,Method,Edit(),,EmptyString,,,; Opens the current script for editing in the default editor.,
+Functions.xml,Method,"EditGetCurrentCol(Control [, WinTitle, WinText, NotInTitle, NotInText])",,Integer,,,; Returns the column number in an Edit control where the caret (text insertion point) resides.,
+Functions.xml,Method,"EditGetCurrentLine(Control [, WinTitle, WinText, NotInTitle, NotInText])",,Integer,,,; Returns the line number in an Edit control where the caret (text insert point) resides.,
+Functions.xml,Method,"EditGetLine(N, Control [, WinTitle, WinText, NotInTitle, NotInText])",,String,,,; Returns the text of the specified line in an Edit control.,
+Functions.xml,Method,"EditGetLineCount(Control [, WinTitle, WinText, NotInTitle, NotInText])",,Integer,,,; Returns the number of lines in an Edit control.,
+Functions.xml,Method,"EditGetSelectedText(Control [, WinTitle, WinText, NotInTitle, NotInText])",,String,,,; Returns the selected text in an Edit control.,
+Functions.xml,Method,"EditPaste(String, Control [, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Pastes the specified string at the caret (text insertion point) in an Edit control.,
+Functions.xml,Method,EnvGet(EnvVar),,String,,,; Retrieves the value of the specified environment variable.,
+Functions.xml,Method,"EnvSet(EnvVar [, Value])",,EmptyString,,,; Writes a value to the specified environment variable.,
+Functions.xml,Method,Exit(ExitCode),,Integer,,,; Exits the current thread.,
+Functions.xml,Method,ExitApp(ExitCode),,Integer,,,; Terminates the script.,
+Functions.xml,Method,Exp(Num),,Number,,,; Returns the result of raising e (which is approximately 2.71828182845905) to the Nth power.,
+Functions.xml,Method,"FileAppend(Text [, Filename, Options])",,EmptyString,,,"; Writes text or binary data to the end of a file (first creating the file, if necessary).",
+Functions.xml,Method,"FileCopy(SourcePattern, DestPattern [, Overwrite])",,EmptyString,,,; Copies one or more files.,
+Functions.xml,Method,"FileCreateShortcut(Target, LinkFile [, WorkingDir, Args, Description, IconFile, ShortcutKey, IconNumber, RunState])",,EmptyString,,,; Creates a shortcut (.lnk) file.,
+Functions.xml,Method,FileDelete(FilePattern),,EmptyString,,,; Deletes one or more files.,
+Functions.xml,Method,FileEncoding(Encoding),,String,,,"; Sets the default encoding for FileRead, Loop Read, FileAppend, and FileOpen.",
+Functions.xml,Method,FileExist(FilePattern),,String,,,; Checks for the existence of a file or folder and returns its attributes.,
+Functions.xml,Method,FileGetAttrib([Filename]),,String,,,"; Reports whether a file or folder is read-only, hidden, etc.",
+Functions.xml,Method,"FileGetShortcut(LinkFile [, &OutTarget, &OutDir, &OutArgs, &OutDescription, &OutIcon, &OutIconNum, &OutRunState])",,EmptyString,,,"; Retrieves information about a shortcut (.lnk) file, such as its target file.",
+Functions.xml,Method,"FileGetSize([Filename, Units])",,Integer,,,; Retrieves the size of a file.,
+Functions.xml,Method,"FileGetTime([Filename, WhichTime])",,String,,,; Retrieves the datetime stamp of a file or folder.,
+Functions.xml,Method,FileGetVersion([Filename]),,String,,,; Retrieves the version of a file.,
+Functions.xml,Method,"FileInstall(Source, Dest [, Overwrite])",,EmptyString,,,; Includes the specified file inside the compiled version of the script.,
+Functions.xml,Method,"FileMove(SourcePattern, DestPattern [, Overwrite])",,EmptyString,,,; Moves or renames one or more files.,
+Functions.xml,Method,"FileOpen(Filename, Flags [, Encoding])",,File,,,; Opens a file to read specific content from it and/or to write new content into it.,
+Functions.xml,Method,"FileRead(Filename [, Options])",,String,,,OR Buffer                                                                                          ; Retrieves the contents of a file.,
+Functions.xml,Method,FileRecycle(FilePattern),,EmptyString,,,"; Sends a file or directory to the recycle bin if possible, or permanently deletes it.",
+Functions.xml,Method,FileRecycleEmpty([DriveLetter]),,EmptyString,,,; Empties the recycle bin.,
+Functions.xml,Method,"FileSelect([Options, RootDir\Filename, Title, Filter])",,String,,,or Array                                                                   ; Displays a standard dialog that allows the user to open or save file(s).,
+Functions.xml,Method,"FileSetAttrib(Attributes [, FilePattern, Mode])",,EmptyString,,,; Changes the attributes of one or more files or folders. Wildcards are supported.,
+Functions.xml,Method,"FileSetTime([YYYYMMDDHH24MISS, FilePattern, WhichTime, Mode])",,EmptyString,,,; Changes the datetime stamp of one or more files or folders. Wildcards are supported.,
+Functions.xml,Method,Floor(Num),,Integer,,,; Returns the specified number rounded down to the nearest integer (without any .00 suffix).,
+Functions.xml,Method,"Format(FormatStr [, Val1, ..., ValN])",,String,,,; Formats a variable number of input values according to a format string.,
+Functions.xml,Method,"FormatTime([YYYYMMDDHH24MISS, Format])",,String,,,; Transforms a YYYYMMDDHH24MISS timestamp into the specified date/time format.,
+Functions.xml,Method,GetKeyName(KeyName),,String,,,; Retrieves the name/text of a key.,
+Functions.xml,Method,GetKeySC(KeyName),,Integer,,,; Retrieves the scan code of a key.,
+Functions.xml,Method,"GetKeyState(KeyName [, Mode])",,Primitive,,,; Returns 1 (true) or 0 (false) depending on whether the specified keyboard key or mouse/controller button is down or up. Also retrieves controller status.,
+Functions.xml,Method,GetKeyVK(KeyName),,Integer,,,; Retrieves the virtual key code of a key.,
+Functions.xml,Method,"GetMethod(Value [, Name, ParamCount])",,Func,,,; Retrieves the implementation function of a method.,
+Functions.xml,Method,"GroupActivate(GroupName [, Mode])",,Integer,,,; Activates the next window in a window group that was defined with GroupAdd.,
+Functions.xml,Method,"GroupAdd(GroupName [, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,"; Adds a window specification to a window group, creating the group if necessary.",
+Functions.xml,Method,"GroupClose(GroupName [, Mode])",,EmptyString,,,; Closes the active window if it was just activated by GroupActivate or GroupDeactivate. It then activates the next window in the series. It can also close all windows in a group.,
+Functions.xml,Method,"GroupDeactivate(GroupName [, Mode])",,EmptyString,,,; Similar to GroupActivate except activates the next window not in the group.,
+Functions.xml,Method,GuiCtrlFromHwnd(Hwnd),,Gui,,,.Control                                                                                                        ; Retrieves the GuiControl object of a GUI control associated with the specified window handle.,
+Functions.xml,Method,"GuiFromHwnd(Hwnd [, RecurseParent])",,Gui,,,; Retrieves the Gui object of a GUI window associated with the specified window handle.,
+Functions.xml,Method,"HasBase(Value, BaseObj)",,Integer,,,; Returns true if the specified base object is in the value's chain of base objects.,
+Functions.xml,Method,"HasMethod(Value, Name, ParamCount)",,Integer,,,; Returns true if the value has a method by this name.,
+Functions.xml,Method,"HasProp(Value, Name)",,Integer,,,; Returns true if the value has a property by this name.,
+Functions.xml,Method,HotIf(ExpressionOrCallback),,EmptyString,,,; Specifies the criteria for subsequently created or modified hotkey variants and hotstring variants.,
+Functions.xml,Method,"HotIfWinActive(WinTitle, WinText)",,EmptyString,,,; Specifies the criteria for subsequently created or modified hotkey variants and hotstring variants.,
+Functions.xml,Method,"HotIfWinExist(WinTitle, WinText)",,EmptyString,,,; Specifies the criteria for subsequently created or modified hotkey variants and hotstring variants.,
+Functions.xml,Method,"HotIfWinNotActive(WinTitle, WinText)",,EmptyString,,,; Specifies the criteria for subsequently created or modified hotkey variants and hotstring variants.,
+Functions.xml,Method,"HotIfWinNotExist(WinTitle, WinText)",,EmptyString,,,; Specifies the criteria for subsequently created or modified hotkey variants and hotstring variants.,
+Functions.xml,Method,"Hotkey(KeyName [, Action, Options])",,EmptyString,,,"; Creates, modifies, enables, or disables a hotkey while the script is running.",
+Functions.xml,Method,"Hotstring(String [, Replacement, OnOffToggle])",,EmptyString,,,"; Creates, modifies, enables, or disables a hotstring while the script is running.",
+Functions.xml,Method,Hotstring(NewOptions),,EmptyString,,,"; Creates, modifies, enables, or disables a hotstring while the script is running.",
+Functions.xml,Method,"Hotstring(SubFunction [, Value])",,EmptyString,,,"; Creates, modifies, enables, or disables a hotstring while the script is running.",
+Functions.xml,Method,"IL_Add(ImageListID, IconFileName [, IconNumber])",,Integer,,,; Adds an icon or picture to the specified ImageList.,
+Functions.xml,Method,"IL_Add(ImageListID, PicFileName, MaskColor, Resize)",,Integer,,,; Adds an icon or picture to the specified ImageList.,
+Functions.xml,Method,"IL_Create([InitialCount, GrowCount, LargeIcons])",,Integer,,,; Creates a new ImageList that is initially empty.,
+Functions.xml,Method,IL_Destroy(ImageListID),,Integer,,,; Deletes the specified ImageList.,
+Functions.xml,Method,"ImageSearch(&OutX, &OutY, X1, Y1, X2, Y2, ImageFile)",,Integer,,,; Searches a region of the screen for an image.,
+Functions.xml,Method,"IniDelete(Filename, Section [, Key])",,EmptyString,,,; Deletes a value from a standard format .ini file.,
+Functions.xml,Method,"IniRead(Filename, Section, Key [, Default])",,String,,,; Reads a value from a standard format .ini file.,
+Functions.xml,Method,"IniRead(Filename, Section)",,String,,,; Reads a section from a standard format .ini file.,
+Functions.xml,Method,IniRead(Filename),,String,,,; Reads a list of section names from a standard format .ini file.,
+Functions.xml,Method,"IniWrite(Value, Filename, Section, Key)",,EmptyString,,,; Writes a value or section to a standard format .ini file.,
+Functions.xml,Method,"IniWrite(Value, Filename, Section)",,EmptyString,,,; Writes a value or section to a standard format .ini file.,
+Functions.xml,Method,"InputBox([Prompt, Title, Options, Default])",,Object,,,; Displays an input box to ask the user to enter a string.,
+Functions.xml,Method,"InstallKeybdHook([Install, Force])",,EmptyString,,,; Installs or uninstalls the keyboard hook.,
+Functions.xml,Method,"InstallMouseHook([Install, Force])",,EmptyString,,,; Installs or uninstalls the mouse hook.,
+Functions.xml,Method,"InStr(Haystack, Needle [, CaseSense, StartingPos, Occurrence])",,Integer,,,"; Searches for a given occurrence of a string, from the left or the right.",
+Functions.xml,Method,IsLabel(LabelName),,Integer,,,; Returns a non-zero number if the specified label exists in the current scope.,
+Functions.xml,Method,IsObject(Value),,Integer,,,; Returns a non-zero number if the specified value is an object.,
+Functions.xml,Method,IsSet(Var),,Integer,,,; Returns a non-zero number if the specified variable has been assigned a value.,
+Functions.xml,Method,IsSetRef(&Ref),,Integer,,,; Returns a non-zero number if the specified var ref has been assigned a value.,
+Functions.xml,Method,KeyHistory([MaxEvents]),,EmptyString,,,; Displays script info and a history of the most recent keystrokes and mouse clicks.,
+Functions.xml,Method,"KeyWait(KeyName [, Options])",,Integer,,,; Waits for a key or mouse/controller button to be released or pressed down.,
+Functions.xml,Method,ListHotkeys(),,EmptyString,,,"; Displays the hotkeys in use by the current script, whether their subroutines are currently running, and whether or not they use the keyboard or mouse hook.",
+Functions.xml,Method,ListLines([Mode]),,Integer,,,; Enables or disables line logging or displays the script lines most recently executed.,
+Functions.xml,Method,ListVars(),,EmptyString,,,; Displays the script's variables: their names and current contents.,
+Functions.xml,Method,"ListViewGetContent([Options, Control, WinTitle, WinText, NotInTitle, NotInText])",,String,,,; Returns a list of items/rows from a ListView.,
+Functions.xml,Method,Ln(Num),,Number,,,; Returns the natural logarithm (base e) of the specified number.,
+Functions.xml,Method,"LoadPicture(Filename [, Options, &OutImageType])",,Integer,,,; Loads a picture from file and returns a bitmap or icon handle.,
+Functions.xml,Method,Log(Num),,Number,,,; Returns the logarithm (base 10) of the specified number.,
+Functions.xml,Method,"LTrim(String [, OmitChars])",,String,,,; Trims characters from the beginning and/or end of a string.,
+Functions.xml,Method,"Max(Number1 [, Number2, ..., NumberN])",,Number,,,; Returns the highest number from a set of numbers.,
+Functions.xml,Method,MenuFromHandle(Handle),,Menu,,,OR MenuBar                                                                                                   ; Retrieves the Menu or MenuBar object corresponding to a Win32 menu handle.,
+Functions.xml,Method,"MenuSelect(WinTitle, WinText, Menu [, SubMenu1, SubMenu2, SubMenu3, SubMenu4, SubMenu5, SubMenu6, NotInTitle, NotInText])",,EmptyString,,,; Invokes a menu item from the menu bar of the specified window.,
+Functions.xml,Method,"Min(Number1 [, Number2, ..., NumberN])",,Number,,,; Returns the lowest number from a set of numbers.,
+Functions.xml,Method,"Mod(Dividend, Divisor)",,Number,,,; Modulo. Returns the remainder of a number (dividend) divided by another number (divisor).,
+Functions.xml,Method,"MonitorGet([N, &Left, &Top, &Right, &Bottom])",,Integer,,,; Checks if the specified monitor exists and optionally retrieves its bounding coordinates.,
+Functions.xml,Method,MonitorGetCount(),,Integer,,,; Returns the total number of monitors.,
+Functions.xml,Method,MonitorGetName([Num]),,String,,,; Returns the operating system's name of the specified monitor.,
+Functions.xml,Method,MonitorGetPrimary(),,Integer,,,; Returns the number of the primary monitor.,
+Functions.xml,Method,"MonitorGetWorkArea([N, &Left, &Top, &Right, &Bottom])",,Integer,,,; Checks if the specified monitor exists and optionally retrieves the bounding coordinates of its working area.,
+Functions.xml,Method,"MouseClick([WhichButton, X, Y, ClickCount, Speed, DownOrUp, Relative])",,EmptyString,,,"; Clicks or holds down a mouse button, or turns the mouse wheel. Note: The Click function is generally more flexible and easier to use.",
+Functions.xml,Method,"MouseClickDrag([WhichButton], X1, Y1, X2, Y2 [, Speed, Relative])",,EmptyString,,,"; Clicks and holds the specified mouse button at x1 y1, drags to x2 y2, and releases button.",
+Functions.xml,Method,"MouseClickDrag([WhichButton], , , X2, Y2 [, Speed, Relative])",,EmptyString,,,"; Clicks and holds the specified mouse button at the current x y coordinate, drags to x2 y2, and releases button.",
+Functions.xml,Method,"MouseGetPos(OutX, &OutY, &OutWin, &OutControl, Flag)",,EmptyString,,,"; Retrieves the current position of the mouse cursor, and optionally which window and control it is hovering over.",
+Functions.xml,Method,"MouseMove(X, Y [, Speed, Relative])",,EmptyString,,,; Moves the mouse cursor.,
+Functions.xml,Method,"MsgBox([Text, Title, Options])",,String,,,; Displays the specified text in a small window containing one or more buttons (such as Yes and No).,
+Functions.xml,Method,"NumGet(Source, Offset, Type)",,Number,,,; Returns the binary number stored at the specified address+offset.,
+Functions.xml,Method,"NumGet(Source, Type)",,Number,,,; Returns the binary number stored at the specified address+offset.,
+Functions.xml,Method,"NumPut(Type1, Number1 [, ..., TypeN, NumberN,] Target [, Offset])",,Integer,,,; Stores one or more numbers in binary format at the specified address+offset.,
+Functions.xml,Method,ObjAddRef(Ptr),,Integer,,,; Increments an object's reference count.,
+Functions.xml,Method,"ObjBindMethod(Obj [, Method, Params])",,BoundFunc,,,; Creates a BoundFunc object which calls a method of a given object.,
+Functions.xml,Method,ObjGetBase(Value),,Prototype,,,; Returns the value's base object.,
+Functions.xml,Method,ObjGetCapacity(Obj),,Integer,,,; ObjSetCapacity: Retrieve or set an Object's capacity to contain properties.,
+Functions.xml,Method,"ObjHasOwnProp(Obj, Name)",,Integer,,,; Returns 1 (true) if an object owns a property by the specified name.,
+Functions.xml,Method,ObjOwnPropCount(Obj),,Integer,,,; Retrieve the number of own properties contained by an object.,
+Functions.xml,Method,ObjOwnProps(obj),,Enumerator,,,; Enumerates an object's own properties.,
+Functions.xml,Method,ObjRelease(Ptr),,Integer,,,; Decrements an object's reference count.,
+Functions.xml,Method,"ObjSetBase(Obj, BaseObj)",,EmptyString,,,; Set an object's base object.,
+Functions.xml,Method,"ObjSetCapacity(Obj, MaxProps)",,Integer,,,; Retrieve or set an Object's capacity to contain properties.,
+Functions.xml,Method,"OnClipboardChange(Callback [, AddRemove])",,EmptyString,,,; Registers a function to be called automatically whenever the clipboard's content changes.,
+Functions.xml,Method,"OnError(Callback [, AddRemove])",,EmptyString,,,; Registers a function to be called automatically whenever an unhandled error occurs.,
+Functions.xml,Method,"OnExit(Callback [, AddRemove])",,EmptyString,,,; Registers a function to be called automatically whenever the script exits.,
+Functions.xml,Method,"OnMessage(MsgNumber, Callback [, MaxThreads])",,Integer,,,; Registers a function to be called automatically whenever the script receives the specified message.,
+Functions.xml,Method,Ord(String),,Integer,,,; Returns the ordinal value (numeric character code) of the first character in the specified string.,
+Functions.xml,Method,OutputDebug(Text),,EmptyString,,,; Sends a string to the debugger (if any) for display.,
+Functions.xml,Method,Pause([NewState]),,EmptyString,,,; Pauses the script's current thread.,
+Functions.xml,Method,Persistent(Persist),,Integer,,,"; Prevents the script from exiting automatically when its last thread completes, allowing it to stay running in an idle state.",
+Functions.xml,Method,"PixelGetColor(X, Y [, Mode])",,String,,,; Retrieves the color of the pixel at the specified X and Y coordinates.,
+Functions.xml,Method,"PixelSearch(&OutX, &OutY, X1, Y1, X2, Y2, ColorID [, Variation])",,Integer,,,; Searches a region of the screen for a pixel of the specified color.,
+Functions.xml,Method,"PostMessage(MsgNumber [, wParam, lParam, Control, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Places a message in the message queue of a window or control.,
+Functions.xml,Method,ProcessClose(PIDOrName),,Integer,,,; Forces the first11 matching process to close.,
+Functions.xml,Method,ProcessExist([PIDOrName]),,Integer,,,; Checks if the specified process exists.,
+Functions.xml,Method,ProcessGetName([PIDOrName]),,String,,,; Returns the name of the specified process.,
+Functions.xml,Method,ProcessGetParent([PIDOrName]),,Integer,,,; Returns the process ID (PID) of the process which created the specified process.,
+Functions.xml,Method,ProcessGetPath([PIDOrName]),,String,,,; Returns the path of the specified process.,
+Functions.xml,Method,"ProcessSetPriority(Level [, PIDOrName])",,Integer,,,; Changes the priority level of the first matching process.,
+Functions.xml,Method,"ProcessWait(PIDOrName [, Timeout])",,Integer,,,; Waits for the specified process to exist.,
+Functions.xml,Method,"ProcessWaitClose(PIDOrName [, Timeout])",,Integer,,,; Waits for all matching processes to close.,
+Functions.xml,Method,"Random(NumLow, NumHigh)",,Number,,,; Generates a pseudo-random number.,
+Functions.xml,Method,RegCreateKey([KeyName]),,EmptyString,,,; Creates a registry key without writing a value.,
+Functions.xml,Method,"RegDelete([KeyName, ValueName])",,EmptyString,,,; Deletes a value from the registry.,
+Functions.xml,Method,RegDeleteKey([KeyName]),,EmptyString,,,; Deletes a subkey from the registry.,
+Functions.xml,Method,"RegExMatch(Haystack, NeedleRegEx [, &Out, StartingPos])",,Integer,,,; Determines whether a string contains a pattern (regular expression).,
+Functions.xml,Method,"RegExReplace(Haystack, NeedleRegEx [, Replacement, &OutCount, Limit, StartingPos])",,String,,,; Replaces occurrences of a pattern (regular expression) inside a string.,
+Functions.xml,Method,"RegRead([KeyName, ValueName, Default])",,String,,,OR Integer                                                                                 ; Reads a value from the registry.,
+Functions.xml,Method,"RegWrite(Value, ValueType, KeyName [, ValueName])",,EmptyString,,,; Writes a value to the registry.,
+Functions.xml,Method,"RegWrite(Value [, ValueType, , ValueName])",,EmptyString,,,; Writes a value to the registry default.,
+Functions.xml,Method,Reload(),,EmptyString,,,; Replaces the currently running instance of the script with a new one.,
+Functions.xml,Method,"Round(Num [, Precision])",,Number,,,; Returns the specified number rounded to N decimal places.,
+Functions.xml,Method,"RTrim(String [, OmitChars])",,String,,,; Trims characters from the beginning and/or end of a string.,
+Functions.xml,Method,"Run(Target [, WorkingDir, Options, &OutPID])",,Integer,,,; Runs an external program.,
+Functions.xml,Method,"RunAs([User, Password, Domain])",,EmptyString,,,; Specifies a set of user credentials to use for all subsequent Run and RunWait functions.,
+Functions.xml,Method,"RunWait(Target [, WorkingDir, Options, &OutPID])",,Integer,,,; Runs an external program and waits until it finishes.,
+Functions.xml,Method,Send(Keys),,EmptyString,,,; Sends simulated keystrokes and mouse clicks to the active window.,
+Functions.xml,Method,SendEvent(Keys),,EmptyString,,,; Sends simulated keystrokes and mouse clicks to the active window.,
+Functions.xml,Method,SendInput(Keys),,EmptyString,,,; Sends simulated keystrokes and mouse clicks to the active window.,
+Functions.xml,Method,SendLevel(Level),,Integer,,,; Controls which artificial keyboard and mouse events are ignored by hotkeys and hotstrings.,
+Functions.xml,Method,"SendMessage(MsgNumber [, wParam, lParam, Control, WinTitle, WinText, NotInTitle, NotInText, Timeout])",,Integer,,,; Sends a message to a window or control and waits for acknowledgement.,
+Functions.xml,Method,SendMode(Mode),,String,,,; Makes Send synonymous with SendEvent or SendPlay rather than the default (SendInput). Also makes Click and MouseMove/Click/Drag use the specified method.,
+Functions.xml,Method,SendPlay(Keys),,EmptyString,,,; Sends simulated keystrokes and mouse clicks to the active window.,
+Functions.xml,Method,SendText(Keys),,EmptyString,,,; Sends simulated keystrokes and mouse clicks to the active window.,
+Functions.xml,Method,SetCapsLockState([State]),,EmptyString,,,; Sets the state of CapsLock. Can also force the key to stay on or off.,
+Functions.xml,Method,SetControlDelay(Delay),,Integer,,,; Sets the delay that will occur after each control-modifying function.,
+Functions.xml,Method,SetDefaultMouseSpeed(Speed),,Integer,,,"; Sets the mouse speed that will be used if unspecified in Click, MouseMove, MouseClick, and MouseClickDrag.",
+Functions.xml,Method,"SetKeyDelay([Delay, PressDuration, Play])",,EmptyString,,,; Sets the delay that will occur after each keystroke sent by Send or ControlSend.,
+Functions.xml,Method,"SetMouseDelay(Delay [, Play])",,Integer,,,; Sets the delay that will occur after each mouse movement or click.,
+Functions.xml,Method,SetNumLockState([State]),,EmptyString,,,; Sets the state of NumLock. Can also force the key to stay on or off.,
+Functions.xml,Method,SetRegView(RegView),,String,,,"; Sets the registry view used by RegRead, RegWrite, RegDelete, RegDeleteKey and Loop Reg, allowing them in a 32-bit script to access the 64-bit registry view and vice versa.",
+Functions.xml,Method,SetScrollLockState([State]),,EmptyString,,,; Sets the state of ScrollLock. Can also force the key to stay on or off.,
+Functions.xml,Method,SetStoreCapsLockMode(Mode),,Integer,,,; Whether to restore the state of CapsLock after a Send.,
+Functions.xml,Method,"SetTimer([Function, Period, Priority])",,EmptyString,,,; Causes a function to be called automatically and repeatedly at a specified time interval.,
+Functions.xml,Method,SetTitleMatchMode(MatchMode),,Integer,,,OR String                                                                                           ; Sets the matching behavior of the WinTitle parameter in built-in functions such as WinWait.,
+Functions.xml,Method,SetTitleMatchMode(Speed),,Integer,,,OR String                                                                                               ; Sets the matching behavior of the WinTitle parameter in built-in functions such as WinWait.,
+Functions.xml,Method,SetWinDelay(Delay),,Integer,,,"; Sets the delay that will occur after each windowing function, such as WinActivate.",
+Functions.xml,Method,SetWorkingDir(DirName),,EmptyString,,,; Changes the script's current working directory.,
+Functions.xml,Method,Shutdown(Flag),,EmptyString,,,"; Shuts down, restarts, or logs off the system.",
+Functions.xml,Method,Sin(Number),,Number,,,; Returns the trigonometric sine of the specified number.,
+Functions.xml,Method,Sleep(Delay),,EmptyString,,,; Waits the specified amount of time before continuing.,
+Functions.xml,Method,"Sort(String [, Options, Callback])",,String,,,"; Arranges a variable's contents in alphabetical, numerical, or random order (optionally removing duplicates).",
+Functions.xml,Method,"SoundBeep([Frequency, Duration])",,EmptyString,,,; Emits a tone from the PC speaker.,
+Functions.xml,Method,"SoundGetInterface(IID [, Component, Device])",,Integer,,,; Retrieves a native COM interface of a sound device or component.,
+Functions.xml,Method,"SoundGetMute([Component, Device])",,Integer,,,; Retrieves a mute setting of a sound device.,
+Functions.xml,Method,"SoundGetName([Component, Device])",,String,,,; Retrieves the name of a sound device or component.,
+Functions.xml,Method,"SoundGetVolume([Component, Device])",,Float,,,; Retrieves a volume setting of a sound device.,
+Functions.xml,Method,"SoundPlay(Filename [, Wait])",,EmptyString,,,"; Plays a sound, video, or other supported file type.",
+Functions.xml,Method,"SoundSetMute(NewSetting [, Component, Device])",,EmptyString,,,; Changes a mute setting of a sound device.,
+Functions.xml,Method,"SoundSetVolume(NewSetting [, Component, Device])",,EmptyString,,,; Changes a volume setting of a sound device.,
+Functions.xml,Method,"SplitPath(Path , &OutFileName, &OutDir, &OutExtension, &OutNameNoExt, &OutDrive)",,EmptyString,,,"; Separates a file name or URL into its name, directory, extension, and drive.",
+Functions.xml,Method,Sqrt(Number),,Number,,,; Returns the square root of the specified number.,
+Functions.xml,Method,"StatusBarGetText([SectionNum, WinTitle, WinText, NotInTitle, NotInText])",,String,,,; Retrieves the text from a standard status bar control.,
+Functions.xml,Method,"StatusBarWait([BarText, Timeout, SectionNum, WinTitle, WinText, Interval, NotInTitle, NotInText])",,Integer,,,; Waits until a window's status bar contains the specified string.,
+Functions.xml,Method,"StrCompare(String1, String2 [, CaseSense])",,Integer,,,; Compares two strings alphabetically.,
+Functions.xml,Method,"StrGet(Source [, Length, Encoding])",,String,,,"; Copies a string from a memory address or buffer, optionally converting it from a given code page.",
+Functions.xml,Method,"StrGet(Source [, Encoding])",,String,,,"; Copies a string from a memory address or buffer, optionally converting it from a given code page.",
+Functions.xml,Method,StrLen(String),,Integer,,,; Retrieves the count of how many characters are in a string.,
+Functions.xml,Method,StrLower(String),,String,,,; Converts a string to lowercase.,
+Functions.xml,Method,StrPtr(Value),,Integer,,,; Returns the current memory address of a string.,
+Functions.xml,Method,"StrPut(String, Target [, Length, Encoding])",,Integer,,,"; Copies a string to a memory address or buffer, optionally converting it to a given code page.",
+Functions.xml,Method,"StrPut(String, Target [, Encoding])",,Integer,,,"; Copies a string to a memory address or buffer, optionally converting it to a given code page.",
+Functions.xml,Method,"StrPut(String [, Encoding])",,Integer,,,"; Copies a string to a memory address or buffer, optionally converting it to a given code page.",
+Functions.xml,Method,"StrReplace(Haystack, Needle [, ReplaceText, CaseSense, &OutCount, Limit])",,String,,,; Replaces the specified substring with a new string.,
+Functions.xml,Method,"StrSplit(String [, Delimiters, OmitChars, MaxParts])",,Array,,,; Separates a string into an array of substrings using the specified delimiters.,
+Functions.xml,Method,StrTitle(String),,String,,,; Converts a string to title case.,
+Functions.xml,Method,StrUpper(String),,String,,,; Converts a string to uppercase.,
+Functions.xml,Method,"SubStr(String, StartingPos [, Length])",,String,,,; Retrieves one or more characters from the specified position in a string.,
+Functions.xml,Method,Suspend([NewState]),,EmptyString,,,; Disables or enables all or selected hotkeys and hotstrings.,
+Functions.xml,Method,SysGet(Property),,Integer,,,"; Retrieves dimensions of system objects, and other system properties.",
+Functions.xml,Method,SysGetIPAddresses(),,Array,,,; Returns an array of the system's IPv4 addresses.,
+Functions.xml,Method,Tan(Number),,Number,,,; Returns the trigonometric tangent of the specified number.,
+Functions.xml,Method,"Thread(NoTimers [, False])",,EmptyString,,,; Sets the priority or interruptibility of threads. It can also temporarily disable all timers.,
+Functions.xml,Method,"Thread(Priority, Level)",,EmptyString,,,; Sets the priority or interruptibility of threads. It can also temporarily disable all timers.,
+Functions.xml,Method,"Thread(Interrupt [, Duration, LineCount])",,EmptyString,,,; Sets the priority or interruptibility of threads. It can also temporarily disable all timers.,
+Functions.xml,Method,"ToolTip([Text, X, Y, WhichToolTip])",,Integer,,,OR EmptyString                                                                               ; Shows an always-on-top window anywhere on the screen.,
+Functions.xml,Method,"TraySetIcon([FileName, IconNumber, Freeze])",,EmptyString,,,; Changes the script's tray icon (which is also used by GUI and dialog windows).,
+Functions.xml,Method,"TrayTip([Text, Title, Options])",,EmptyString,,,"; Shows a balloon message window or, on Windows 10 and later, a toast notification near the tray icon.",
+Functions.xml,Method,"Trim(String [, OmitChars])",,String,,,; Trims characters from the beginning and/or end of a string.,
+Functions.xml,Method,Type(Value),,String,,,; Returns the class name of a value.,
+Functions.xml,Method,"VarSetStrCapacity(&TargetVar [, RequestedCapacity])",,Integer,,,"; Enlarges a variable's holding capacity or frees its memory. This is not normally needed, but may be used with DllCall or SendMessage or to optimize repeated concatenation.",
+Functions.xml,Method,"VerCompare(VersionA, VersionB)",,Integer,,,; Compares two version strings.,
+Functions.xml,Method,"WinActivate([WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Activates the specified window.,
+Functions.xml,Method,"WinActivateBottom([WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Same as WinActivate except that it activates the bottommost matching window rather than the topmost.,
+Functions.xml,Method,"WinActive([WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Checks if the specified window is active and returns its unique ID (HWND).,
+Functions.xml,Method,"WinClose([WinTitle, WinText, SecondsToWait, NotInTitle, NotInText])",,EmptyString,,,; Closes the specified window.,
+Functions.xml,Method,"WinExist([WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Checks if the specified window exists and returns the unique ID (HWND) of the first matching window.,
+Functions.xml,Method,"WinGetClass([WinTitle, WinText, NotInTitle, NotInText])",,String,,,; Retrieves the specified window's class name.,
+Functions.xml,Method,"WinGetClientPos([&X, &Y, &Width, &Height, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Retrieves the position and size of the specified window's client area.,
+Functions.xml,Method,"WinGetControls([WinTitle, WinText, NotInTitle, NotInText])",,Array,,,; Returns the control names for all controls in the specified window.,
+Functions.xml,Method,"WinGetControlsHwnd([WinTitle, WinText, NotInTitle, NotInText])",,Array,,,; Returns the unique ID numbers for all controls in the specified window.,
+Functions.xml,Method,"WinGetCount([WinTitle, WinText, NotInTitle, NotInText])",,Integer,,,; Returns the number of existing windows that match the specified criteria.,
+Functions.xml,Method,"WinGetExStyle([WinTitle, WinText, NotInTitle, NotInText])",,Integer,,,; Returns the extended style of the specified window.,
+Functions.xml,Method,"WinGetID([WinTitle, WinText, NotInTitle, NotInText])",,Integer,,,; Returns the unique ID number of the specified window.,
+Functions.xml,Method,"WinGetIDLast([WinTitle, WinText, NotInTitle, NotInText])",,Integer,,,; Returns the unique ID number of the last/bottommost window if there is more than one match.,
+Functions.xml,Method,"WinGetList([WinTitle, WinText, NotInTitle, NotInText])",,Array,,,; Returns the unique ID numbers of all existing windows that match the specified criteria.,
+Functions.xml,Method,"WinGetMinMax([WinTitle, WinText, NotInTitle, NotInText])",,Integer,,,; Returns a non-zero number if the specified window is maximized or minimized.,
+Functions.xml,Method,"WinGetPID([WinTitle, WinText, NotInTitle, NotInText])",,Integer,,,; Returns the Process ID number of the specified window.,
+Functions.xml,Method,"WinGetPos([&OutX, &OutY, &OutWidth, &OutHeight, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Retrieves the position and size of the specified window.,
+Functions.xml,Method,"WinGetProcessName([WinTitle, WinText, NotInTitle, NotInText])",,String,,,; Returns the name of the process that owns the specified window.,
+Functions.xml,Method,"WinGetProcessPath([WinTitle, WinText, NotInTitle, NotInText])",,String,,,; Returns the full path and name of the process that owns the specified window.,
+Functions.xml,Method,"WinGetStyle([WinTitle, WinText, NotInTitle, NotInText])",,Integer,,,; Returns the style of the specified window.,
+Functions.xml,Method,"WinGetText([WinTitle, WinText, NotInTitle, NotInText])",,String,,,; Retrieves the text from the specified window.,
+Functions.xml,Method,"WinGetTitle([WinTitle, WinText, NotInTitle, NotInText])",,String,,,; Retrieves the title of the specified window.,
+Functions.xml,Method,"WinGetTransColor([WinTitle, WinText, NotInTitle, NotInText])",,String,,,; Returns the color that is marked transparent in the specified window.,
+Functions.xml,Method,"WinGetTransparent([WinTitle, WinText, NotInTitle, NotInText])",,Integer,,,or EmptyString                                                     ; Returns the degree of transparency of the specified window.,
+Functions.xml,Method,"WinHide[WinTitle, WinText, NotInTitle, NotInText]()",,EmptyString,,,; Hides the specified window.,
+Functions.xml,Method,"WinKill([WinTitle, WinText, SecondsToWait, NotInTitle, NotInText])",,EmptyString,,,; Forces the specified window to close.,
+Functions.xml,Method,"WinMaximize([WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Enlarges the specified window to its maximum size.,
+Functions.xml,Method,"WinMinimize([WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Collapses the specified window into a button on the task bar.,
+Functions.xml,Method,WinMinimizeAll(),,EmptyString,,,; Minimizes or unminimizes all windows.,
+Functions.xml,Method,WinMinimizeAllUndo(),,EmptyString,,,; Minimizes or unminimizes all windows.,
+Functions.xml,Method,"WinMove([X, Y, Width, Height, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Changes the position and/or size of the specified window.,
+Functions.xml,Method,"WinMoveBottom([WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,"; Sends the specified window to the bottom of stack; that is, beneath all other windows.",
+Functions.xml,Method,"WinMoveTop([WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Brings the specified window to the top of the stack without explicitly activating it.,
+Functions.xml,Method,"WinRedraw([WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Redraws the specified window.,
+Functions.xml,Method,"WinRestore([WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Unminimizes or unmaximizes the specified window if it is minimized or maximized.,
+Functions.xml,Method,"WinSetAlwaysOnTop([NewSetting, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Makes the specified window stay on top of all other windows (except other always-on-top windows).,
+Functions.xml,Method,"WinSetEnabled(NewSetting [, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Enables or disables the specified window.,
+Functions.xml,Method,"WinSetExStyle(Value [, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Changes the extended style of the specified window.,
+Functions.xml,Method,"WinSetRegion([Options, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,"; Changes the shape of the specified window to be the specified rectangle, ellipse, or polygon.",
+Functions.xml,Method,"WinSetStyle(Value [, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Changes the style of the specified window.,
+Functions.xml,Method,"WinSetTitle(NewTitle [, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Changes the title of the specified window.,
+Functions.xml,Method,"WinSetTransColor(Color [, WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Makes all pixels of the chosen color invisible inside the specified window.,
+Functions.xml,Method,"WinSetTransparent(N, WinTitle, WinText, NotInTitle, NotInText)",,EmptyString,,,; Makes the specified window semi-transparent.,
+Functions.xml,Method,"WinShow([WinTitle, WinText, NotInTitle, NotInText])",,EmptyString,,,; Unhides the specified window.,
+Functions.xml,Method,"WinWait([WinTitle, WinText, Timeout, NotInTitle, NotInText])",,Integer,,,; Waits until the specified window exists.,
+Functions.xml,Method,"WinWaitActive([WinTitle, WinText, Timeout, NotInTitle, NotInText])",,Integer,,,; Waits until the specified window is active or not active.,
+Functions.xml,Method,"WinWaitClose([WinTitle, WinText, Timeout, NotInTitle, NotInText])",,Integer,,,; Waits until no matching windows can be found.,
+Functions.xml,Method,"WinWaitNotActive([WinTitle, WinText, Timeout, NotInTitle, NotInText])",,Integer,,,; Waits until the specified window is active or not active.,
+Module.xml,Key,#ClipboardTimeout,,,,,,Milliseconds
+Module.xml,Key,#CommentFlag,,,,,,NewString
+Module.xml,Key,#Delimiter,,,,,,
+Module.xml,Key,#DerefChar,,,,,,
+Module.xml,Key,#ErrorStdOut,,,,,,
+Module.xml,Key,#EscapeChar,,,,,,NewChar
+Module.xml,Key,#HotkeyInterval,,,,,,Milliseconds
+Module.xml,Key,#HotkeyModifierTimeout,,,,,,Milliseconds
+Module.xml,Key,#Hotstring,,,,,,NoMouse; EndChars NewChars; NewOptions
+Module.xml,Key,#If,,,,,,"[, Expression ]"
+Module.xml,Key,#IfTimeout,,,,,,Timeout
+Module.xml,Key,#IfWinActive,,,,,,"[, WinTitle, WinText]"
+Module.xml,Key,#IfWinExist,,,,,,"[, WinTitle, WinText]"
+Module.xml,Key,#IfWinNotActive,,,,,,"[, WinTitle, WinText]"
+Module.xml,Key,#IfWinNotExist,,,,,,"[, WinTitle, WinText]"
+Module.xml,Key,#Include,,,,,,FileOrDirName; <LibName>
+Module.xml,Key,#IncludeAgain,,,,,,FileOrDirName
+Module.xml,Key,#InputLevel,,,,,,"[, Level]"
+Module.xml,Key,#InstallKeybdHook,,,,,,
+Module.xml,Key,#InstallMouseHook,,,,,,
+Module.xml,Key,#KeyHistory,,,,,,MaxEvents
+Module.xml,Key,#LTrim,,,,,,[On|Off]
+Module.xml,Key,#MaxHotkeysPerInterval,,,,,,Value
+Module.xml,Key,#MaxMem,,,,,,Megabytes
+Module.xml,Key,#MaxThreads,,,,,,Value
+Module.xml,Key,#MaxThreadsBuffer,,,,,,On|Off
+Module.xml,Key,#MaxThreadsPerHotkey,,,,,,Value
+Module.xml,Key,#MenuMaskKey,,,,,,KeyName
+Module.xml,Key,#NoEnv,,,,,,
+Module.xml,Key,#NoTrayIcon,,,,,,
+Module.xml,Key,#Persistent,,,,,,
+Module.xml,Key,#SingleInstance,,,,,,[Force|Ignore|Off]
+Module.xml,Key,#UseHook,,,,,,[On|Off]
+Module.xml,Key,#Warn,,,,,,"[, WarningType, WarningMode]"
+Module.xml,Key,#WinActivateForce,,,,,,
+Module.xml,Key,.__Handle,,,,,,
+Module.xml,Key,._NewEnum,,,,,,
+Module.xml,Key,.AtEOF,,,,,,
+Module.xml,Key,.Bind,,,,,,(Parameters)
+Module.xml,Key,.Call,,,,,,(Parameters)
+Module.xml,Key,.Clone,,,,,,
+Module.xml,Key,.Close,,,,,,
+Module.xml,Key,.Count,,,,,,
+Module.xml,Key,.Delete,,,,,,"(Key); (FirstKey, LastKey)"
+Module.xml,Key,.Encoding,,,,,,
+Module.xml,Key,.GetAddress,,,,,,(Key)
+Module.xml,Key,.GetCapacity,,,,,,([Key])
+Module.xml,Key,.HasKey,,,,,,(Key)
+Module.xml,Key,.Insert,,,,,,"(Value); (StringOrObjectKey, Value); (Pos, Value1 [, Value2, ... ValueN ])"
+Module.xml,Key,.InsertAt,,,,,,"(Pos, Value1 [, Value2, ... ValueN])"
+Module.xml,Key,.IsBuiltIn,,,,,,
+Module.xml,Key,.IsByRef,,,,,,(ParamIndex)
+Module.xml,Key,.IsOptional,,,,,,(ParamIndex)
+Module.xml,Key,.IsVariadic,,,,,,
+Module.xml,Key,.Length,,,,,,
+Module.xml,Key,.MaxIndex,,,,,,
+Module.xml,Key,.MaxParams,,,,,,
+Module.xml,Key,.MinIndex,,,,,,
+Module.xml,Key,.MinParams,,,,,,
+Module.xml,Key,.Name,,,,,,
+Module.xml,Key,.Pop,,,,,,
+Module.xml,Key,.Pos,,,,,,
+Module.xml,Key,.Position,,,,,,
+Module.xml,Key,.Push,,,,,,"([ Value, Value2, ..., ValueN ])"
+Module.xml,Key,.RawRead,,,,,,"(VarOrAddress, Bytes)"
+Module.xml,Key,.RawWrite,,,,,,"(VarOrAddress, Bytes)"
+Module.xml,Key,.Read,,,,,,([Characters])
+Module.xml,Key,.ReadChar,,,,,,
+Module.xml,Key,.ReadDouble,,,,,,
+Module.xml,Key,.ReadFloat,,,,,,
+Module.xml,Key,.ReadInt,,,,,,
+Module.xml,Key,.ReadInt64,,,,,,
+Module.xml,Key,.ReadLine,,,,,,
+Module.xml,Key,.ReadShort,,,,,,
+Module.xml,Key,.ReadUChar,,,,,,
+Module.xml,Key,.ReadUInt,,,,,,
+Module.xml,Key,.ReadUShort,,,,,,
+Module.xml,Key,.Remove,,,,,,"(Key); (Key, """"); (FirstKey, LastKey)"
+Module.xml,Key,.RemoveAt,,,,,,"(Pos [, Length])"
+Module.xml,Key,.Seek,,,,,,"(Distance [, Origin = 0])"
+Module.xml,Key,.SetCapacity,,,,,,"(MaxItems); (Key, ByteSize)"
+Module.xml,Key,.Tell,,,,,,
+Module.xml,Key,.Write,,,,,,(String)
+Module.xml,Key,.WriteChar,,,,,,(Num)
+Module.xml,Key,.WriteDouble,,,,,,(Num)
+Module.xml,Key,.WriteFloat,,,,,,(Num)
+Module.xml,Key,.WriteInt,,,,,,(Num)
+Module.xml,Key,.WriteInt64,,,,,,(Num)
+Module.xml,Key,.WriteLine,,,,,,([String])
+Module.xml,Key,.WriteShort,,,,,,(Num)
+Module.xml,Key,.WriteUChar,,,,,,(Num)
+Module.xml,Key,.WriteUInt,,,,,,(Num)
+Module.xml,Key,.WriteUShort,,,,,,(Num)
+Module.xml,Key,__Call,,,,,,"(Name [, Params...])"
+Module.xml,Key,__Class,,,,,,
+Module.xml,Key,__Delete,,,,,,
+Module.xml,Key,__Get,,,,,,"([Key, Key2, ...])"
+Module.xml,Key,__Init,,,,,,
+Module.xml,Key,__New,,,,,,([Params...])
+Module.xml,Key,__Set,,,,,,"([Key, Key2, ...], Value)"
+Module.xml,Key,A_AhkPath,,,,,,
+Module.xml,Key,A_AhkVersion,,,,,,
+Module.xml,Key,A_AppData,,,,,,
+Module.xml,Key,A_AppDataCommon,,,,,,
+Module.xml,Key,A_AutoTrim,,,,,,
+Module.xml,Key,A_BatchLines,,,,,,
+Module.xml,Key,A_CaretX,,,,,,
+Module.xml,Key,A_CaretY,,,,,,
+Module.xml,Key,A_ComputerName,,,,,,
+Module.xml,Key,A_ControlDelay,,,,,,
+Module.xml,Key,A_CoordModeCaret,,,,,,
+Module.xml,Key,A_CoordModeMenu,,,,,,
+Module.xml,Key,A_CoordModeMouse,,,,,,
+Module.xml,Key,A_CoordModePixel,,,,,,
+Module.xml,Key,A_CoordModeToolTip,,,,,,
+Module.xml,Key,A_Cursor,,,,,,
+Module.xml,Key,A_DD,,,,,,
+Module.xml,Key,A_DDD,,,,,,
+Module.xml,Key,A_DDDD,,,,,,
+Module.xml,Key,A_DefaultGui,,,,,,
+Module.xml,Key,A_DefaultListView,,,,,,
+Module.xml,Key,A_DefaultMouseSpeed,,,,,,
+Module.xml,Key,A_DefaultTreeView,,,,,,
+Module.xml,Key,A_Desktop,,,,,,
+Module.xml,Key,A_DesktopCommon,,,,,,
+Module.xml,Key,A_DetectHiddenText,,,,,,
+Module.xml,Key,A_DetectHiddenWindows,,,,,,
+Module.xml,Key,A_EndChar,,,,,,
+Module.xml,Key,A_EventInfo,,,,,,
+Module.xml,Key,A_ExitReason,,,,,,
+Module.xml,Key,A_FileEncoding,,,,,,
+Module.xml,Key,A_FormatFloat,,,,,,
+Module.xml,Key,A_FormatInteger,,,,,,
+Module.xml,Key,A_Gui,,,,,,
+Module.xml,Key,A_GuiControl,,,,,,
+Module.xml,Key,A_GuiControlEvent,,,,,,
+Module.xml,Key,A_GuiEvent,,,,,,
+Module.xml,Key,A_GuiHeight,,,,,,
+Module.xml,Key,A_GuiWidth,,,,,,
+Module.xml,Key,A_GuiX,,,,,,
+Module.xml,Key,A_GuiY,,,,,,
+Module.xml,Key,A_Hour,,,,,,
+Module.xml,Key,A_IconFile,,,,,,
+Module.xml,Key,A_IconHidden,,,,,,
+Module.xml,Key,A_IconNumber,,,,,,
+Module.xml,Key,A_IconTip,,,,,,
+Module.xml,Key,A_Index,,,,,,
+Module.xml,Key,A_IPAddress1,,,,,,
+Module.xml,Key,A_IPAddress2,,,,,,
+Module.xml,Key,A_IPAddress3,,,,,,
+Module.xml,Key,A_IPAddress4,,,,,,
+Module.xml,Key,A_Is64bitOS,,,,,,
+Module.xml,Key,A_IsAdmin,,,,,,
+Module.xml,Key,A_IsCompiled,,,,,,
+Module.xml,Key,A_IsCritical,,,,,,
+Module.xml,Key,A_IsPaused,,,,,,
+Module.xml,Key,A_IsSuspended,,,,,,
+Module.xml,Key,A_IsUnicode,,,,,,
+Module.xml,Key,A_KeyDelay,,,,,,
+Module.xml,Key,A_KeyDelayPlay,,,,,,
+Module.xml,Key,A_KeyDuration,,,,,,
+Module.xml,Key,A_KeyDurationPlay,,,,,,
+Module.xml,Key,A_Language,,,,,,
+Module.xml,Key,A_LastError,,,,,,
+Module.xml,Key,A_LineFile,,,,,,
+Module.xml,Key,A_LineNumber,,,,,,
+Module.xml,Key,A_LoopField,,,,,,
+Module.xml,Key,A_LoopFileAttrib,,,,,,
+Module.xml,Key,A_LoopFileDir,,,,,,
+Module.xml,Key,A_LoopFileExt,,,,,,
+Module.xml,Key,A_LoopFileFullPath,,,,,,
+Module.xml,Key,A_LoopFileLongPath,,,,,,
+Module.xml,Key,A_LoopFileName,,,,,,
+Module.xml,Key,A_LoopFileShortName,,,,,,
+Module.xml,Key,A_LoopFileShortPath,,,,,,
+Module.xml,Key,A_LoopFileSize,,,,,,
+Module.xml,Key,A_LoopFileSizeKB,,,,,,
+Module.xml,Key,A_LoopFileSizeMB,,,,,,
+Module.xml,Key,A_LoopFileTimeAccessed,,,,,,
+Module.xml,Key,A_LoopFileTimeCreated,,,,,,
+Module.xml,Key,A_LoopFileTimeModified,,,,,,
+Module.xml,Key,A_LoopReadLine,,,,,,
+Module.xml,Key,A_LoopRegKey,,,,,,
+Module.xml,Key,A_LoopRegName,,,,,,
+Module.xml,Key,A_LoopRegSubkey,,,,,,
+Module.xml,Key,A_LoopRegTimeModified,,,,,,
+Module.xml,Key,A_LoopRegType,,,,,,
+Module.xml,Key,A_MDAY,,,,,,
+Module.xml,Key,A_Min,,,,,,
+Module.xml,Key,A_MM,,,,,,
+Module.xml,Key,A_MMM,,,,,,
+Module.xml,Key,A_MMMM,,,,,,
+Module.xml,Key,A_Mon,,,,,,
+Module.xml,Key,A_MouseDelay,,,,,,
+Module.xml,Key,A_MouseDelayPlay,,,,,,
+Module.xml,Key,A_MSec,,,,,,
+Module.xml,Key,A_MyDocuments,,,,,,
+Module.xml,Key,A_Now,,,,,,
+Module.xml,Key,A_NowUTC,,,,,,
+Module.xml,Key,A_NumBatchLines,,,,,,
+Module.xml,Key,A_OSType,,,,,,
+Module.xml,Key,A_OSVersion,,,,,,
+Module.xml,Key,A_PriorHotkey,,,,,,
+Module.xml,Key,A_PriorKey,,,,,,
+Module.xml,Key,A_ProgramFiles,,,,,,
+Module.xml,Key,A_Programs,,,,,,
+Module.xml,Key,A_ProgramsCommon,,,,,,
+Module.xml,Key,A_PtrSize,,,,,,
+Module.xml,Key,A_RegView,,,,,,
+Module.xml,Key,A_ScreenDPI,,,,,,
+Module.xml,Key,A_ScreenHeight,,,,,,
+Module.xml,Key,A_ScreenWidth,,,,,,
+Module.xml,Key,A_ScriptDir,,,,,,
+Module.xml,Key,A_ScriptFullPath,,,,,,
+Module.xml,Key,A_ScriptHwnd,,,,,,
+Module.xml,Key,A_ScriptName,,,,,,
+Module.xml,Key,A_Sec,,,,,,
+Module.xml,Key,A_SendLevel,,,,,,
+Module.xml,Key,A_SendMode,,,,,,
+Module.xml,Key,A_Space,,,,,,
+Module.xml,Key,A_StartMenu,,,,,,
+Module.xml,Key,A_StartMenuCommon,,,,,,
+Module.xml,Key,A_Startup,,,,,,
+Module.xml,Key,A_StartupCommon,,,,,,
+Module.xml,Key,A_StoreCapslockMode,,,,,,
+Module.xml,Key,A_StringCaseSense,,,,,,
+Module.xml,Key,A_Tab,,,,,,
+Module.xml,Key,A_Temp,,,,,,
+Module.xml,Key,A_ThisFunc,,,,,,
+Module.xml,Key,A_ThisHotkey,,,,,,
+Module.xml,Key,A_ThisLabel,,,,,,
+Module.xml,Key,A_ThisMenu,,,,,,
+Module.xml,Key,A_ThisMenuItem,,,,,,
+Module.xml,Key,A_ThisMenuItemPos,,,,,,
+Module.xml,Key,A_TickCount,,,,,,
+Module.xml,Key,A_TimeIdle,,,,,,
+Module.xml,Key,A_TimeIdlePhysical,,,,,,
+Module.xml,Key,A_TimeSincePriorHotkey,,,,,,
+Module.xml,Key,A_TimeSinceThisHotkey,,,,,,
+Module.xml,Key,A_TitleMatchMode,,,,,,
+Module.xml,Key,A_TitleMatchModeSpeed,,,,,,
+Module.xml,Key,A_UserName,,,,,,
+Module.xml,Key,A_WDay,,,,,,
+Module.xml,Key,A_WinDelay,,,,,,
+Module.xml,Key,A_WinDir,,,,,,
+Module.xml,Key,A_WorkingDir,,,,,,
+Module.xml,Key,A_YDay,,,,,,
+Module.xml,Key,A_YEAR,,,,,,
+Module.xml,Key,A_YWeek,,,,,,
+Module.xml,Key,A_YYYY,,,,,,
+Module.xml,Key,Abort,,,,,,
+Module.xml,Key,AboveNormal,,,,,,
+Module.xml,Key,Abs,,,,,,(Number)
+Module.xml,Key,ACos,,,,,,(Number)
+Module.xml,Key,ActiveX,,,,,,
+Module.xml,Key,Add,,,,,,
+Module.xml,Key,ahk_class,,,,,,
+Module.xml,Key,ahk_exe,,,,,,
+Module.xml,Key,ahk_group,,,,,,
+Module.xml,Key,ahk_id,,,,,,
+Module.xml,Key,ahk_pid,,,,,,
+Module.xml,Key,All,,,,,,
+Module.xml,Key,AlNum,,,,,,
+Module.xml,Key,Alpha,,,,,,
+Module.xml,Key,Alt,,,,,,
+Module.xml,Key,AltDown,,,,,,
+Module.xml,Key,AltSubmit,,,,,,
+Module.xml,Key,AltTab,,,,,,
+Module.xml,Key,AltTabAndMenu,,,,,,
+Module.xml,Key,AltTabMenu,,,,,,
+Module.xml,Key,AltTabMenuDismiss,,,,,,
+Module.xml,Key,AltUp,,,,,,
+Module.xml,Key,AlwaysOnTop,,,,,,
+Module.xml,Key,And,,,,,,
+Module.xml,Key,AppsKey,,,,,,
+Module.xml,Key,Array,,,,,,
+Module.xml,Key,Asc,,,,,,(String)
+Module.xml,Key,ASin,,,,,,(Number)
+Module.xml,Key,ATan,,,,,,(Number)
+Module.xml,Key,AutoSize,,,,,,
+Module.xml,Key,AutoTrim,,,,,,On|Off
+Module.xml,Key,Background,,,,,,
+Module.xml,Key,BackgroundTrans,,,,,,
+Module.xml,Key,Backspace,,,,,,
+Module.xml,Key,Base,,,,,,
+Module.xml,Key,BelowNormal,,,,,,
+Module.xml,Key,Between,,,,,,
+Module.xml,Key,BitAnd,,,,,,
+Module.xml,Key,BitNot,,,,,,
+Module.xml,Key,BitOr,,,,,,
+Module.xml,Key,BitShiftLeft,,,,,,
+Module.xml,Key,BitShiftRight,,,,,,
+Module.xml,Key,BitXOr,,,,,,
+Module.xml,Key,Blind,,,,,,
+Module.xml,Key,BlockInput,,,,,,On|Off|Send|Mouse|SendAndMouse|Default|MouseMove|MouseMoveOff
+Module.xml,Key,Bold,,,,,,
+Module.xml,Key,Border,,,,,,
+Module.xml,Key,Bottom,,,,,,
+Module.xml,Key,Break,,,,,,"[, LoopLabel]"
+Module.xml,Key,Browser_Back,,,,,,
+Module.xml,Key,Browser_Favorites,,,,,,
+Module.xml,Key,Browser_Forward,,,,,,
+Module.xml,Key,Browser_Home,,,,,,
+Module.xml,Key,Browser_Refresh,,,,,,
+Module.xml,Key,Browser_Search,,,,,,
+Module.xml,Key,Browser_Stop,,,,,,
+Module.xml,Key,BS,,,,,,
+Module.xml,Key,Button,,,,,,
+Module.xml,Key,Buttons,,,,,,
+Module.xml,Key,ByRef,,,,,,
+Module.xml,Key,Cancel,,,,,,
+Module.xml,Key,Capacity,,,,,,
+Module.xml,Key,CapsLock,,,,,,
+Module.xml,Key,Caption,,,,,,
+Module.xml,Key,Catch,,,,,,[OutputVar]
+Module.xml,Key,Ceil,,,,,,(Number)
+Module.xml,Key,Center,,,,,,
+Module.xml,Key,Check,,,,,,
+Module.xml,Key,Check3,,,,,,
+Module.xml,Key,Checkbox,,,,,,
+Module.xml,Key,Checked,,,,,,
+Module.xml,Key,CheckedGray,,,,,,
+Module.xml,Key,Choice,,,,,,
+Module.xml,Key,Choose,,,,,,
+Module.xml,Key,ChooseString,,,,,,
+Module.xml,Key,Chr,,,,,,(Number)
+Module.xml,Key,Class,,,,,,
+Module.xml,Key,Click,,,,,,"[Left|Right|n-Times|Down|Up|WheelUp|WheelDown|Relative X, Y]"
+Module.xml,Key,Clipboard,,,,,,
+Module.xml,Key,ClipboardAll,,,,,,
+Module.xml,Key,ClipWait,,,,,,"[, SecondsToWait, 1]"
+Module.xml,Key,Close,,,,,,
+Module.xml,Key,Color,,,,,,
+Module.xml,Key,ComboBox,,,,,,
+Module.xml,Key,ComObj,,,,,,"(VarType, Value [, Flags])"
+Module.xml,Key,ComObjActive,,,,,,(CLSID)
+Module.xml,Key,ComObjArray,,,,,,"(VarType, Count1 [, Count2, ... Count8])"
+Module.xml,Key,ComObjConnect,,,,,,"(ComObject [, Prefix])"
+Module.xml,Key,ComObjCreate,,,,,,"(CLSID [, IID])"
+Module.xml,Key,ComObjEnwrap,,,,,,(DispPtr)
+Module.xml,Key,ComObjError,,,,,,([Enable])
+Module.xml,Key,ComObjFlags,,,,,,"(ComObject [, NewFlags, Mask])"
+Module.xml,Key,ComObjGet,,,,,,(Name)
+Module.xml,Key,ComObjMissing,,,,,,
+Module.xml,Key,ComObjParameter,,,,,,
+Module.xml,Key,ComObjQuery,,,,,,"(ComObject, [SID,] IID)"
+Module.xml,Key,ComObjType,,,,,,"(ComObject); (ComObject, ""Name""); (ComObject, ""IID"")"
+Module.xml,Key,ComObjUnwrap,,,,,,(ComObject)
+Module.xml,Key,ComObjValue,,,,,,(ComObject)
+Module.xml,Key,ComSpec,,,,,,
+Module.xml,Key,Contains,,,,,,
+Module.xml,Key,Continue,,,,,,"[, LoopLabel]"
+Module.xml,Key,Control,,,,,,"Cmd [, Value, Control, WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,ControlClick,,,,,,"[Control-or-Pos, WinTitle, WinText, WhichButton, ClickCount, Options, ExcludeTitle, ExcludeText]"
+Module.xml,Key,ControlFocus,,,,,,"[Control, WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,ControlGet,,,,,,"OutputVar, Cmd [, Value, Control, WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,ControlGetFocus,,,,,,"OutputVar [, WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,ControlGetPos,,,,,,"[, X, Y, Width, Height, Control, WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,ControlGetText,,,,,,"OutputVar [, Control, WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,ControlList,,,,,,
+Module.xml,Key,ControlListHWND,,,,,,
+Module.xml,Key,ControlMove,,,,,,"Control, X, Y, Width, Height [, WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,ControlSend,,,,,,"[, Control, Keys, WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,ControlSendRaw,,,,,,"[, Control, Keys, WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,ControlSetText,,,,,,"[, Control, NewText, WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,CoordMode,,,,,,"ToolTip|Pixel|Mouse|Caret|Menu [, Screen|Window|Client]"
+Module.xml,Key,Cos,,,,,,(Number)
+Module.xml,Key,Count,,,,,,
+Module.xml,Key,Critical,,,,,,"[, Value|Off]"
+Module.xml,Key,Ctrl,,,,,,
+Module.xml,Key,CtrlBreak,,,,,,
+Module.xml,Key,CtrlDown,,,,,,
+Module.xml,Key,CtrlUp,,,,,,
+Module.xml,Key,CurrentLine,,,,,,
+Module.xml,Key,CurrentCol,,,,,,
+Module.xml,Key,Custom,,,,,,
+Module.xml,Key,Date,,,,,,
+Module.xml,Key,DateTime,,,,,,
+Module.xml,Key,Days,,,,,,
+Module.xml,Key,DDL,,,,,,
+Module.xml,Key,Default,,,,,,
+Module.xml,Key,Del,,,,,,
+Module.xml,Key,Delete,,,,,,
+Module.xml,Key,DeleteAll,,,,,,
+Module.xml,Key,Delimiter,,,,,,
+Module.xml,Key,Deref,,,,,,
+Module.xml,Key,Destroy,,,,,,
+Module.xml,Key,DetectHiddenText,,,,,,On|Off
+Module.xml,Key,DetectHiddenWindows,,,,,,On|Off
+Module.xml,Key,Digit,,,,,,
+Module.xml,Key,Disable,,,,,,
+Module.xml,Key,Disabled,,,,,,
+Module.xml,Key,DllCall,,,,,,"(""[DllFile\]Function"" [, Type1, Arg1, Type2, Arg2, ""Cdecl ReturnType""])"
+Module.xml,Key,Down,,,,,,
+Module.xml,Key,DPIScale,,,,,,
+Module.xml,Key,Drive,,,,,,"Label|Lock|Unlock|Eject [, Drive , Value]"
+Module.xml,Key,DriveGet,,,,,,"OutputVar, Cmd [, Value]"
+Module.xml,Key,DriveSpaceFree,,,,,,"OutputVar, Path"
+Module.xml,Key,DropDownList,,,,,,
+Module.xml,Key,Edit,,,,,,
+Module.xml,Key,EditPaste,,,,,,
+Module.xml,Key,Eject,,,,,,
+Module.xml,Key,Else,,,,,,
+Module.xml,Key,Enable,,,,,,
+Module.xml,Key,Enabled,,,,,,
+Module.xml,Key,End,,,,,,
+Module.xml,Key,Enter,,,,,,
+Module.xml,Key,EnvAdd,,,,,,"Var, Value [, TimeUnits]"
+Module.xml,Key,EnvDiv,,,,,,"Var, Value"
+Module.xml,Key,EnvGet,,,,,,"OutputVar, EnvVarName"
+Module.xml,Key,EnvMult,,,,,,"Var, Value"
+Module.xml,Key,EnvSet,,,,,,"EnvVar, Value"
+Module.xml,Key,EnvSub,,,,,,"Var, Value [, TimeUnits]"
+Module.xml,Key,EnvUpdate,,,,,,
+Module.xml,Key,Error,,,,,,
+Module.xml,Key,ErrorLevel,,,,,,
+Module.xml,Key,Esc,,,,,,
+Module.xml,Key,Escape,,,,,,
+Module.xml,Key,Exception,,,,,,"(Message [, What, Extra])"
+Module.xml,Key,Exist,,,,,,
+Module.xml,Key,Exit,,,,,,"[, ExitCode]"
+Module.xml,Key,ExitApp,,,,,,"[, ExitCode]"
+Module.xml,Key,Exp,,,,,,(N)
+Module.xml,Key,Expand,,,,,,
+Module.xml,Key,ExStyle,,,,,,
+Module.xml,Key,Extends,,,,,,
+Module.xml,Key,F1,,,,,,
+Module.xml,Key,F2,,,,,,
+Module.xml,Key,F3,,,,,,
+Module.xml,Key,F4,,,,,,
+Module.xml,Key,F5,,,,,,
+Module.xml,Key,F6,,,,,,
+Module.xml,Key,F7,,,,,,
+Module.xml,Key,F8,,,,,,
+Module.xml,Key,F9,,,,,,
+Module.xml,Key,F10,,,,,,
+Module.xml,Key,F11,,,,,,
+Module.xml,Key,F12,,,,,,
+Module.xml,Key,F13,,,,,,
+Module.xml,Key,F14,,,,,,
+Module.xml,Key,F15,,,,,,
+Module.xml,Key,F16,,,,,,
+Module.xml,Key,F17,,,,,,
+Module.xml,Key,F18,,,,,,
+Module.xml,Key,F19,,,,,,
+Module.xml,Key,F20,,,,,,
+Module.xml,Key,F21,,,,,,
+Module.xml,Key,F22,,,,,,
+Module.xml,Key,F23,,,,,,
+Module.xml,Key,F24,,,,,,
+Module.xml,Key,False,,,,,,
+Module.xml,Key,FileAppend,,,,,,"[, Text, Filename, Encoding]"
+Module.xml,Key,FileCopy,,,,,,"SourcePattern, DestPattern [, Overwrite? (0|1)]"
+Module.xml,Key,FileCopyDir,,,,,,"Source, Dest [, Overwrite? (0|1)]"
+Module.xml,Key,FileCreateDir,,,,,,DirName
+Module.xml,Key,FileCreateShortcut,,,,,,"Target, LinkFile [, WorkingDir, Args, Description, IconFile, ShortcutKey, IconNumber, RunState]"
+Module.xml,Key,FileDelete,,,,,,FilePattern
+Module.xml,Key,FileEncoding,,,,,,"[, UTF-8|UTF-16|UTF-8-RAW|UTF-16-RAW|CPnnn]"
+Module.xml,Key,FileExist,,,,,,(FilePattern)
+Module.xml,Key,FileGetAttrib,,,,,,"OutputVar [, Filename]"
+Module.xml,Key,FileGetShortcut,,,,,,"LinkFile [, OutTarget, OutDir, OutArgs, OutDescription, OutIcon, OutIconNum, OutRunState]"
+Module.xml,Key,FileGetSize,,,,,,"OutputVar [, Filename, Units (B = bytes, K = kilobytes, M = megabytes)]"
+Module.xml,Key,FileGetTime,,,,,,"OutputVar [, Filename, WhichTime (M = Modification, C = Creation, A = Last Access]"
+Module.xml,Key,FileGetVersion,,,,,,"OutputVar [, Filename]"
+Module.xml,Key,FileInstall,,,,,,"Source, Dest [, Overwrite? (0|1)]"
+Module.xml,Key,FileMove,,,,,,"SourcePattern, DestPattern [, Overwrite? (0|1)]"
+Module.xml,Key,FileMoveDir,,,,,,"Source, Dest [, Flag (2 = overwrite, R = rename)]"
+Module.xml,Key,FileOpen,,,,,,"(Filename, Flags [, Encoding])"
+Module.xml,Key,FileRead,,,,,,"OutputVar, Filename"
+Module.xml,Key,FileReadLine,,,,,,"OutputVar, Filename, LineNum"
+Module.xml,Key,FileRecycle,,,,,,FilePattern
+Module.xml,Key,FileRecycleEmpty,,,,,,"[, DriveLetter]"
+Module.xml,Key,FileRemoveDir,,,,,,"DirName [, Recurse?]"
+Module.xml,Key,FileSelectFile,,,,,,"OutputVar [, Options, RootDir\Filename, Prompt, Filter]"
+Module.xml,Key,FileSelectFolder,,,,,,"OutputVar [, *StartingFolder, Options, Prompt]"
+Module.xml,Key,FileSetAttrib,,,,,,"Attributes [, FilePattern, OperateOnFolders?, Recurse?]"
+Module.xml,Key,FileSetTime,,,,,,"[, YYYYMMDDHH24MISS, FilePattern, WhichTime, OperateOnFolders?, Recurse?]"
+Module.xml,Key,FileSystem,,,,,,
+Module.xml,Key,Finally,,,,,,
+Module.xml,Key,FindString,,,,,,
+Module.xml,Key,First,,,,,,
+Module.xml,Key,Flash,,,,,,
+Module.xml,Key,Float,,,,,,
+Module.xml,Key,FloatFast,,,,,,
+Module.xml,Key,Floor,,,,,,(Number)
+Module.xml,Key,Focus,,,,,,
+Module.xml,Key,Font,,,,,,
+Module.xml,Key,For,,,,,,"Key [, Value] in Expression"
+Module.xml,Key,Force,,,,,,
+Module.xml,Key,Format,,,,,,"(FormatStr [, Values...])"
+Module.xml,Key,FormatTime,,,,,,"OutputVar [, YYYYMMDDHH24MISS, Format]"
+Module.xml,Key,FromCodePage,,,,,,
+Module.xml,Key,Func,,,,,,(FunctionName)
+Module.xml,Key,GetKeyName,,,,,,(Key)
+Module.xml,Key,GetKeySC,,,,,,(Key)
+Module.xml,Key,GetKeyState,,,,,,"(""KeyName"" [, ""Mode""]); OutputVar, KeyName [, Mode]"
+Module.xml,Key,GetKeyVK,,,,,,(Key)
+Module.xml,Key,Global,,,,,,
+Module.xml,Key,Gosub,,,,,,Label
+Module.xml,Key,Goto,,,,,,Label
+Module.xml,Key,Grid,,,,,,
+Module.xml,Key,Group,,,,,,
+Module.xml,Key,GroupActivate,,,,,,"GroupName [, R]"
+Module.xml,Key,GroupAdd,,,,,,"GroupName [, WinTitle, WinText, Label, ExcludeTitle, ExcludeText]"
+Module.xml,Key,GroupBox,,,,,,
+Module.xml,Key,GroupClose,,,,,,"GroupName [, A|R]"
+Module.xml,Key,GroupDeactivate,,,,,,"GroupName [, R]"
+Module.xml,Key,Gui,,,,,,"sub-command [, Param2, Param3, Param4]"
+Module.xml,Key,GuiClose,,,,,,(GuiHwnd)
+Module.xml,Key,GuiContextMenu,,,,,,"(GuiHwnd, CtrlHwnd, EventInfo, IsRightClick, X, Y)"
+Module.xml,Key,GuiControl,,,,,,"Sub-command, ControlID [, Param3]"
+Module.xml,Key,GuiControlGet,,,,,,"OutputVar [, Sub-command, ControlID, Param4]"
+Module.xml,Key,GuiDropFiles,,,,,,"(GuiHwnd, FileArray, CtrlHwnd, X, Y)"
+Module.xml,Key,GuiEscape,,,,,,
+Module.xml,Key,GuiSize,,,,,,"(GuiHwnd, EventInfo, Width, Height)"
+Module.xml,Key,Hdr,,,,,,
+Module.xml,Key,Hidden,,,,,,
+Module.xml,Key,Hide,,,,,,
+Module.xml,Key,HideDropDown,,,,,,
+Module.xml,Key,High,,,,,,
+Module.xml,Key,HKCC,,,,,,
+Module.xml,Key,HKCR,,,,,,
+Module.xml,Key,HKCU,,,,,,
+Module.xml,Key,HKEY_CLASSES_ROOT,,,,,,
+Module.xml,Key,HKEY_CURRENT_CONFIG,,,,,,
+Module.xml,Key,HKEY_CURRENT_USER,,,,,,
+Module.xml,Key,HKEY_LOCAL_MACHINE,,,,,,
+Module.xml,Key,HKEY_USERS,,,,,,
+Module.xml,Key,HKLM,,,,,,
+Module.xml,Key,HKU,,,,,,
+Module.xml,Key,Home,,,,,,
+Module.xml,Key,Hotkey,,,,,,"KeyName [, Label, Options]; IfWinActive/Exist [, WinTitle, WinText]; If [, Expression]"
+Module.xml,Key,Hours,,,,,,
+Module.xml,Key,HScroll,,,,,,
+Module.xml,Key,hWnd,,,,,,
+Module.xml,Key,Icon,,,,,,
+Module.xml,Key,IconSmall,,,,,,
+Module.xml,Key,ID,,,,,,
+Module.xml,Key,IDLast,,,,,,
+Module.xml,Key,If,,,,,,"(Expression); Var [Not] Between LowerBound and UpperBound; Var [Not] in Value1,Value2,...; Var [Not] Contains Value1,Value2,...; Var is [Not] Type"
+Module.xml,Key,IfEqual,,,,,,"var, value"
+Module.xml,Key,IfExist,,,,,,FilePattern
+Module.xml,Key,IfGreater,,,,,,"var, value"
+Module.xml,Key,IfGreaterOrEqual,,,,,,"var, value"
+Module.xml,Key,IfInString,,,,,,"var, SearchString"
+Module.xml,Key,IfLess,,,,,,"var, value"
+Module.xml,Key,IfLessOrEqual,,,,,,"var, value"
+Module.xml,Key,IfMsgBox,,,,,,ButtonName
+Module.xml,Key,IfNotEqual,,,,,,"var, value"
+Module.xml,Key,IfNotExist,,,,,,FilePattern
+Module.xml,Key,IfNotInString,,,,,,"var, SearchString"
+Module.xml,Key,IfWinActive,,,,,,"[, WinTitle, WinText,  ExcludeTitle, ExcludeText]"
+Module.xml,Key,IfWinExist,,,,,,"[, WinTitle, WinText,  ExcludeTitle, ExcludeText]"
+Module.xml,Key,IfWinNotActive,,,,,,"[, WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,IfWinNotExist,,,,,,"[, WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,Ignore,,,,,,
+Module.xml,Key,IL_Add,,,,,,"(ImageListID, Filename [, IconNumber, ResizeNonIcon?])"
+Module.xml,Key,IL_Create,,,,,,"([InitialCount, GrowCount, LargeIcons?])"
+Module.xml,Key,IL_Destroy,,,,,,(ImageListID)
+Module.xml,Key,ImageList,,,,,,
+Module.xml,Key,ImageSearch,,,,,,"OutputVarX, OutputVarY, X1, Y1, X2, Y2, ImageFile"
+Module.xml,Key,In,,,,,,
+Module.xml,Key,IniDelete,,,,,,"Filename, Section [, Key]"
+Module.xml,Key,IniRead,,,,,,"OutputVar, Filename, Section, Key [, Default]; OutputVarSection, Filename, Section; OutputVarSectionNames, Filename"
+Module.xml,Key,IniWrite,,,,,,"Value, Filename, Section, Key; Pairs, Filename, Section"
+Module.xml,Key,Input,,,,,,"[, OutputVar, Options, EndKeys, MatchList]"
+Module.xml,Key,InputBox,,,,,,"OutputVar [, Title, Prompt, HIDE, Width, Height, X, Y, Font, Timeout, Default]"
+Module.xml,Key,Ins,,,,,,
+Module.xml,Key,Insert,,,,,,
+Module.xml,Key,InStr,,,,,,"(Haystack, Needle [, CaseSensitive = false, StartingPos = 1, Occurrence = 1])"
+Module.xml,Key,Integer,,,,,,
+Module.xml,Key,IntegerFast,,,,,,
+Module.xml,Key,Interrupt,,,,,,
+Module.xml,Key,Is,,,,,,
+Module.xml,Key,IsByRef,,,,,,(Var)
+Module.xml,Key,IsFunc,,,,,,(FunctionName)
+Module.xml,Key,IsLabel,,,,,,(LabelName)
+Module.xml,Key,IsObject,,,,,,(Var)
+Module.xml,Key,Italic,,,,,,
+Module.xml,Key,Join,,,,,,
+Module.xml,Key,Joy1,,,,,,
+Module.xml,Key,Joy2,,,,,,
+Module.xml,Key,JoyAxes,,,,,,
+Module.xml,Key,JoyButtons,,,,,,
+Module.xml,Key,JoyInfo,,,,,,
+Module.xml,Key,JoyName,,,,,,
+Module.xml,Key,JoyPOV,,,,,,
+Module.xml,Key,JoyR,,,,,,
+Module.xml,Key,JoyU,,,,,,
+Module.xml,Key,JoyV,,,,,,
+Module.xml,Key,JoyX,,,,,,
+Module.xml,Key,JoyY,,,,,,
+Module.xml,Key,JoyZ,,,,,,
+Module.xml,Key,KeyHistory,,,,,,
+Module.xml,Key,KeyWait,,,,,,"KeyName [, Options]"
+Module.xml,Key,Label,,,,,,
+Module.xml,Key,LAlt,,,,,,
+Module.xml,Key,LastFound,,,,,,
+Module.xml,Key,LastFoundExist,,,,,,
+Module.xml,Key,Launch_App1,,,,,,
+Module.xml,Key,Launch_App2,,,,,,
+Module.xml,Key,Launch_Mail,,,,,,
+Module.xml,Key,Launch_Media,,,,,,
+Module.xml,Key,LButton,,,,,,
+Module.xml,Key,LControl,,,,,,
+Module.xml,Key,LCtrl,,,,,,
+Module.xml,Key,Left,,,,,,
+Module.xml,Key,Limit,,,,,,
+Module.xml,Key,Line,,,,,,
+Module.xml,Key,LineCount,,,,,,
+Module.xml,Key,Lines,,,,,,
+Module.xml,Key,Link,,,,,,
+Module.xml,Key,List,,,,,,
+Module.xml,Key,ListBox,,,,,,
+Module.xml,Key,ListHotkeys,,,,,,
+Module.xml,Key,ListLines,,,,,,
+Module.xml,Key,ListVars,,,,,,
+Module.xml,Key,ListView,,,,,,
+Module.xml,Key,Ln,,,,,,(Number)
+Module.xml,Key,LoadPicture,,,,,,"(Filename [, Options, ByRef ImageType])"
+Module.xml,Key,Local,,,,,,
+Module.xml,Key,LocalSameAsGlobal,,,,,,
+Module.xml,Key,Lock,,,,,,
+Module.xml,Key,Log,,,,,,(Number)
+Module.xml,Key,LogOff,,,,,,
+Module.xml,Key,Loop,,,,,,"[, Count]; Parse, InputVar [, Delimiters, OmitChars]; Read, InputFile [, OutputFile]; Files, FilePattern [, Mode]; FilePattern [, IncludeFolders?, Recurse?]; Reg, RootKey[\Key, Mode]; RootKey [, Key, IncludeSubkeys?, Recurse?]"
+Module.xml,Key,Low,,,,,,
+Module.xml,Key,Lower,,,,,,
+Module.xml,Key,Lowercase,,,,,,
+Module.xml,Key,LShift,,,,,,
+Module.xml,Key,LTrim,,,,,,"(String, OmitChars = "" `t"")"
+Module.xml,Key,LV_Add,,,,,,"([Options, Field1, Field2, ...])"
+Module.xml,Key,LV_Delete,,,,,,([RowNumber])
+Module.xml,Key,LV_DeleteCol,,,,,,(ColumnNumber)
+Module.xml,Key,LV_GetCount,,,,,,"([""Selected | Column""])"
+Module.xml,Key,LV_GetNext,,,,,,"([StartingRowNumber, ""Checked | Focused""])"
+Module.xml,Key,LV_GetText,,,,,,"(OutputVar, RowNumber [, ColumnNumber])"
+Module.xml,Key,LV_Insert,,,,,,"(RowNumber [, Options, Col1, Col2, ...])"
+Module.xml,Key,LV_InsertCol,,,,,,"(ColumnNumber [, Options, ColumnTitle])"
+Module.xml,Key,LV_Modify,,,,,,"(RowNumber [, Options, NewCol1, NewCol2, ...])"
+Module.xml,Key,LV_ModifyCol,,,,,,"([ColumnNumber, Options, ColumnTitle])"
+Module.xml,Key,LV_SetImageList,,,,,,"(ImageListID [, 0|1|2])"
+Module.xml,Key,LWin,,,,,,
+Module.xml,Key,LWinDown,,,,,,
+Module.xml,Key,LWinUp,,,,,,
+Module.xml,Key,MainWindow,,,,,,
+Module.xml,Key,Margin,,,,,,
+Module.xml,Key,Maximize,,,,,,
+Module.xml,Key,MaximizeBox,,,,,,
+Module.xml,Key,MaxSize,,,,,,
+Module.xml,Key,MButton,,,,,,
+Module.xml,Key,Media_Next,,,,,,
+Module.xml,Key,Media_Play_Pause,,,,,,
+Module.xml,Key,Media_Prev,,,,,,
+Module.xml,Key,Media_Stop,,,,,,
+Module.xml,Key,Menu,,,,,,"MenuName, Cmd [, P3, P4, P5]"
+Module.xml,Key,MenuGetHandle,,,,,,(MenuName)
+Module.xml,Key,MenuGetName,,,,,,(Handle)
+Module.xml,Key,Minimize,,,,,,
+Module.xml,Key,MinimizeBox,,,,,,
+Module.xml,Key,MinMax,,,,,,
+Module.xml,Key,MinSize,,,,,,
+Module.xml,Key,Minutes,,,,,,
+Module.xml,Key,Mod,,,,,,"(Dividend, Divisor)"
+Module.xml,Key,Monitor,,,,,,
+Module.xml,Key,MonitorCount,,,,,,
+Module.xml,Key,MonitorName,,,,,,
+Module.xml,Key,MonitorPrimary,,,,,,
+Module.xml,Key,MonitorWorkArea,,,,,,
+Module.xml,Key,MonthCal,,,,,,
+Module.xml,Key,Mouse,,,,,,
+Module.xml,Key,MouseClick,,,,,,"[, WhichButton , X, Y, ClickCount, Speed, D|U, R]"
+Module.xml,Key,MouseClickDrag,,,,,,"WhichButton, X1, Y1, X2, Y2 [, Speed, R]"
+Module.xml,Key,MouseGetPos,,,,,,"[OutputVarX, OutputVarY, OutputVarWin, OutputVarControl, 1|2|3]"
+Module.xml,Key,MouseMove,,,,,,"X, Y [, Speed, R]"
+Module.xml,Key,MouseMoveOff,,,,,,
+Module.xml,Key,Move,,,,,,
+Module.xml,Key,MsgBox,,,,,,"[, Options, Title, Text, Timeout]"
+Module.xml,Key,Multi,,,,,,
+Module.xml,Key,NA,,,,,,
+Module.xml,Key,New,,,,,,
+Module.xml,Key,No,,,,,,
+Module.xml,Key,NoActivate,,,,,,
+Module.xml,Key,NoDefault,,,,,,
+Module.xml,Key,NoHide,,,,,,
+Module.xml,Key,NoIcon,,,,,,
+Module.xml,Key,NoMainWindow,,,,,,
+Module.xml,Key,Norm,,,,,,
+Module.xml,Key,Normal,,,,,,
+Module.xml,Key,NoSort,,,,,,
+Module.xml,Key,NoSortHdr,,,,,,
+Module.xml,Key,NoStandard,,,,,,
+Module.xml,Key,Not,,,,,,
+Module.xml,Key,NoTab,,,,,,
+Module.xml,Key,NoTimers,,,,,,
+Module.xml,Key,Number,,,,,,
+Module.xml,Key,NumGet,,,,,,"(VarOrAddress [, Offset = 0][, Type = ""UPtr""])"
+Module.xml,Key,NumLock,,,,,,
+Module.xml,Key,Numpad0,,,,,,
+Module.xml,Key,Numpad1,,,,,,
+Module.xml,Key,Numpad2,,,,,,
+Module.xml,Key,Numpad3,,,,,,
+Module.xml,Key,Numpad4,,,,,,
+Module.xml,Key,Numpad5,,,,,,
+Module.xml,Key,Numpad6,,,,,,
+Module.xml,Key,Numpad7,,,,,,
+Module.xml,Key,Numpad8,,,,,,
+Module.xml,Key,Numpad9,,,,,,
+Module.xml,Key,NumpadAdd,,,,,,
+Module.xml,Key,NumpadClear,,,,,,
+Module.xml,Key,NumpadDel,,,,,,
+Module.xml,Key,NumpadDiv,,,,,,
+Module.xml,Key,NumpadDot,,,,,,
+Module.xml,Key,NumpadDown,,,,,,
+Module.xml,Key,NumpadEnd,,,,,,
+Module.xml,Key,NumpadEnter,,,,,,
+Module.xml,Key,NumpadHome,,,,,,
+Module.xml,Key,NumpadIns,,,,,,
+Module.xml,Key,NumpadLeft,,,,,,
+Module.xml,Key,NumpadMult,,,,,,
+Module.xml,Key,NumpadPgdn,,,,,,
+Module.xml,Key,NumpadPgup,,,,,,
+Module.xml,Key,NumpadRight,,,,,,
+Module.xml,Key,NumpadSub,,,,,,
+Module.xml,Key,NumpadUp,,,,,,
+Module.xml,Key,NumPut,,,,,,"(Number, VarOrAddress [, Offset = 0][, Type = ""UPtr""])"
+Module.xml,Key,ObjAddRef,,,,,,(Ptr)
+Module.xml,Key,ObjClone,,,,,,(Object)
+Module.xml,Key,ObjCount,,,,,,(Object)
+Module.xml,Key,Object,,,,,,
+Module.xml,Key,ObjGetAddress,,,,,,"(Object, Key)"
+Module.xml,Key,ObjGetBase,,,,,,(Object)
+Module.xml,Key,ObjGetCapacity,,,,,,"(Object, Key)"
+Module.xml,Key,ObjHasKey,,,,,,"(Object, Key)"
+Module.xml,Key,ObjInsert,,,,,,"(Object, Index, Values...); (Object, Value); (Object, Key, Value)"
+Module.xml,Key,ObjMaxIndex,,,,,,(Object)
+Module.xml,Key,ObjMinIndex,,,,,,(Object)
+Module.xml,Key,ObjNewEnum,,,,,,(Object)
+Module.xml,Key,ObjRawGet,,,,,,"(Object, Key)"
+Module.xml,Key,ObjRawSet,,,,,,"(Object, Key, Value)"
+Module.xml,Key,ObjRelease,,,,,,(Ptr)
+Module.xml,Key,ObjRemove,,,,,,"(Object, Key); (Object, First, Last)"
+Module.xml,Key,ObjSetBase,,,,,,"(Object, BaseObject)"
+Module.xml,Key,ObjSetCapacity,,,,,,"(Object, MaxItems); (Object, Key, ByteSize)"
+Module.xml,Key,Off,,,,,,
+Module.xml,Key,OK,,,,,,
+Module.xml,Key,On,,,,,,
+Module.xml,Key,OnClipboardChange,,,,,,"(Func [, AddRemove])"
+Module.xml,Key,OnError,,,,,,"(Func [, AddRemove])"
+Module.xml,Key,OnExit,,,,,,"(Func [, AddRemove]); [, Label]"
+Module.xml,Key,OnMessage,,,,,,"(MsgNumber [, Function, MaxThreads])"
+Module.xml,Key,Or,,,,,,
+Module.xml,Key,Ord,,,,,,(String)
+Module.xml,Key,OutputDebug,,,,,,Text
+Module.xml,Key,OwnDialogs,,,,,,
+Module.xml,Key,Owner,,,,,,
+Module.xml,Key,Parent,,,,,,
+Module.xml,Key,Parse,,,,,,
+Module.xml,Key,Password,,,,,,
+Module.xml,Key,Pause,,,,,,"[, On|Off|Toggle, OperateOnUnderlyingThread?]"
+Module.xml,Key,PgDn,,,,,,
+Module.xml,Key,PgUp,,,,,,
+Module.xml,Key,Pic,,,,,,
+Module.xml,Key,Picture,,,,,,
+Module.xml,Key,PID,,,,,,
+Module.xml,Key,Pixel,,,,,,
+Module.xml,Key,PixelGetColor,,,,,,"OutputVar, X, Y [, Alt|Slow|RGB]"
+Module.xml,Key,PixelSearch,,,,,,"OutputVarX, OutputVarY, X1, Y1, X2, Y2, ColorID [, Variation, Fast|RGB]"
+Module.xml,Key,Pos,,,,,,
+Module.xml,Key,PostMessage,,,,,,"Msg [, wParam, lParam, Control, WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,Pow,,,,,,
+Module.xml,Key,PrintScreen,,,,,,
+Module.xml,Key,Priority,,,,,,
+Module.xml,Key,Process,,,,,,"Cmd [, PID-or-Name, Param3]"
+Module.xml,Key,ProcessName,,,,,,
+Module.xml,Key,ProcessPath,,,,,,
+Module.xml,Key,ProgramFiles,,,,,,
+Module.xml,Key,Progress,,,,,,"ProgressParam1 [, SubText, MainText, WinTitle, FontName]; Off"
+Module.xml,Key,Radio,,,,,,
+Module.xml,Key,RAlt,,,,,,
+Module.xml,Key,Random,,,,,,"OutputVar [, Min, Max]; ,, NewSeed"
+Module.xml,Key,Range,,,,,,
+Module.xml,Key,Raw,,,,,,
+Module.xml,Key,RButton,,,,,,
+Module.xml,Key,RControl,,,,,,
+Module.xml,Key,RCtrl,,,,,,
+Module.xml,Key,Read,,,,,,
+Module.xml,Key,ReadOnly,,,,,,
+Module.xml,Key,Realtime,,,,,,
+Module.xml,Key,Redraw,,,,,,
+Module.xml,Key,REG_BINARY,,,,,,
+Module.xml,Key,REG_DWORD,,,,,,
+Module.xml,Key,REG_EXPAND_SZ,,,,,,
+Module.xml,Key,REG_MULTI_SZ,,,,,,
+Module.xml,Key,REG_SZ,,,,,,
+Module.xml,Key,RegDelete,,,,,,"RootKey\SubKey [, ValueName]  ; v1.1.21+; RootKey, SubKey [, ValueName]"
+Module.xml,Key,RegEx,,,,,,
+Module.xml,Key,RegExMatch,,,,,,"(Haystack, NeedleRegEx [, UnquotedOutputVar = """", StartingPosition = 1])"
+Module.xml,Key,RegExReplace,,,,,,"(Haystack, NeedleRegEx [, Replacement = """", OutputVarCount = """", Limit = -1, StartingPosition = 1])"
+Module.xml,Key,Region,,,,,,
+Module.xml,Key,RegisterCallback,,,,,,"(""FunctionName"" [, Options = """", ParamCount = FormalCount, EventInfo = Address])"
+Module.xml,Key,RegRead,,,,,,"OutputVar, RootKey\SubKey [, ValueName]; OutputVar, RootKey, SubKey [, ValueName]"
+Module.xml,Key,RegWrite,,,,,,"ValueType, RootKey\SubKey [, ValueName, Value]; ValueType, RootKey, SubKey [, ValueName, Value]"
+Module.xml,Key,Relative,,,,,,
+Module.xml,Key,Reload,,,,,,
+Module.xml,Key,Rename,,,,,,
+Module.xml,Key,Report,,,,,,
+Module.xml,Key,Resize,,,,,,
+Module.xml,Key,Restore,,,,,,
+Module.xml,Key,Retry,,,,,,
+Module.xml,Key,Return,,,,,,"[, Expression]"
+Module.xml,Key,RGB,,,,,,
+Module.xml,Key,Right,,,,,,
+Module.xml,Key,Round,,,,,,"(Number [, N])"
+Module.xml,Key,RShift,,,,,,
+Module.xml,Key,RTrim,,,,,,"(String, OmitChars = "" `t"")"
+Module.xml,Key,RTrim0,,,,,,
+Module.xml,Key,Run,,,,,,"Target [, WorkingDir, Max|Min|Hide|UseErrorLevel, OutputVarPID]"
+Module.xml,Key,RunAs,,,,,,"[, User, Password, Domain]"
+Module.xml,Key,RunWait,,,,,,"Target [, WorkingDir, Max|Min|Hide|UseErrorLevel, OutputVarPID]"
+Module.xml,Key,RWin,,,,,,
+Module.xml,Key,RWinDown,,,,,,
+Module.xml,Key,RWinUp,,,,,,
+Module.xml,Key,SB_SetIcon,,,,,,"(Filename [, IconNumber, PartNumber])"
+Module.xml,Key,SB_SetParts,,,,,,"([Width1, Width2, ... Width255])"
+Module.xml,Key,SB_SetText,,,,,,"(NewText [, PartNumber, Style])"
+Module.xml,Key,Screen,,,,,,
+Module.xml,Key,ScrollLock,,,,,,
+Module.xml,Key,Seconds,,,,,,
+Module.xml,Key,Section,,,,,,
+Module.xml,Key,Selected,,,,,,
+Module.xml,Key,Send,,,,,,Keys
+Module.xml,Key,SendAndMouse,,,,,,
+Module.xml,Key,SendEvent,,,,,,Keys
+Module.xml,Key,SendInput,,,,,,Keys
+Module.xml,Key,SendLevel,,,,,,Level
+Module.xml,Key,SendMessage,,,,,,"Msg [, wParam, lParam, Control, WinTitle, WinText, ExcludeTitle, ExcludeText, Timeout]"
+Module.xml,Key,SendMode,,,,,,Input|Play|Event|InputThenPlay
+Module.xml,Key,SendPlay,,,,,,Keys
+Module.xml,Key,SendRaw,,,,,,Keys
+Module.xml,Key,Serial,,,,,,
+Module.xml,Key,SetBatchLines,,,,,,20ms; LineCount
+Module.xml,Key,SetCapsLockState,,,,,,"[, State]"
+Module.xml,Key,SetControlDelay,,,,,,Delay
+Module.xml,Key,SetDefaultMouseSpeed,,,,,,Speed
+Module.xml,Key,SetEnv,,,,,,"Var, Value"
+Module.xml,Key,SetFormat,,,,,,"NumberType, Format"
+Module.xml,Key,SetKeyDelay,,,,,,"[, Delay, PressDuration, Play]"
+Module.xml,Key,SetLabel,,,,,,
+Module.xml,Key,SetMouseDelay,,,,,,"Delay [, Play]"
+Module.xml,Key,SetNumLockState,,,,,,"[, State]"
+Module.xml,Key,SetRegView,,,,,,RegView
+Module.xml,Key,SetScrollLockState,,,,,,"[, State]"
+Module.xml,Key,SetStoreCapslockMode,,,,,,On|Off
+Module.xml,Key,SetTimer,,,,,,"[, Label, Period|On|Off|Delete, Priority]"
+Module.xml,Key,SetTitleMatchMode,,,,,,MatchMode (1|2|3|RegEx); Fast|Slow
+Module.xml,Key,SetWinDelay,,,,,,Delay
+Module.xml,Key,SetWorkingDir,,,,,,DirName
+Module.xml,Key,Shift,,,,,,
+Module.xml,Key,ShiftAltTab,,,,,,
+Module.xml,Key,ShiftDown,,,,,,
+Module.xml,Key,ShiftUp,,,,,,
+Module.xml,Key,Show,,,,,,
+Module.xml,Key,ShowDropDown,,,,,,
+Module.xml,Key,Shutdown,,,,,,Code
+Module.xml,Key,Sin,,,,,,(Number)
+Module.xml,Key,Single,,,,,,
+Module.xml,Key,Sleep,,,,,,DelayInMilliseconds
+Module.xml,Key,Slider,,,,,,
+Module.xml,Key,Sort,,,,,,"VarName [, Options]"
+Module.xml,Key,SortDesc,,,,,,
+Module.xml,Key,SoundBeep,,,,,,"[, Frequency, Duration]"
+Module.xml,Key,SoundGet,,,,,,"OutputVar [, ComponentType, ControlType, DeviceNumber]"
+Module.xml,Key,SoundGetWaveVolume,,,,,,"OutputVar [, DeviceNumber]"
+Module.xml,Key,SoundPlay,,,,,,"Filename [, wait]"
+Module.xml,Key,SoundSet,,,,,,"NewSetting [, ComponentType, ControlType, DeviceNumber]"
+Module.xml,Key,SoundSetWaveVolume,,,,,,"Percent [, DeviceNumber]"
+Module.xml,Key,Space,,,,,,
+Module.xml,Key,SplashImage,,,,,,"[, ImageFile, Options, SubText, MainText, WinTitle, FontName]; Off"
+Module.xml,Key,SplashTextOff,,,,,,
+Module.xml,Key,SplashTextOn,,,,,,"[, Width, Height, Title, Text]"
+Module.xml,Key,SplitPath,,,,,,"InputVar [, OutFileName, OutDir, OutExtension, OutNameNoExt, OutDrive]"
+Module.xml,Key,Sqrt,,,,,,(Number)
+Module.xml,Key,Standard,,,,,,
+Module.xml,Key,Static,,,,,,
+Module.xml,Key,Status,,,,,,
+Module.xml,Key,StatusBar,,,,,,
+Module.xml,Key,StatusBarGetText,,,,,,"OutputVar [, Part#, WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,StatusBarWait,,,,,,"[, BarText, Seconds, Part#, WinTitle, WinText, Interval, ExcludeTitle, ExcludeText]"
+Module.xml,Key,StatusCD,,,,,,
+Module.xml,Key,StrGet,,,,,,"(Address [, Length] [, Encoding = None ] )"
+Module.xml,Key,Strike,,,,,,
+Module.xml,Key,StringCaseSense,,,,,,On|Off|Locale
+Module.xml,Key,StringGetPos,,,,,,"OutputVar, InputVar, SearchText [, L#|R#, Offset]"
+Module.xml,Key,StringLeft,,,,,,"OutputVar, InputVar, Count"
+Module.xml,Key,StringLen,,,,,,"OutputVar, InputVar"
+Module.xml,Key,StringLower,,,,,,"OutputVar, InputVar [, T]"
+Module.xml,Key,StringMid,,,,,,"OutputVar, InputVar, StartChar [, Count , L]"
+Module.xml,Key,StringReplace,,,,,,"OutputVar, InputVar, SearchText [, ReplaceText, ReplaceAll?]"
+Module.xml,Key,StringRight,,,,,,"OutputVar, InputVar, Count"
+Module.xml,Key,StringSplit,,,,,,"OutputArray, InputVar [, Delimiters, OmitChars]"
+Module.xml,Key,StringTrimLeft,,,,,,"OutputVar, InputVar, Count"
+Module.xml,Key,StringTrimRight,,,,,,"OutputVar, InputVar, Count"
+Module.xml,Key,StringUpper,,,,,,"OutputVar, InputVar [, T]"
+Module.xml,Key,StrLen,,,,,,(InputVar)
+Module.xml,Key,StrPut,,,,,,"(String, Address [, Length] [, Encoding = None ]); (String [, Encoding = None ])"
+Module.xml,Key,StrReplace,,,,,,"(Haystack, SearchText [, ReplaceText, OutputVarCount, Limit := -1])"
+Module.xml,Key,StrSplit,,,,,,"(String [, Delimiters, OmitChars])"
+Module.xml,Key,Style,,,,,,
+Module.xml,Key,Submit,,,,,,
+Module.xml,Key,SubStr,,,,,,"(String, StartingPos [, Length])"
+Module.xml,Key,Suspend,,,,,,"[, On|Off|Toggle|Permit]"
+Module.xml,Key,SysGet,,,,,,"OutputVar, Sub-command [, Param3]"
+Module.xml,Key,SysMenu,,,,,,
+Module.xml,Key,Tab,,,,,,
+Module.xml,Key,Tab2,,,,,,
+Module.xml,Key,Tab3,,,,,,
+Module.xml,Key,TabLeft,,,,,,
+Module.xml,Key,TabRight,,,,,,
+Module.xml,Key,TabStop,,,,,,
+Module.xml,Key,Tan,,,,,,(Number)
+Module.xml,Key,Text,,,,,,
+Module.xml,Key,Theme,,,,,,
+Module.xml,Key,Thread,,,,,,"NoTimers [, false]; Priority, n; Interrupt [, Duration, LineCount]"
+Module.xml,Key,Throw,,,,,,"[, Expression]"
+Module.xml,Key,Tile,,,,,,
+Module.xml,Key,Time,,,,,,
+Module.xml,Key,Tip,,,,,,
+Module.xml,Key,ToCodePage,,,,,,
+Module.xml,Key,ToggleCheck,,,,,,
+Module.xml,Key,ToggleEnable,,,,,,
+Module.xml,Key,ToolTip,,,,,,"[, Text, X, Y, WhichToolTip]"
+Module.xml,Key,ToolWindow,,,,,,
+Module.xml,Key,Top,,,,,,
+Module.xml,Key,Topmost,,,,,,
+Module.xml,Key,TransColor,,,,,,
+Module.xml,Key,Transform,,,,,,"OutputVar, Cmd, Value1 [, Value2]"
+Module.xml,Key,Transparent,,,,,,
+Module.xml,Key,Tray,,,,,,
+Module.xml,Key,TrayTip,,,,,,"[, Title, Text, Seconds, Options]"
+Module.xml,Key,TreeView,,,,,,
+Module.xml,Key,Trim,,,,,,"(String, OmitChars = "" `t"")"
+Module.xml,Key,True,,,,,,
+Module.xml,Key,Try,,,,,,
+Module.xml,Key,TryAgain,,,,,,
+Module.xml,Key,TV_Add,,,,,,"(Name, [ParentItemID, Options])"
+Module.xml,Key,TV_Delete,,,,,,([ItemID])
+Module.xml,Key,TV_Get,,,,,,"(ItemID, ""Expand | Check | Bold"")"
+Module.xml,Key,TV_GetChild,,,,,,(ParentItemID)
+Module.xml,Key,TV_GetCount,,,,,,
+Module.xml,Key,TV_GetNext,,,,,,"([ItemID, ""Checked | Full""])"
+Module.xml,Key,TV_GetParent,,,,,,(ItemID)
+Module.xml,Key,TV_GetPrev,,,,,,(ItemID)
+Module.xml,Key,TV_GetSelection,,,,,,
+Module.xml,Key,TV_GetText,,,,,,"(OutputVar, ItemID)"
+Module.xml,Key,TV_Modify,,,,,,"(ItemID [, Options, NewName])"
+Module.xml,Key,TV_SetImageList,,,,,,"(ImageListID [, 0|2])"
+Module.xml,Key,Type,,,,,,
+Module.xml,Key,Uncheck,,,,,,
+Module.xml,Key,Underline,,,,,,
+Module.xml,Key,Unicode,,,,,,
+Module.xml,Key,Unlock,,,,,,
+Module.xml,Key,Until,,,,,,Expression
+Module.xml,Key,Up,,,,,,
+Module.xml,Key,UpDown,,,,,,
+Module.xml,Key,Upper,,,,,,
+Module.xml,Key,Uppercase,,,,,,
+Module.xml,Key,URLDownloadToFile,,,,,,"URL, Filename"
+Module.xml,Key,UseEnv,,,,,,
+Module.xml,Key,UseErrorLevel,,,,,,
+Module.xml,Key,UseUnsetGlobal,,,,,,
+Module.xml,Key,UseUnsetLocal,,,,,,
+Module.xml,Key,VarSetCapacity,,,,,,"(UnquotedVarName [, RequestedCapacity, FillByte])"
+Module.xml,Key,Vertical,,,,,,
+Module.xml,Key,Vis,,,,,,
+Module.xml,Key,VisFirst,,,,,,
+Module.xml,Key,Visible,,,,,,
+Module.xml,Key,Volume_Down,,,,,,
+Module.xml,Key,Volume_Mute,,,,,,
+Module.xml,Key,Volume_Up,,,,,,
+Module.xml,Key,VScroll,,,,,,
+Module.xml,Key,Wait,,,,,,
+Module.xml,Key,WaitClose,,,,,,
+Module.xml,Key,WantCtrlA,,,,,,
+Module.xml,Key,WantF2,,,,,,
+Module.xml,Key,WantReturn,,,,,,
+Module.xml,Key,WantTab,,,,,,
+Module.xml,Key,WheelDown,,,,,,
+Module.xml,Key,WheelLeft,,,,,,
+Module.xml,Key,WheelRight,,,,,,
+Module.xml,Key,WheelUp,,,,,,
+Module.xml,Key,While,,,,,,Expression
+Module.xml,Key,WinActivate,,,,,,"[, WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,WinActivateBottom,,,,,,"[, WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,WinActive,,,,,,"(""WinTitle"", ""WinText"", ""ExcludeTitle"", ""ExcludeText"")"
+Module.xml,Key,WinClose,,,,,,"[, WinTitle, WinText, SecondsToWait, ExcludeTitle, ExcludeText]"
+Module.xml,Key,WinExist,,,,,,"(""WinTitle"", ""WinText"", ""ExcludeTitle"", ""ExcludeText"")"
+Module.xml,Key,WinGet,,,,,,"OutputVar [, Cmd, WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,WinGetActiveStats,,,,,,"Title, Width, Height, X, Y"
+Module.xml,Key,WinGetActiveTitle,,,,,,OutputVar
+Module.xml,Key,WinGetClass,,,,,,"OutputVar [, WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,WinGetPos,,,,,,"X, Y, Width, Height, WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,WinGetText,,,,,,"OutputVar [, WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,WinGetTitle,,,,,,"OutputVar [, WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,WinHide,,,,,,"[WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,WinKill,,,,,,"WinTitle, WinText, SecondsToWait, ExcludeTitle, ExcludeText]"
+Module.xml,Key,WinMaximize,,,,,,"[WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,WinMenuSelectItem,,,,,,"WinTitle, WinText, Menu [, SubMenu1, SubMenu2, SubMenu3, SubMenu4, SubMenu5, SubMenu6, ExcludeTitle, ExcludeText]"
+Module.xml,Key,WinMinimize,,,,,,"[WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,WinMinimizeAll,,,,,,
+Module.xml,Key,WinMinimizeAllUndo,,,,,,
+Module.xml,Key,WinMove,,,,,,"WinTitle, WinText, X, Y [, Width, Height, ExcludeTitle, ExcludeText]; X, Y"
+Module.xml,Key,WinRestore,,,,,,"[WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,WinSet,,,,,,"Attribute, Value [, WinTitle, WinText,  ExcludeTitle, ExcludeText]"
+Module.xml,Key,WinSetTitle,,,,,,"WinTitle, WinText, NewTitle [, ExcludeTitle, ExcludeText]; NewTitle"
+Module.xml,Key,WinShow,,,,,,"[WinTitle, WinText, ExcludeTitle, ExcludeText]"
+Module.xml,Key,WinWait,,,,,,"WinTitle, WinText, Seconds, ExcludeTitle, ExcludeText]"
+Module.xml,Key,WinWaitActive,,,,,,"WinTitle, WinText, Seconds, ExcludeTitle, ExcludeText]"
+Module.xml,Key,WinWaitClose,,,,,,"WinTitle, WinText, Seconds, ExcludeTitle, ExcludeText]"
+Module.xml,Key,WinWaitNotActive,,,,,,"WinTitle, WinText, Seconds, ExcludeTitle, ExcludeText]"
+Module.xml,Key,Wrap,,,,,,
+Module.xml,Key,XButton1,,,,,,
+Module.xml,Key,XButton2,,,,,,
+Module.xml,Key,Xdigit,,,,,,
+Module.xml,Key,xm,,,,,,
+Module.xml,Key,xp,,,,,,
+Module.xml,Key,xs,,,,,,
+Module.xml,Key,Yes,,,,,,
+Module.xml,Key,ym,,,,,,
+Module.xml,Key,yp,,,,,,
+Module.xml,Key,ys,,,,,,
+Operators.xml,Operator,(Expression),,,(Expression),,"Any sub-expression enclosed in parentheses. For example, (3 + 2) * 2 forces 3 + 2 to be evaluated first. For a multi-statement expression, the result of the last statement is returned. For example, (a := 1, b := 2, c := 3) returns 3.",
+Operators.xml,Operator,Fn(),,,Fn(),,"Function call. There must be no space between the function name or expression and the open parenthesis which begins the parameter list. For details, see Function Calls.",
+Operators.xml,Operator,Fn(Params*),,,Fn(Params*),,"Variadic function call. Params is an enumerable object (an object with an __Enum method), such as an Array containing parameter values.",
+Operators.xml,Operator,x[y],,,x[y],,"Item access. Get or set the __Item property (or default property) of object x with the parameter y (or multiple parameters in place of y). This typically corresponds to an array element or item within a collection, where y is the item's index or key. The item can be assigned a value by using any assignment operator immediately after the closing bracket. For example, x[y] := z.",
+Operators.xml,Operator,"[1, 2]",,,"[1, 2]",,"Array literal. If the open-bracket is not preceded by a value (or a sub-expression which yields a value), it is interpreted as the beginning of an array literal. For example, [a, b, c] is equivalent to Array(a, b, c) (a, b and c are variables).",
+Operators.xml,Operator,"{a:1, b:2}",,,"{a:1, b:2}",,"Object literal. Create an Object. Each pair consists of a literal property name a and a property value expression b. For example, x := {a: b} is equivalent to x := Object(), x.a := b. Base may be set within the object literal, but all other properties are set as own value properties, potentially overriding properties inherited from the base object.",
+Operators.xml,Operator,%Expression%,,,%Expression%,,Dereference or name substitution.,
+Operators.xml,Operator,x.y,,,x.y,,"Member access. Get or set a value or call a method of object x, where y is a literal name and z is an expression which evaluates to a name. See object syntax.",
+Operators.xml,Operator,x.%z%,,,x.%z%,,"Member access. Get or set a value or call a method of object x, where y is a literal name and z is an expression which evaluates to a name. See object syntax.",
+Operators.xml,Operator,var?,,,var?,,"Maybe. Permits the variable to be unset. This is valid only when passing a variable to an optional parameter, array element or object literal; or on the right-hand side of a direct assignment. The question mark must be followed by one of the following symbols (ignoring whitespace): )]},:. The variable may be passed conditionally via the ternary operator or on the right-hand side of AND/OR.",
+Operators.xml,Operator,++,,,++,,"Pre- and post-increment. Adds 1 to a variable. The operator may appear either before or after the variable's name. If it appears before the name, the operation is performed and its result is used by the next operation (the result is a variable reference in this case). For example, Var := ++X increments X and then assigns its value to Var. Conversely, if the operator appears after the variable's name, the result is the value of X prior to performing the operation. For example, Var := X++ increments X but Var receives the value X had before it was incremented.",
+Operators.xml,Operator,--,,,--,,"Pre- and post-decrement. Subtracts 1 from a variable. The operator may appear either before or after the variable's name. If it appears before the name, the operation is performed and its result is used by the next operation (the result is a variable reference in this case). For example, Var := ++X increments X and then assigns its value to Var. Conversely, if the operator appears after the variable's name, the result is the value of X prior to performing the operation. For example, Var := X++ increments X but Var receives the value X had before it was incremented.",
+Operators.xml,Operator,**,,,**,,"Power. Example usage: base**exponent. Both base and exponent may contain a decimal point. If exponent is negative, the result will be formatted as a floating point number even if base and exponent are both integers. Since ** is of higher precedence than unary minus, -2**2 is evaluated like -(2**2) and so yields -4. Thus, to raise a literal negative number to a power, enclose it in parentheses such as (-2)**2.",
+Operators.xml,Operator,-,,,-,,Unary minus (-): Inverts the sign of its operand.,
+Operators.xml,Operator,+,,,+,,"Unary plus (+): +N is equivalent to -(-N). This has no effect when applied to a pure number, but can be used to convert numeric strings to pure numbers.",
+Operators.xml,Operator,!,,,!,,"Logical-not (!): If the operand is blank or 0, the result of applying logical-not is 1, which means ""true"". Otherwise, the result is 0 (false). For example: !x or !(y and z). Note: The word NOT is synonymous with ! except that ! has a higher precedence. Consecutive unary operators such as !!Var are allowed because they are evaluated in right-to-left order.",
+Operators.xml,Operator,~,,,~,,"Bitwise-not (~): This inverts each bit of its operand. As 64-bit signed integers are used, a positive input value will always give a negative result and vice versa. For example, ~0xf0f evaluates to -0xf10 (-3856), which is binary equivalent to 0xfffffffffffff0f0. If an unsigned 32-bit value is intended, the result can be truncated with result & 0xffffffff. If the operand is a floating point value, a TypeError is thrown.",
+Operators.xml,Operator,&,,,&,,"Reference (&): Creates a VarRef, which is a value representing a reference to a variable. A VarRef can then be used to indirectly access the target variable. For example, ref := &target followed by %ref% := 1 would assign the value 1 to target. The VarRef would typically be passed to a function, but could be stored in an array or property. See also: Dereference, ByRef.",
+Operators.xml,Operator,*,,,*,,"Multiply (*): The result is an integer if both inputs are integers; otherwise, it is a floating point number.",
+Operators.xml,Operator,/,,,/,,"True divide (/): True division yields a floating point result even when both inputs are integers. For example, 3/2 yields 1.5 rather than 1, and 4/2 yields 2.0 rather than 2.",
+Operators.xml,Operator,//,,,//,,"Integer divide (//): The double-slash operator uses high-performance integer division. For example, 5//3 is 1 and 5//-3 is -1. If either of the inputs is in floating point format, a TypeError is thrown. For modulo, see Mod.",
+Operators.xml,Operator,+,,,+,,Add (+),
+Operators.xml,Operator,-,,,-,,Subtract (-),
+Operators.xml,Operator,<<,,,<<,,"Bit shift left (<<). Example usage: Value1 << Value2. This is equivalent to multiplying Value1 by ""2 to the Value2th power"".",
+Operators.xml,Operator,>>,,,>>,,"Arithmetic bit shift right (>>). Example usage: Value1 >> Value2. This is equivalent to dividing Value1 by ""2 to the Value2th power"" and rounding the result to the nearest integer leftward on the number line; for example, -3>>1 is -2.",
+Operators.xml,Operator,>>>,,,>>>,,"Logical bit shift right (>>>). Example usage: Value1 >>> Value2. Unlike arithmetic bit shift right, this does not preserve the sign of the number. For example, -1 has the same bit representation as the unsigned 64-bit integer 0xffffffffffffffff, therefore -1 >>> 1 is 0x7fffffffffffffff.",
+Operators.xml,Operator,&,,,&,,Bitwise-and (&),
+Operators.xml,Operator,^,,,^,,Bitwise-exclusive-or (^),
+Operators.xml,Operator,|,,,|,,Bitwise-or (|),
+Operators.xml,Operator,.,,,.,,"Concatenate. A period (dot) with at least one space or tab on each side is used to combine two items into a single string. You may also omit the period to achieve the same result (except where ambiguous such as x -y, or when the item on the right side has a leading ++ or --). When the dot is omitted, there must be at least one space or tab between the items to be merged.",
+Operators.xml,Operator,~=,,,~=,,"Shorthand for RegExMatch. For example, the result of ""abc123"" ~= ""\d"" is 4 (the position of the first numeric character).",
+Operators.xml,Operator,>,,,>,,Greater (>),
+Operators.xml,Operator,<,,,<,,Less (<),
+Operators.xml,Operator,>=,,,>=,,Greater-or-equal,
+Operators.xml,Operator,<=,,,<=,,Less-or-equal,
+Operators.xml,Operator,=,,,=,,Case-insensitive equal (=),
+Operators.xml,Operator,==,,,==,,Case-sensitive equal,
+Operators.xml,Operator,!=,,,!=,,Not-equal,
+Operators.xml,Operator,!==,,,!==,,Case-sensitive not-equal,
+Operators.xml,Operator,IS,,,IS,,"(Value IS Class) yields true (1) if Value is an instance of Class or false (0) otherwise. Class must be an Object with a Prototype own property, but typically the property is defined implicitly by a class definition.",
+Operators.xml,Operator,IN,,,IN,,"Keyword used with the for-loop to enumerate an object. For key, value IN object",
+Operators.xml,Operator,CONTAINS,,,CONTAINS,,contains is reserved for future use.,
+Operators.xml,Operator,NOT,,,NOT,,"Logical-NOT. Except for its lower precedence, this is the same as the ! operator. For example, not (x = 3 or y = 3) is the same as !(x = 3 or y = 3).",
+Operators.xml,Operator,AND,,,AND,,Logical-AND. For example: (x > 3 AND x < 10),
+Operators.xml,Operator,&&,,,&&,,Logical-AND. For example: (x > 3 && x < 10),
+Operators.xml,Operator,OR,,,OR,,Logical-OR. For example: (x <= 3 OR x >= 10).,
+Operators.xml,Operator,||,,,||,,Logical-OR. For example: (x <= 3 || x >= 10).,
+Operators.xml,Operator,??,,,??,,"Or maybe. Otherwise known as the coalescing operator. If the left operand (which must be a variable) has a value, it becomes the result and the right branch is skipped. Otherwise, the right operand becomes the result. In other words, A ?? B behaves like A || B (logical-OR) except that the condition is IsSet(A).",
+Operators.xml,Operator,?:,,,?:,,"Ternary operator. This operator is a shorthand replacement for the if-else statement. It evaluates the condition on its left side to determine which of its two branches should become its final result. For example, var := x>y ? 2 : 3 stores 2 in Var if x is greater than y; otherwise it stores 3. To enhance performance, only the winning branch is evaluated (see short-circuit evaluation).",
+Operators.xml,Operator,:=,,,:=,,"Assignment operator. Performs the operation using the original variable and the contents on the right, then assigns the result back to the original variable.",
+Operators.xml,Operator,+=,,,+=,,"Add-assign operator. Performs the operation using the original variable and the contents on the right, then assigns the result back to the original variable.",
+Operators.xml,Operator,-=,,,-=,,"Minus-assign operator. Performs the operation using the original variable and the contents on the right, then assigns the result back to the original variable.",
+Operators.xml,Operator,*=,,,*=,,"Multiply-assign operator. Performs the operation using the original variable and the contents on the right, then assigns the result back to the original variable.",
+Operators.xml,Operator,/=,,,/=,,"True-divide-assign operator. Performs the operation using the original variable and the contents on the right, then assigns the result back to the original variable.",
+Operators.xml,Operator,//=,,,//=,,"Integer-divide-assign operator. Performs the operation using the original variable and the contents on the right, then assigns the result back to the original variable.",
+Operators.xml,Operator,.=,,,.=,,"Concatinate-assign operator. Performs the operation using the original variable and the contents on the right, then assigns the result back to the original variable.",
+Operators.xml,Operator,|=,,,|=,,"Bitwise-or-assign operator. Performs the operation using the original variable and the contents on the right, then assigns the result back to the original variable.",
+Operators.xml,Operator,&=,,,&=,,"Bitwise-and-assign operator. Performs the operation using the original variable and the contents on the right, then assigns the result back to the original variable.",
+Operators.xml,Operator,^=,,,^=,,"Bitwise-xor-assign operator. Performs the operation using the original variable and the contents on the right, then assigns the result back to the original variable.",
+Operators.xml,Operator,>>=,,,>>=,,"Bitshift-right-assign operator. Performs the operation using the original variable and the contents on the right, then assigns the result back to the original variable.",
+Operators.xml,Operator,<<=,,,<<=,,"Bitshift-left-assign operator. Performs the operation using the original variable and the contents on the right, then assigns the result back to the original variable.",
+Operators.xml,Operator,>>>=,,,>>>=,,"Logical-bitshift-right-assign operator. Performs the operation using the original variable and the contents on the right, then assigns the result back to the original variable.",
+Operators.xml,Operator,() => Expression,,,() => Expression,,"Fat arrow function. Defines a simple function and returns a Func or Closure object. Write the function's parameter list (optionally preceded by a function name) to the left of the operator. When the function is called (via the returned reference), it evaluates the sub-expression expr and returns the result.",
+Operators.xml,Operator,",",,,",",,Comma (multi-statement). Commas may be used to write multiple sub-expressions into a single statement. This is most commonly used to group together multiple assignments or function calls. Commas are also used as delimiters between function parameters.,

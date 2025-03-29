@@ -1,0 +1,105 @@
+<Directives>
+  <Directive name="#ClipboardTimeout" description="Changes how long the script keeps trying to access the clipboard when the first attempt fails.">
+    <Parameters>
+      <Required name="Milliseconds" type="Unknown" description="Changes how long the script keeps trying to access the clipboard when the first attempt fails." />
+    </Parameters>
+  </Directive>
+  <Directive name="#DllLoad" description="Loads a DLL or EXE file before the script starts executing.">
+    <Parameters>
+      <Optional name="FileOrDirName" type="Unknown" description="Loads a DLL or EXE file before the script starts executing." />
+    </Parameters>
+  </Directive>
+  <Directive name="#ErrorStdOut" description="Sends any syntax error that prevents a script from launching to the standard error stream (stderr) rather than displaying a dialog.">
+    <Parameters>
+      <Optional name="Encoding" type="Unknown" description="Sends any syntax error that prevents a script from launching to the standard error stream (stderr) rather than displaying a dialog." />
+    </Parameters>
+  </Directive>
+  <Directive name="#Hotstring" description="Changes hotstring options or ending characters.">
+    <Parameters>
+      <Required name="NoMouse" type="Unknown" description="Changes hotstring options or ending characters." />
+    </Parameters>
+  </Directive>
+  <Directive name="#Hotstring" description="Changes hotstring options or ending characters.">
+    <Parameters>
+      <Required name="EndChars NewChars" type="Unknown" description="Changes hotstring options or ending characters." />
+    </Parameters>
+  </Directive>
+  <Directive name="#Hotstring" description="Changes hotstring options or ending characters.">
+    <Parameters>
+      <Required name="NewOptions" type="Unknown" description="Changes hotstring options or ending characters." />
+    </Parameters>
+  </Directive>
+  <Directive name="#HotIf" description="Creates context-sensitive hotkeys and hotstrings. Such hotkeys perform a different action (or none at all) depending on any condition (an expression).">
+    <Parameters>
+      <Optional name="Expression" type="Unknown" description="Creates context-sensitive hotkeys and hotstrings. Such hotkeys perform a different action (or none at all) depending on any condition (an expression)." />
+    </Parameters>
+  </Directive>
+  <Directive name="#HotIfTimeout" description="Sets the maximum time that may be spent evaluating a single #HotIf expression.">
+    <Parameters>
+      <Required name="Timeout" type="Unknown" description="Sets the maximum time that may be spent evaluating a single #HotIf expression." />
+    </Parameters>
+  </Directive>
+  <Directive name="#Include" description="Causes the script to behave as though the specified file's contents are present at this exact position.">
+    <Parameters>
+      <Required name="FileOrDirName" type="Unknown" description="Causes the script to behave as though the specified file's contents are present at this exact position." />
+    </Parameters>
+  </Directive>
+  <Directive name="#Include" description="Causes the script to behave as though the specified file's contents are present at this exact position.">
+    <Parameters>
+      <Required name="LibName" type="Unknown" description="Causes the script to behave as though the specified file's contents are present at this exact position." />
+    </Parameters>
+  </Directive>
+  <Directive name="#IncludeAgain" description="Causes the script to behave as though the specified file's contents are present at this exact position.">
+    <Parameters>
+      <Required name="FileOrDirName" type="Unknown" description="Causes the script to behave as though the specified file's contents are present at this exact position." />
+    </Parameters>
+  </Directive>
+  <Directive name="#InputLevel" description="Controls which artificial keyboard and mouse events are ignored by hotkeys and hotstrings.">
+    <Parameters>
+      <Optional name="Level" type="Unknown" description="Controls which artificial keyboard and mouse events are ignored by hotkeys and hotstrings." />
+    </Parameters>
+  </Directive>
+  <Directive name="#MaxThreads" description="Sets the maximum number of simultaneous threads.">
+    <Parameters>
+      <Required name="Value" type="Unknown" description="Sets the maximum number of simultaneous threads." />
+    </Parameters>
+  </Directive>
+  <Directive name="#MaxThreadsBuffer" description="Causes some or all hotkeys to buffer rather than ignore keypresses when their #MaxThreadsPerHotkey limit has been reached.">
+    <Parameters>
+      <Optional name="Setting" type="Unknown" description="Causes some or all hotkeys to buffer rather than ignore keypresses when their #MaxThreadsPerHotkey limit has been reached." />
+    </Parameters>
+  </Directive>
+  <Directive name="#MaxThreadsPerHotkey" description="Sets the maximum number of simultaneous threads per hotkey or hotstring.">
+    <Parameters>
+      <Required name="Value" type="Unknown" description="Sets the maximum number of simultaneous threads per hotkey or hotstring." />
+    </Parameters>
+  </Directive>
+  <Directive name="#NoTrayIcon" description="Disables the showing of a tray icon." />
+  <Directive name="#Requires" description="Displays an error and quits if a version requirement is not met.">
+    <Parameters>
+      <Required name="Requirement" type="Unknown" description="Displays an error and quits if a version requirement is not met." />
+    </Parameters>
+  </Directive>
+  <Directive name="#SingleInstance" description="Determines whether a script is allowed to run again when it is already running.">
+    <Parameters>
+      <Optional name="ForceIgnorePromptOff" type="Unknown" description="Determines whether a script is allowed to run again when it is already running." />
+    </Parameters>
+  </Directive>
+  <Directive name="#SuspendExempt" description="Exempts subsequent hotkeys and hotstrings from suspension.">
+    <Parameters>
+      <Optional name="Setting" type="Unknown" description="Exempts subsequent hotkeys and hotstrings from suspension." />
+    </Parameters>
+  </Directive>
+  <Directive name="#UseHook" description="Forces the use of the hook to implement all or some keyboard hotkeys.">
+    <Parameters>
+      <Optional name="Setting" type="Unknown" description="Forces the use of the hook to implement all or some keyboard hotkeys." />
+    </Parameters>
+  </Directive>
+  <Directive name="#Warn" description="Enables or disables warnings for specific conditions which may indicate an error, such as a typo or missing &quot;global&quot; declaration.">
+    <Parameters>
+      <Required name="[WarningType" type="Unknown" description="Enables or disables warnings for specific conditions which may indicate an error, such as a typo or missing &quot;global&quot; declaration." />
+      <Required name="WarningMode]" type="Unknown" description="Enables or disables warnings for specific conditions which may indicate an error, such as a typo or missing &quot;global&quot; declaration." />
+    </Parameters>
+  </Directive>
+  <Directive name="#WinActivateForce" description="Skips the gentle method of activating a window and goes straight to the forceful method." />
+</Directives>
