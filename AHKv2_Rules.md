@@ -1,246 +1,461 @@
-# AutoHotkey v2 Coding Rules and Best Practices
+# AutoHotkey v2 Coding Standards
+
+This document outlines comprehensive coding standards and best practices for AutoHotkey v2 development. Following these guidelines will help ensure your code is maintainable, efficient, and follows proper AHK v2 idioms.
+
+## Table of Contents
+
+1. [Core Syntax Rules](#core-syntax-rules)
+2. [Object-Oriented Programming](#object-oriented-programming)
+3. [GUI Development](#gui-development)
+4. [Error Handling](#error-handling)
+5. [Data Structures](#data-structures)
+6. [Hotkeys and Hotstrings](#hotkeys-and-hotstrings)
+7. [Code Organization](#code-organization)
+8. [Performance Considerations](#performance-considerations)
 
 ## Core Syntax Rules
 
-1. **Always use proper version header**
-   ```autohotkey
-   #Requires AutoHotkey v2.1-alpha.16
-   #SingleInstance Force
-   ```
+### Script Header
 
-2. **Require explicit variable declarations**
-   - Use `global` for global variables
-   - Define variables before use
-   - Avoid implicit global variables
+Always include the appropriate headers in your scripts:
 
-3. **Initialize classes correctly**
-   ```autohotkey
-   MyClass() ; Correct - creates an instance
-   myVar := MyClass() ; Also correct - assigns the instance
-   new MyClass() ; Incorrect - "new" keyword not needed in AHK v2
-   ```
+```autohotkey
+#Requires AutoHotkey v2.1-alpha.16
+#SingleInstance Force
+```
 
-4. **Never use object literals for data storage**
-   ```autohotkey
-   ; CORRECT
-   config := Map("width", 800, "height", 600)
-   
-   ; INCORRECT - will cause issues
-   config := {width: 800, height: 600}
-   ```
+### Variable Declaration
 
-5. **Use proper comment syntax**
-   ```autohotkey
-   ; Use semicolons for comments
-   /* 
-     Multi-line comments are OK
-   */
-   // NEVER use C-style single-line comments
-   ```
+- Always declare your variables explicitly with appropriate scope
+- Use `global` for truly global variables
+- Use `static` for variables that persist between function calls
+- Local variables are automatically declared when they are first used within a function
 
-## OOP and Class Design
+```autohotkey
+; Good
+global appName := "MyApp"
+MyFunction() {
+    static counter := 0
+    counter++
+    local result := counter * 2
+    return result
+}
 
-1. **Class Initialization**
-   ```autohotkey
-   MyClass() ; Always initialize classes at the top of the script
-   
-   class MyClass {
-       __New() {
-           ; Constructor code here
-       }
-   }
-   ```
+; Bad - implicit globals
+appName := "MyApp"  ; Creates an implicit global variable
+```
 
-2. **Method Binding**
-   ```autohotkey
-   ; CORRECT - binding 'this' context to the method
-   button.OnEvent("Click", this.HandleClick.Bind(this))
-   
-   ; INCORRECT - will lose 'this' context
-   button.OnEvent("Click", this.HandleClick)
-   ```
+### Comments
 
-3. **Property Accessors**
-   ```autohotkey
-   property {
-       get => this._property ; Use arrow for simple accessors
-       set => this._property := value
-   }
-   ```
+- Use semicolons for comments, not C-style comments
+- Include a space after the semicolon
 
-4. **Arrow Function Usage**
-   - Use arrow functions (`=>`) **ONLY** for simple, single-line expressions
-   - **NEVER** use arrow functions for multiline logic or when `{}` would be needed
-   ```autohotkey
-   ; CORRECT - simple arrow function
-   button.OnEvent("Click", (*) => this.gui.Hide())
-   
-   ; INCORRECT - complex logic should use normal function syntax
-   button.OnEvent("Click", (*) => {
-       this.SaveData()
-       this.gui.Hide()
-   })
-   ```
+```autohotkey
+; Good - single line comment
+x := 10  ; Inline comment
 
-5. **Static Properties**
-   ```autohotkey
-   class Config {
-       ; Static config maps are preferred
-       static Settings := Map(
-           "width", 800,
-           "height", 600
-       )
-   }
-   ```
+; Bad
+//This is a C-style comment
+/*
+  This is a C-style block comment
+*/
+```
 
-## Data Structures
+### String Handling
 
-1. **Maps for Key-Value Data**
-   ```autohotkey
-   settings := Map(
-       "title", "My Application",
-       "version", "1.0.0",
-       "debug", true
-   )
-   
-   ; Access via key
-   MsgBox "Version: " settings["version"]
-   ```
+- Use double quotes for strings
+- Escape double quotes within strings using backtick (`), not backslash
+- Use Format() for complex string formatting
 
-2. **Arrays for Sequential Data**
-   ```autohotkey
-   fruits := ["apple", "banana", "orange"]
-   
-   ; Arrays are 1-indexed in AHK
-   MsgBox "First fruit: " fruits[1]
-   
-   ; Adding items
-   fruits.Push("grape")
-   ```
+```autohotkey
+; Good
+message := "User said: `"Hello!`""
+formatted := Format("Value is {1}, Name is {2}", value, name)
 
-3. **Classes for Complex Data**
-   ```autohotkey
-   class User {
-       Name := ""
-       Email := ""
-       
-       __New(name, email) {
-           this.Name := name
-           this.Email := email
-       }
-   }
-   
-   users := []
-   users.Push(User("John", "john@example.com"))
-   ```
+; Bad
+message := "User said: \"Hello!\""  ; Backslash escaping
+```
 
-## GUI Best Practices
+## Object-Oriented Programming
 
-1. **GUI Construction**
-   ```autohotkey
-   class MyGui {
-       __New() {
-           this.gui := Gui("+Resize", "My Application")
-           this.gui.SetFont("s10")
-           
-           ; Add controls
-           this.gui.AddText("w200", "Enter your name:")
-           this.gui.AddEdit("w200 vUserName")
-           this.gui.AddButton("w100 Default", "Submit").OnEvent("Click", this.Submit.Bind(this))
-           
-           ; Set events
-           this.gui.OnEvent("Close", (*) => this.gui.Hide())
-           this.gui.OnEvent("Escape", (*) => this.gui.Hide())
-       }
-       
-       Submit(*) {
-           saved := this.gui.Submit()
-           MsgBox "Hello, " saved.UserName
-       }
-       
-       Show(*) => this.gui.Show()
-   }
-   ```
+### Class Definition
 
-2. **Event Handling**
-   - Always bind event callbacks to preserve `this` context
-   - Use descriptive method names for handlers
-   - Consider using `HotIfWinActive` for GUI-specific hotkeys
+Define classes with proper syntax and structure:
+
+```autohotkey
+class MyClass {
+    ; Static properties (shared across all instances)
+    static Config := Map(
+        "version", "1.0.0",
+        "name", "MyClass"
+    )
+    
+    ; Instance properties with initial values
+    value := 0
+    name := ""
+    
+    ; Constructor
+    __New(name := "") {
+        this.name := name
+    }
+    
+    ; Methods
+    Increment(amount := 1) {
+        this.value += amount
+        return this.value
+    }
+    
+    ; Property with accessors
+    Value {
+        get => this.value
+        set => this.value := value
+    }
+}
+```
+
+### Class Initialization
+
+- Initialize classes without using the `new` keyword
+- Store the instance if you need to reference it
+
+```autohotkey
+; Good
+myInstance := MyClass()
+
+; Bad
+myInstance := new MyClass()  ; 'new' keyword is not needed
+```
+
+### Method Binding
+
+Always bind methods when used as callbacks:
+
+```autohotkey
+; Good
+button.OnEvent("Click", this.HandleClick.Bind(this))
+SetTimer(this.UpdateStatus.Bind(this), 1000)
+
+; Bad
+button.OnEvent("Click", this.HandleClick)  ; Will lose 'this' context
+```
+
+### Arrow Functions
+
+Use arrow functions only for simple, single-line expressions:
+
+```autohotkey
+; Good - single line arrow function
+callback := (x, y) => x + y
+button.OnEvent("Click", (*) => MsgBox("Clicked"))
+
+; Bad - complex logic in arrow function
+callback := (x, y) => {
+    result := x * 2
+    result += y
+    return result
+}
+```
+
+### Inheritance
+
+Properly implement inheritance using the `extends` keyword:
+
+```autohotkey
+class Parent {
+    __New() {
+        this.value := 100
+    }
+    
+    Method() {
+        return this.value
+    }
+}
+
+class Child extends Parent {
+    __New() {
+        super.__New()  ; Call parent constructor
+        this.childValue := 200
+    }
+    
+    Method() {
+        return super.Method() + this.childValue  ; Call parent method
+    }
+}
+```
+
+## GUI Development
+
+### GUI Creation
+
+Create GUIs using proper object-oriented syntax:
+
+```autohotkey
+myGui := Gui("+Resize", "Window Title")
+myGui.SetFont("s10")
+```
+
+### Control Addition
+
+Add controls with appropriate options and store references if needed:
+
+```autohotkey
+; Add a control and store it for later reference
+myEdit := myGui.AddEdit("w200 h100 vUserInput")
+
+; Add a control with an event handler
+myButton := myGui.AddButton("w100", "Submit")
+myButton.OnEvent("Click", HandleSubmit)
+```
+
+### GUI Events
+
+Use OnEvent for handling GUI events:
+
+```autohotkey
+myGui.OnEvent("Close", GuiClose)
+myGui.OnEvent("Size", GuiSize)
+```
+
+### GUI in Classes
+
+Properly structure GUI code in classes:
+
+```autohotkey
+class MyApplication {
+    gui := ""
+    controls := Map()
+    
+    __New() {
+        this.CreateGui()
+    }
+    
+    CreateGui() {
+        this.gui := Gui("+Resize", "My Application")
+        
+        ; Store controls in a Map for easy access
+        this.controls["edit"] := this.gui.AddEdit("w200")
+        this.controls["button"] := this.gui.AddButton("w100", "Submit")
+        this.controls["button"].OnEvent("Click", this.HandleSubmit.Bind(this))
+        
+        ; Set up events
+        this.gui.OnEvent("Close", (*) => this.gui.Hide())
+    }
+    
+    HandleSubmit(*) {
+        MsgBox("Button was clicked")
+    }
+}
+```
 
 ## Error Handling
 
-1. **Try/Catch Blocks**
-   ```autohotkey
-   try {
-       result := RiskyOperation()
-   } catch Error as e {
-       MsgBox "Error: " e.Message
-   }
-   ```
+### Try-Catch Blocks
 
-2. **Error Messages**
-   - Store error messages in static Maps
-   - Use descriptive error codes
-   - Include context in error messages
+Use try-catch for operations that might fail:
 
-## Common Pitfalls to Avoid
+```autohotkey
+try {
+    file := FileOpen(path, "r")
+    content := file.Read()
+    file.Close()
+} catch Error as e {
+    MsgBox("Error reading file: " e.Message)
+}
+```
 
-1. **V1 vs V2 Syntax**
-   - AHK v2 uses function call syntax with parentheses
-   - `MsgBox("Text")` not `MsgBox Text`
-   - `FileExist()` returns string, not 1/0
+### Custom Error Handling
 
-2. **String Escaping**
-   - Use backtick (`` ` ``) to escape quotes, not backslash
-   ```autohotkey
-   MsgBox "He said `"Hello`" to me" ; CORRECT
-   MsgBox "He said \"Hello\" to me" ; INCORRECT
-   ```
+Create structured error handling:
 
-3. **Variable References**
-   - No `%var%` syntax in v2
-   - Use direct variable references: `MsgBox var`
+```autohotkey
+class MyErrors {
+    static Messages := Map(
+        "FileNotFound", "The specified file could not be found.",
+        "InvalidInput", "The input provided is not valid."
+    )
+}
 
-4. **Function Parameters**
-   - Always provide the correct number of parameters
-   - Use optional parameters with default values when appropriate
+MyFunction() {
+    if !FileExist(path)
+        throw Error(MyErrors.Messages["FileNotFound"], -1)
+}
+```
 
-5. **Object Access**
-   - Use dot notation for methods and properties: `obj.Method()`
-   - Use bracket notation for Maps: `map["key"]`
+## Data Structures
 
-## Documentation and Style
+### Maps for Key-Value Data
 
-1. **Code Organization**
-   - Place initialization at the top
-   - Group related functions and methods
-   - Order methods logically (constructor, public methods, private methods)
+Always use Map() for key-value data, not object literals:
 
-2. **Naming Conventions**
-   - `ClassName` - PascalCase for class names
-   - `methodName` - camelCase for methods and functions
-   - `_privateMember` - underscore prefix for private variables
+```autohotkey
+; Good
+config := Map(
+    "width", 800,
+    "height", 600,
+    "title", "My Application"
+)
 
-3. **Clear Structure**
-   - Break complex tasks into smaller, reusable functions
-   - Use descriptive names that explain what the code does
-   - Keep methods focused on a single responsibility
+; Bad
+config := { width: 800, height: 600, title: "My Application" }
+```
 
-## Performance Tips
+### Arrays
 
-1. **Avoid unnecessary object creation**
-   - Reuse objects when possible
-   - Consider using static methods for utility functions
+Use arrays for sequential data:
 
-2. **Optimize loops**
-   - Use `for key, value in array` instead of indexed access in loops
-   - Exit loops early when possible
+```autohotkey
+; Create an array
+fruits := ["apple", "banana", "orange"]
 
-3. **Cache repeated calculations**
-   - Store results of expensive operations rather than recomputing
+; Loop through array
+for index, fruit in fruits
+    MsgBox(index ": " fruit)
+```
 
-## Resources
+### Static Configuration
 
-- [Official AHK v2 Documentation](https://www.autohotkey.com/docs/v2/)
-- [AHK v2 Migration Guide](https://www.autohotkey.com/docs/v2/v1-changes.htm)
-- [Common AHK v2 Patterns](https://www.autohotkey.com/docs/v2/lib/Object.htm)
+Use static Maps in classes for configuration data:
+
+```autohotkey
+class Config {
+    static Settings := Map(
+        "appName", "MyApp",
+        "version", "1.0.0",
+        "paths", Map(
+            "config", A_AppData "\MyApp\config.ini",
+            "logs", A_AppData "\MyApp\logs\"
+        )
+    )
+}
+```
+
+## Hotkeys and Hotstrings
+
+### Hotkey Definition
+
+Use proper object-oriented hotkey definition:
+
+```autohotkey
+; For dynamic hotkeys in a class
+class HotkeyManager {
+    __New() {
+        Hotkey("^s", this.SaveFile.Bind(this))
+        Hotkey("#t", this.ToggleWindow.Bind(this))
+    }
+    
+    SaveFile(*) {
+        MsgBox("Saving file...")
+    }
+    
+    ToggleWindow(*) {
+        MsgBox("Toggling window...")
+    }
+}
+```
+
+### Context-Sensitive Hotkeys
+
+Use HotIf directives for context-sensitive hotkeys:
+
+```autohotkey
+; Hotkeys that only work in Notepad
+HotIfWinActive("ahk_class Notepad")
+Hotkey("^b", MakeBold)
+Hotkey("^i", MakeItalic)
+HotIf()  ; End context
+
+; Hotkeys that only work when a specific variable is true
+HotIf(*) => isEditing
+Hotkey("Escape", CancelEdit)
+HotIf()
+```
+
+## Code Organization
+
+### Script Structure
+
+Organize your scripts in a logical manner:
+
+```autohotkey
+#Requires AutoHotkey v2.1-alpha.16
+#SingleInstance Force
+#Include lib\Utils.ahk  ; Include external files
+
+; Initialize main application class
+MyApp()
+
+; Define classes
+class MyApp {
+    ; Class implementation
+}
+
+; Define functions
+UtilityFunction() {
+    ; Function implementation
+}
+```
+
+### Project Organization
+
+For larger projects, organize files by functionality:
+
+```
+/MyProject
+  main.ahk        ; Entry point script
+  /lib            ; Library files
+    Utils.ahk
+    Network.ahk
+  /ui             ; User interface modules
+    MainWindow.ahk
+    SettingsDialog.ahk
+  /data           ; Data handling
+    Config.ahk
+    Storage.ahk
+```
+
+## Performance Considerations
+
+### Variable Access
+
+- Avoid repeatedly accessing the same property or calculating the same value
+- Cache values that are used multiple times
+
+```autohotkey
+; Good
+length := array.Length
+for i := 1 to length
+    DoSomething(array[i])
+
+; Bad
+for i := 1 to array.Length  ; Recalculates length on each iteration
+    DoSomething(array[i])
+```
+
+### Resource Cleanup
+
+Always clean up resources when done:
+
+```autohotkey
+file := FileOpen(path, "r")
+try {
+    content := file.Read()
+} finally {
+    file.Close()  ; This runs even if Read() throws an error
+}
+```
+
+### Avoid Global Variables
+
+Minimize the use of global variables:
+
+```autohotkey
+; Better
+class AppState {
+    static Config := Map(
+        "setting1", value1,
+        "setting2", value2
+    )
+}
+
+; Then access via:
+AppState.Config["setting1"]

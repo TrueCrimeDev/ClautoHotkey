@@ -1,131 +1,125 @@
 #Requires AutoHotkey v2.1-alpha.16
 #SingleInstance Force
 
-; This example demonstrates proper AHK v2 coding following .clinerules standards
+; Initialize class for our example
+ExampleApplication()
 
-; Initialize main application class
-ExampleApp()
-
-; Define main application class
-class ExampleApp {
-    ; Static configuration using Map (not object literals)
+class ExampleApplication {
+    ; Static properties for app configuration
     static Config := Map(
-        "title", "Example Application",
+        "appName", "AHKv2 Example Application",
         "version", "1.0.0",
-        "defaultWidth", 600,
-        "defaultHeight", 400,
-        "errorMessages", Map(
-            "FILE_NOT_FOUND", "The specified file could not be found: {1}",
-            "INVALID_INPUT", "Invalid input provided: {1}"
+        "theme", Map(
+            "background", "White",
+            "foreground", "Black",
+            "accent", "#0078D7"
         )
     )
     
-    ; Instance properties with proper initialization
-    settings := Map()
-    dataStorage := []
+    ; Instance properties
+    gui := ""
+    controls := Map()
     
     ; Constructor
     __New() {
-        ; Initialize instance properties
-        this.settings := Map(
-            "width", ExampleApp.Config["defaultWidth"],
-            "height", ExampleApp.Config["defaultHeight"],
-            "isDarkMode", true
-        )
+        ; Create and configure the GUI
+        this.CreateGui()
         
-        ; Setup GUI with proper OOP construction
-        this.InitializeGUI()
-        
-        ; Setup hotkeys
+        ; Set up hotkeys
         this.SetupHotkeys()
         
-        ; Show the interface
-        this.Show()
+        ; Show the GUI
+        this.gui.Show()
     }
     
-    ; GUI initialization with proper OOP patterns
-    InitializeGUI() {
-        ; Create GUI instance
-        this.gui := Gui("+Resize", ExampleApp.Config["title"])
+    ; GUI creation method
+    CreateGui() {
+        ; Create the main GUI
+        this.gui := Gui("+Resize", ExampleApplication.Config["appName"])
         this.gui.SetFont("s10")
         
-        ; Add controls
-        this.gui.AddText("w200", "Enter some text:")
-        this.gui.AddEdit("w400 h100 vUserInput")
-        
-        ; Add buttons with proper event binding
-        this.gui.AddButton("w100 Default", "Save").OnEvent("Click", this.SaveData.Bind(this))
-        this.gui.AddButton("w100", "Clear").OnEvent("Click", this.ClearData.Bind(this))
-        
-        ; Add status bar
-        this.statusBar := this.gui.AddStatusBar()
-        this.statusBar.SetText("Ready")
-        
-        ; Set up GUI events with proper binding
+        ; Set up events
         this.gui.OnEvent("Close", (*) => this.gui.Hide())
         this.gui.OnEvent("Escape", (*) => this.gui.Hide())
-    }
-    
-    ; Method for setting up hotkeys
-    SetupHotkeys() {
-        ; Use proper hotkey binding
-        HotKey("^t", this.ToggleInterface.Bind(this))
         
-        ; Context-sensitive hotkeys
-        HotIfWinActive("ahk_id " this.gui.Hwnd)
-        HotKey("^s", this.SaveData.Bind(this))
-        HotKey("^n", this.ClearData.Bind(this))
-        HotIfWinActive()
+        ; Add controls
+        this.gui.AddText("xm y10 w400", "Enter a message:")
+        
+        ; Store the edit control in our controls map
+        this.controls["edit"] := this.gui.AddEdit("xm y30 w400 h100 vUserMessage")
+        
+        ; Add a button and bind the click event properly
+        this.controls["btnSubmit"] := this.gui.AddButton("xm y140 w120", "Show Message")
+        this.controls["btnSubmit"].OnEvent("Click", this.ShowMessage.Bind(this))
+        
+        ; Add a button to clear the input
+        this.controls["btnClear"] := this.gui.AddButton("x+10 y140 w120", "Clear")
+        this.controls["btnClear"].OnEvent("Click", this.ClearInput.Bind(this))
+        
+        ; Add a status bar
+        this.controls["statusBar"] := this.gui.AddStatusBar()
+        this.controls["statusBar"].SetText("Ready")
     }
     
-    ; Simple method for showing interface with arrow function
-    Show(*) => this.gui.Show("w" this.settings["width"] " h" this.settings["height"])
+    ; Event handler for the Show Message button
+    ShowMessage(*) {
+        ; Submit the form to get values from the controls
+        submitted := this.gui.Submit(false)
+        
+        ; Check if message is empty
+        if (submitted.UserMessage = "") {
+            MsgBox("Please enter a message.", "Error", "Icon!")
+            return
+        }
+        
+        ; Show the message with proper quote escaping
+        MsgBox("Your message: `"" submitted.UserMessage "`"", "Message", "Icon")
+        
+        ; Update status bar
+        this.controls["statusBar"].SetText("Message displayed at " A_Now)
+    }
     
-    ; Toggle method with proper implementation
-    ToggleInterface(*) {
+    ; Event handler for the Clear button
+    ClearInput(*) {
+        ; Clear the edit control
+        this.controls["edit"].Value := ""
+        
+        ; Update status bar
+        this.controls["statusBar"].SetText("Input cleared")
+    }
+    
+    ; Set up global hotkeys
+    SetupHotkeys() {
+        ; Toggle GUI visibility with Win+E
+        Hotkey("#e", this.ToggleGui.Bind(this))
+        
+        ; Add hotkeys that only work when the GUI is active
+        HotIfWinActive("ahk_id " this.gui.Hwnd)
+        Hotkey("^s", this.ShowMessage.Bind(this))     ; Ctrl+S shows the message
+        Hotkey("^d", this.ClearInput.Bind(this))      ; Ctrl+D clears the input
+        HotIf()
+    }
+    
+    ; Toggle GUI visibility
+    ToggleGui(*) {
         if WinExist("ahk_id " this.gui.Hwnd)
             this.gui.Hide()
         else
-            this.Show()
+            this.gui.Show()
     }
     
-    ; Data operations with error handling
-    SaveData(*) {
-        try {
-            ; Get data from GUI
-            saved := this.gui.Submit(false)
-            
-            if (saved.UserInput == "") {
-                MsgBox ExampleApp.Config["errorMessages"]["INVALID_INPUT"].Replace("{1}", "Empty input")
-                return
-            }
-            
-            ; Store in data array
-            this.dataStorage.Push(Map(
-                "text", saved.UserInput,
-                "timestamp", A_Now
-            ))
-            
-            this.statusBar.SetText("Data saved - " this.dataStorage.Length " entries")
-        } catch Error as e {
-            MsgBox "Error saving data: " e.Message
-        }
-    }
-    
-    ; Clear form data
-    ClearData(*) {
-        this.gui["UserInput"].Value := ""
-        this.statusBar.SetText("Form cleared")
-    }
-    
-    ; Property accessor demonstrating arrow syntax
-    totalEntries {
-        get => this.dataStorage.Length
-    }
-    
-    ; Cleanup method
+    ; Destructor - clean up resources
     __Delete() {
-        ; Clean up resources as needed
-        this.dataStorage := []
+        try {
+            ; Clean up hotkeys
+            Hotkey("#e", "Off")
+            
+            ; Destroy GUI if it exists
+            if IsObject(this.gui)
+                this.gui.Destroy()
+        } catch Error as e {
+            ; Log any errors during cleanup
+            FileAppend "Cleanup error: " e.Message "`n", "error_log.txt"
+        }
     }
 }

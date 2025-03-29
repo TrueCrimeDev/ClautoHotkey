@@ -1,304 +1,252 @@
 #Requires AutoHotkey v2.1-alpha.16
 #SingleInstance Force
 
-; This file contains simplified examples of AHK v2 best practices
+; ========================================================================
+; SIMPLE AUTOHOTKEY V2 EXAMPLES
+; This file contains beginner-friendly examples of common AHK v2 patterns
+; ========================================================================
 
-;---------------------------
-; INITIALIZATION SECTION
-;---------------------------
-SimpleGui()
-SimpleTooltip()
+; ------------------------------------------------------------
+; Basic Hotkeys
+; ------------------------------------------------------------
 
-;---------------------------
-; SIMPLE GUI EXAMPLE
-;---------------------------
-class SimpleGui {
-    static Config := Map(
-        "title", "Simple GUI Example",
-        "width", 300,
-        "height", 200
-    )
+; Simple hotkey to show a message when you press Win+Z
+#z:: MsgBox("You pressed Win+Z!")
+
+; Ctrl+Alt+T to display the current time
+^!t::ShowCurrentTime()
+
+ShowCurrentTime() {
+    currentTime := FormatTime(, "h:mm:ss tt")
+    MsgBox("The current time is " currentTime, "Time Display")
+}
+
+; ------------------------------------------------------------
+; Basic GUI Example
+; ------------------------------------------------------------
+
+; Win+G to show a simple GUI
+#g::ShowSimpleGui()
+
+ShowSimpleGui() {
+    ; Create a GUI
+    myGui := Gui(, "Simple Example")
+    myGui.SetFont("s10")
     
-    __New() {
-        ; Initialize GUI
-        this.gui := Gui("+Resize", SimpleGui.Config["title"])
-        this.gui.SetFont("s10")
-        this.gui.MarginX := 10
-        this.gui.MarginY := 10
-        
-        ; Add controls
-        this.gui.AddText("w280", "Enter your name:")
-        this.nameEdit := this.gui.AddEdit("w280 vUserName")
-        
-        ; Add buttons with proper event binding
-        this.submitBtn := this.gui.AddButton("w120 y+10 Default", "Submit")
-        this.submitBtn.OnEvent("Click", this.Submit.Bind(this))
-        
-        this.cancelBtn := this.gui.AddButton("w120 x+10", "Cancel")
-        this.cancelBtn.OnEvent("Click", this.Cancel.Bind(this))
-        
-        ; Set up window events
-        this.gui.OnEvent("Close", this.CloseWindow.Bind(this))
-        this.gui.OnEvent("Escape", this.CloseWindow.Bind(this))
-    }
+    ; Add some controls
+    myGui.AddText(, "Enter your name:")
+    nameEdit := myGui.AddEdit("w200 vUserName")
     
-    CloseWindow(*) {
-        this.gui.Hide()
-    }
+    ; Add a button with a callback
+    submitBtn := myGui.AddButton("Default w100", "OK")
+    submitBtn.OnEvent("Click", SubmitForm)
     
-    Show(*) {
-        this.gui.Show("w" SimpleGui.Config["width"] " h" SimpleGui.Config["height"] " Center")
-    }
+    ; Add event to handle when the GUI is closed
+    myGui.OnEvent("Close", (*) => myGui.Destroy())
     
-    Submit(*) {
-        formData := this.gui.Submit(false)
-        
-        if (formData.UserName = "") {
-            MsgBox("Please enter your name")
-            return
-        }
-        
-        MsgBox("Hello, " formData.UserName "!")
-    }
+    ; Show the GUI
+    myGui.Show()
     
-    Cancel(*) {
-        this.nameEdit.Value := ""
-        this.gui.Hide()
+    ; Function to handle the button click
+    SubmitForm(*) {
+        saved := myGui.Submit()
+        if (saved.UserName = "")
+            MsgBox("Please enter your name.")
+        else
+            MsgBox("Hello, " saved.UserName "!")
     }
 }
 
-;---------------------------
-; SIMPLE TOOLTIP TIMER
-;---------------------------
-class SimpleTooltip {
-    static Config := Map(
-        "interval", 1000,
-        "format", "Time running: {1} seconds"
+; ------------------------------------------------------------
+; Simple Text Manipulation
+; ------------------------------------------------------------
+
+; Ctrl+Shift+U to convert selected text to uppercase
+^+u::ConvertSelectedText("upper")
+
+; Ctrl+Shift+L to convert selected text to lowercase
+^+l::ConvertSelectedText("lower")
+
+ConvertSelectedText(textCase) {
+    ; Save the current clipboard content
+    savedClip := ClipboardAll()
+    
+    ; Clear the clipboard and copy the selected text
+    A_Clipboard := ""
+    Send("^c")
+    ClipWait(1)
+    
+    ; If text was selected and copied
+    if (A_Clipboard != "") {
+        ; Convert the text based on the textCase parameter
+        if (textCase = "upper")
+            A_Clipboard := StrUpper(A_Clipboard)
+        else if (textCase = "lower")
+            A_Clipboard := StrLower(A_Clipboard)
+        
+        ; Paste the converted text
+        Send("^v")
+    }
+    
+    ; Restore the original clipboard
+    A_Clipboard := savedClip
+}
+
+; ------------------------------------------------------------
+; Simple Application Launcher
+; ------------------------------------------------------------
+
+; Win+N to launch Notepad
+#n::Run("notepad.exe")
+
+; Win+C to launch Calculator
+#c::Run("calc.exe")
+
+; ------------------------------------------------------------
+; Working with Arrays and Maps (Modern Data Structures)
+; ------------------------------------------------------------
+
+; Ctrl+Alt+A to demonstrate arrays
+^!a::DemonstrateArray()
+
+DemonstrateArray() {
+    ; Create an array of fruits
+    fruits := ["Apple", "Banana", "Cherry", "Date", "Elderberry"]
+    
+    ; Build a message with all fruits
+    message := "Fruits in the array:`n`n"
+    
+    ; Loop through the array
+    for index, fruit in fruits
+        message .= index ": " fruit "`n"
+    
+    ; Add an item
+    fruits.Push("Fig")
+    message .= "`nAdded 'Fig' to the array.`n"
+    
+    ; Remove an item
+    fruits.RemoveAt(2)  ; Remove Banana (index 2)
+    message .= "Removed 'Banana' from the array.`n"
+    
+    ; Display the updated array
+    message .= "`nUpdated array:`n"
+    for index, fruit in fruits
+        message .= index ": " fruit "`n"
+    
+    MsgBox(message, "Array Example")
+}
+
+; Ctrl+Alt+M to demonstrate maps
+^!m::DemonstrateMap()
+
+DemonstrateMap() {
+    ; Create a map of person details
+    person := Map(
+        "name", "John Smith",
+        "age", 35,
+        "city", "New York",
+        "occupation", "Software Developer"
     )
     
-    __New() {
-        this.running := false
-        this.seconds := 0
-        this.timerFunc := this.UpdateTooltip.Bind(this)
-        
-        ; Create a demo button to control the tooltip
-        this.demoGui := Gui("+AlwaysOnTop", "Tooltip Demo")
-        this.demoGui.SetFont("s10")
-        
-        this.btn := this.demoGui.AddButton("w200 h30", "Start Timer")
-        this.btn.OnEvent("Click", this.ToggleTimer.Bind(this))
-        
-        this.demoGui.Show("Center")
-    }
+    ; Build a message with all details
+    message := "Person details:`n`n"
     
-    ToggleTimer(*) {
-        if (!this.running) {
-            this.StartTimer()
-            this.btn.Text := "Stop Timer"
-        } else {
-            this.StopTimer()
-            this.btn.Text := "Start Timer"
-        }
-    }
+    ; Loop through the map
+    for key, value in person
+        message .= key ": " value "`n"
     
-    StartTimer() {
-        this.seconds := 0
-        SetTimer(this.timerFunc, SimpleTooltip.Config["interval"])
-        this.running := true
-        this.UpdateTooltip()
-    }
+    ; Add an item
+    person["email"] := "john@example.com"
+    message .= "`nAdded 'email' to the map.`n"
     
-    StopTimer() {
-        SetTimer(this.timerFunc, 0)
+    ; Remove an item
+    person.Delete("age")
+    message .= "Removed 'age' from the map.`n"
+    
+    ; Display the updated map
+    message .= "`nUpdated map:`n"
+    for key, value in person
+        message .= key ": " value "`n"
+    
+    MsgBox(message, "Map Example")
+}
+
+; ------------------------------------------------------------
+; Simple File Operations
+; ------------------------------------------------------------
+
+; Ctrl+Alt+F to demonstrate file operations
+^!f::DemonstrateFileOperations()
+
+DemonstrateFileOperations() {
+    ; Define file path in Documents folder
+    filePath := A_MyDocuments "\AHKTest.txt"
+    
+    ; Write to a file
+    try {
+        file := FileOpen(filePath, "w")
+        file.WriteLine("This is line 1")
+        file.WriteLine("This is line 2")
+        file.WriteLine("This is line 3")
+        file.Close()
+        
+        MsgBox("Successfully wrote to file: " filePath)
+        
+        ; Read from the file
+        file := FileOpen(filePath, "r")
+        fileContent := file.Read()
+        file.Close()
+        
+        MsgBox("File content:`n`n" fileContent)
+        
+    } catch Error as e {
+        MsgBox("Error: " e.Message)
+    }
+}
+
+; ------------------------------------------------------------
+; Simple Timer Example
+; ------------------------------------------------------------
+
+; Ctrl+Alt+T to start/stop a simple timer
+^!t::ToggleTimer()
+
+; Global to track timer state
+global timerRunning := false
+global startTime := 0
+
+ToggleTimer() {
+    global timerRunning, startTime
+    
+    if (!timerRunning) {
+        ; Start the timer
+        startTime := A_TickCount
+        SetTimer(UpdateTimerDisplay, 1000)
+        timerRunning := true
+        
+        ; Show initial display
+        UpdateTimerDisplay()
+    } else {
+        ; Stop the timer
+        SetTimer(UpdateTimerDisplay, 0)
+        timerRunning := false
+        
+        ; Clear the tooltip
         ToolTip()
-        this.running := false
-    }
-    
-    UpdateTooltip() {
-        this.seconds++
-        ToolTip(Format(SimpleTooltip.Config["format"], this.seconds))
     }
 }
 
-;---------------------------
-; SIMPLE CONFIG MANAGER
-;---------------------------
-class SimpleConfig {
-    static Defaults := Map(
-        "theme", "light",
-        "fontSize", 12,
-        "autoSave", true
-    )
+UpdateTimerDisplay() {
+    global startTime
     
-    __New(configFile := A_ScriptDir "\config.ini") {
-        this.configFile := configFile
-        this.settings := this.LoadConfig()
-    }
+    ; Calculate elapsed time
+    elapsedSeconds := Floor((A_TickCount - startTime) / 1000)
+    elapsedMinutes := Floor(elapsedSeconds / 60)
+    elapsedSeconds := Mod(elapsedSeconds, 60)
     
-    LoadConfig() {
-        settings := Map()
-        
-        ; Start with defaults
-        for key, value in SimpleConfig.Defaults {
-            settings[key] := value
-        }
-        
-        ; Load from file if exists
-        if FileExist(this.configFile) {
-            for key, defaultValue in SimpleConfig.Defaults {
-                if IsInteger(defaultValue) {
-                    settings[key] := Integer(IniRead(this.configFile, "Settings", key, defaultValue))
-                } else if (defaultValue = true || defaultValue = false) {
-                    settings[key] := IniRead(this.configFile, "Settings", key, defaultValue ? "true" : "false") = "true"
-                } else {
-                    settings[key] := IniRead(this.configFile, "Settings", key, defaultValue)
-                }
-            }
-        }
-        
-        return settings
-    }
+    ; Format nicely with leading zeros
+    timeDisplay := Format("{:02}:{:02}", elapsedMinutes, elapsedSeconds)
     
-    SaveConfig() {
-        for key, value in this.settings {
-            if (value = true || value = false) {
-                IniWrite(value ? "true" : "false", this.configFile, "Settings", key)
-            } else {
-                IniWrite(value, this.configFile, "Settings", key)
-            }
-        }
-        return true
-    }
-    
-    GetValue(key, defaultValue := "") {
-        return this.settings.Has(key) ? this.settings[key] : defaultValue
-    }
-    
-    SetValue(key, value) {
-        this.settings[key] := value
-        return this.SaveConfig()
-    }
-}
-
-;---------------------------
-; SIMPLE FILE HANDLER
-;---------------------------
-class SimpleFile {
-    ReadFile(filePath) {
-        if !FileExist(filePath) {
-            return ""
-        }
-        
-        try {
-            return FileRead(filePath, "UTF-8")
-        } catch {
-            return ""
-        }
-    }
-    
-    WriteFile(filePath, content) {
-        try {
-            ; Create directory if it doesn't exist
-            SplitPath(filePath, , &dirPath)
-            if (dirPath && !DirExist(dirPath)) {
-                DirCreate(dirPath)
-            }
-            
-            ; Write file
-            FileDelete(filePath)
-            FileAppend(content, filePath, "UTF-8")
-            return true
-        } catch {
-            return false
-        }
-    }
-}
-
-;---------------------------
-; SIMPLE HOTKEY MANAGER
-;---------------------------
-class SimpleHotkeys {
-    static Bindings := Map()
-    
-    __New() {
-        ; Create a simple demo
-        this.demoGui := Gui("+AlwaysOnTop", "Hotkey Demo")
-        this.demoGui.SetFont("s10")
-        this.demoGui.AddText("w200", "Press buttons to register hotkeys:")
-        
-        this.demoGui.AddButton("w200", "Register Ctrl+1").OnEvent("Click", this.RegisterHotkey1.Bind(this))
-        this.demoGui.AddButton("w200", "Register Ctrl+2").OnEvent("Click", this.RegisterHotkey2.Bind(this))
-        this.demoGui.AddButton("w200", "Unregister All").OnEvent("Click", this.UnregisterAll.Bind(this))
-        
-        this.demoGui.Show("Center")
-    }
-    
-    RegisterHotkey1(*) {
-        this.Register("^1", (*) => MsgBox("Hotkey Ctrl+1 was pressed!"))
-    }
-    
-    RegisterHotkey2(*) {
-        this.Register("^2", (*) => MsgBox("Hotkey Ctrl+2 was pressed!"))
-    }
-    
-    Register(hotkeyString, callback) {
-        try {
-            Hotkey(hotkeyString, callback)
-            SimpleHotkeys.Bindings[hotkeyString] := callback
-            MsgBox("Registered: " hotkeyString)
-            return true
-        } catch as e {
-            MsgBox("Failed to register: " e.Message)
-            return false
-        }
-    }
-    
-    Unregister(hotkeyString) {
-        if SimpleHotkeys.Bindings.Has(hotkeyString) {
-            try {
-                Hotkey(hotkeyString, "Off")
-                SimpleHotkeys.Bindings.Delete(hotkeyString)
-                return true
-            } catch {
-                return false
-            }
-        }
-        return false
-    }
-    
-    UnregisterAll(*) {
-        for hotkeyString, callback in SimpleHotkeys.Bindings {
-            this.Unregister(hotkeyString)
-        }
-        MsgBox("All hotkeys unregistered")
-    }
-}
-
-; Main demo launcher
-demoLauncher := Gui("+AlwaysOnTop", "AHK v2 Simple Examples")
-demoLauncher.SetFont("s10")
-demoLauncher.AddText("w300", "Click a button to run an example:")
-
-btnGui := demoLauncher.AddButton("w300 h30", "Show Simple GUI Example")
-btnGui.OnEvent("Click", ShowGuiExample)
-
-btnHotkeys := demoLauncher.AddButton("w300 h30", "Show Hotkey Manager Example")
-btnHotkeys.OnEvent("Click", ShowHotkeyExample)
-
-btnTooltip := demoLauncher.AddButton("w300 h30", "Show Tooltip Timer Example")
-btnTooltip.OnEvent("Click", ShowTooltipExample)
-
-demoLauncher.Show("Center")
-
-; Callback functions for demo launcher
-ShowGuiExample(*) {
-    SimpleGui().Show()
-}
-
-ShowHotkeyExample(*) {
-    SimpleHotkeys()
-}
-
-ShowTooltipExample(*) {
-    SimpleTooltip()
+    ; Display in tooltip
+    ToolTip("Timer: " timeDisplay)
 }

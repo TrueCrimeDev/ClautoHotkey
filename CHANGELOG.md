@@ -1,35 +1,32 @@
 # Changelog
 
-## v1.0.0 - March 29, 2025
+All notable changes to the ClautoHotkey project will be documented in this file.
+
+## [1.0.0] - 2025-03-29
 
 ### Added
-- `.clinerules` configuration file for Claude AI to follow AutoHotkey v2 best practices
-- `.clinerules.md` documentation explaining how to use the rules system
-- `AHKv2_Example.ahk` as a comprehensive working example demonstrating:
-  - Proper class initialization patterns
-  - Static configuration using Maps (avoiding object literals)
-  - OOP GUI construction with proper event binding
-  - Error handling with structured error messages
-  - Property accessors with arrow syntax
-  - Context-sensitive hotkeys
-  - Clean code organization
-- `AHKv2_Code_Examples.ahk` with additional code patterns for reference
-- `Simple_AHKv2_Examples.ahk` with beginner-friendly examples
-- `AHKv2_Rules.md` detailing comprehensive coding standards
-- `AHKv2_Rules_README.md` explaining the rules system
-- Improved `Context_Claude.md` for more consistent code generation
-- `Using_Cline_for_AHKv2.md` with guidance on effective prompting
+- Initial release with comprehensive Cline rules system
+- `.clinerules` - JSON rules file for AHK v2 syntax validation and guidance
+- `.clinerules.md` - Documentation for the rules system
+- Comprehensive example scripts demonstrating proper AHK v2 patterns:
+  - `AHKv2_Example.ahk` - Complete application example with GUI and proper OOP structure
+  - `AHKv2_Code_Examples.ahk` - Additional pattern examples 
+  - `Simple_AHKv2_Examples.ahk` - Beginner-friendly examples
+- Documentation files:
+  - `AHKv2_Rules.md` - Detailed coding standards documentation
+  - `AHKv2_Rules_README.md` - Guide to the rules system
+  - `Using_Cline_for_AHKv2.md` - Guide for effective prompting
+- Updated project structure with clear organization
+- Improved README with detailed setup and usage instructions
+- Added comprehensive `.gitignore` file for AutoHotkey projects
 
-### Organization
-- Created structured folders:
-  - `Data/` - For reference data and examples
-  - `Modules/` - For modular AHK components
-  - `System_Prompts/` - For various AI assistant prompts
-  - `Tests/` - Example test scripts
-  - `XML/` - XML templates and data
+### Changed
+- Entirely restructured from previous prompts system to use `.clinerules` file format
+- Optimized examples to demonstrate current AHK v2 best practices
+- Reorganized documentation for better clarity and usability
 
-### Documentation
-- Comprehensive README with setup instructions
-- Detailed explanations for each component
-- Cross-references between related files
-- MIT License for project distribution
+### Fixed
+- Corrected syntax examples to properly follow AHK v2 standards
+- Consolidated conflicting guidance from earlier versions
+- Improved Class initialization examples to match current recommended patterns
+- Fixed Map/Object usage examples to prevent common errors

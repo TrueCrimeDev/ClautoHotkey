@@ -55,6 +55,11 @@ ClautoHotkey/
    - Configure your .clinerules integration through the Cline VS Code extension
    - Ensure the rules are available in your project context
 
+3. **For Updating via Git**:
+   - git remote add origin https://github.com/yourusername/ClautoHotkey.git
+   - git branch -M main
+   - git push -u origin main
+
 ## Usage Examples
 
 ### Basic AHK v2 Script Generation

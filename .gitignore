@@ -1,38 +1,43 @@
-# AutoHotkey specific
-*.exe
+# AutoHotkey specific files
 *.ahk.bak
-*.ahk~
+*.exe
+*.dll
+*.zip
 compiled/
 
-# Debug logs and temporary files
-*.log
-debug.txt
+# Debug files
 error_log.txt
-temp/
-*.tmp
+debug.log
+*.log
 
-# User-specific files
-settings.ini
-user_config.json
-personal_settings.ahk
-
-# Editor specific files
+# VS Code specific
 .vscode/*
-!.vscode/launch.json
+!.vscode/settings.json
 !.vscode/tasks.json
-.idea/
-*.sublime-*
+!.vscode/launch.json
+!.vscode/extensions.json
 *.code-workspace
 
+# User-specific files
+**/settings.ini
+**/config.ini
+**/user.ini
+**/secrets.ahk
+
 # OS specific files
+# Windows
 Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
 .DS_Store
-desktop.ini
+.AppleDouble
+.LSOverride
+._*
 
-# Project specific
-Data/Private/
-*.private.ahk
-
-# Dependency directories
-node_modules/
-vendor/
+# Temp files
+*.tmp
+*.temp
+~*
