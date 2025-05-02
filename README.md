@@ -1,19 +1,66 @@
-# ClautoHotkey
+<!-- ─────────────────────────────  HERO HEADER  ───────────────────────────── -->
+<div align="center">
 
-> [!IMPORTANT]
-> Updated March 29, 2025: Major improvements with new rules system for Sonnet 3.7, Gemini 2.5, and other LLMs for writing high-quality AHK v2 code.
+<h1>
+  &nbsp;ClautoHotkey
+  <sup><sub><kbd>v 1.3</kbd></sub></sup>
+</h1>
 
-A comprehensive framework for generating correct, consistent AutoHotkey v2 code with Claude and other LLMs. This repository features rule sets, examples, and guidance to ensure proper AHK v2 syntax and best practices in AI-generated code.
+<p>
+  <kbd>📝 System Prompts</kbd> •
+  <kbd>🔧 Project Modules</kbd> •
+  <kbd>💅 Response Styles</kbd> •
+  <kbd>🤖 Cline Rules</kbd>
+</p>
 
-The system also includes context prompts for Deepseek, Gemini, and ChatGPT, but the main focus is on the `.clinerules` system that enables structured, reliable code generation across different AI assistants.
+[![AutoHotGPT](https://img.shields.io/badge/ChatGPT-Custom%20GPT-orange?style=flat&logo=openai)](https://chatgpt.com/g/g-673a87acb08081918fe4bfc012d6d098-ahk-v2)
+[![AHK v2 Docs](https://img.shields.io/badge/AHK%20v2-Docs-brightgreen?style=flat&logo=autohotkey&logoColor=white)](https://www.autohotkey.com/docs/v2/index.htm)
+[![Wiki](https://img.shields.io/badge/Wiki-blueviolet?style=flat)](https://github.com/TrueCrimeAudit/ClautoHotkey/wiki)
 
-Big thanks to [g.ahk](https://github.com/G33kDude), [Descolada](https://github.com/Descolada), [Panaku](https://github.com/The-CoDingman), [Nperovic](https://github.com/nperovic) and everyone else who have assisted with code samples and feedback.
+</div>
 
-## Overview
+> **ℹ️  Updated May 2 2025**  
+> Major improvements: **ahk‑server MCP references, prompt testing/logging tool, _cline_ rules, custom coding styles, context aggregator** for lightning‑fast module selection.
 
-This repository provides documentation and context files to create an optimized AutoHotkey v2 development environment within Claude. By using these prompts, you can significantly improve the quality and accuracy of Claude's AutoHotkey v2 code generation. You can also check out my ChatGPT custom GPT here: https://chatgpt.com/g/g-673a87acb08081918fe4bfc012d6d098-ahk-v2
+---
 
-## Repository Structure
+## ✨ Overview
+
+**ClautoHotkey** is a comprehensive framework for generating **correct, consistent AutoHotkey v2** code with Claude, ChatGPT, Gemini, and other LLMs.
+
+| ⚙️ Component | 📄 Description |
+|--------------|---------------|
+| **Rule Sets** | Enforce strict OOP‑first AHK v2 syntax across models. |
+| **.clinerules** | Zero‑config prompt pre‑processor that injects style & lint rules. |
+| **Modules** | Reusable building blocks (GUI, WinAPI, regex helpers, etc.). |
+| **Prompt Toolkit** | Test bench & logger for benchmarking multiple LLMs. |
+| **Context Aggregator** | Smart picker that stitches only the files you need into one prompt. |
+
+> *Big thanks* to [G33kDude], [Descolada], [Panaku], [Nperovic], [0w0Demonic] and everyone who has chipped in with code, reviews, and caffeine.
+
+---
+
+## 🚀 Quick Start
+
+```bash
+git clone https://github.com/TrueCrimeAudit/ClautoHotkey.git
+cd ClautoHotkey
+Open docs/GettingStarted.md for the 5‑minute walkthrough.
+
+<details> <summary><kbd>📓 Changelog</kbd></summary>
+2025‑05‑02
+Added ahk‑server MCP references
+
+Introduced prompt testing/logging tool
+
+New context aggregator for one‑click module bundling
+
+2025‑03‑29
+Switched to rules v1.3 for Sonnet 3.7 & Gemini 2.5
+
+Refined .clinerules syntax & error handling
+
+</details>
 
 ```
 ClautoHotkey/
