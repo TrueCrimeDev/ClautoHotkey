@@ -1,0 +1,39 @@
+id: function_square
+name: Square Function
+category: Basic Functions
+difficulty: Easy
+timeEstimate: 10 minutes
+author: System
+version: 1.0
+---
+Create a function that squares a number. This is a basic benchmark to test implementation of a simple mathematical function.
+---
+Implement a function that takes a number as input and returns the square of that number.
+
+Requirements:
+1. Function must be named YourFunction
+2. Must handle negative numbers correctly
+3. Must return the square of the input
+---
+; Implement a function that returns the square of a number
+YourFunction(number) {
+    ; Your code here
+}
+---
+; Test framework
+TestFunction(name, result, expected) {
+    testPassed := result == expected
+    FileAppend(name ": " (testPassed ? "PASS" : "FAIL") "
+", A_Temp "\ahkbench\testResults.txt")
+
+    if (!testPassed) {
+        FileAppend("Test " name " failed. Expected: " expected ", Got: " result "
+", A_Temp "\ahkbench\testErrors.txt")
+    }
+}
+
+; Run tests
+TestFunction("SquarePositive", YourFunction(5), 25)
+TestFunction("SquareZero", YourFunction(0), 0)
+TestFunction("SquareNegative", YourFunction(-3), 9)
+TestFunction("SquareDecimal", YourFunction(1.5), 2.25)

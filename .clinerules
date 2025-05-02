@@ -1,5 +1,5 @@
 {
-    "version": "1.0.0",
+    "version": "1.1.0",
     "rules": {
         "ahkv2_syntax": {
             "description": "AHK v2 Syntax Rules",
@@ -111,6 +111,13 @@
                     "correct": "this.gui.AddEdit(\"vUserInput w200\")",
                     "incorrect": "UserInput := this.gui.AddEdit(\"w200\")",
                     "message": "Use 'v' option for variable binding in GUI controls"
+                },
+                {
+                    "name": "gui_control_storage",
+                    "description": "Store GUI controls in a Map for consistent access",
+                    "correct": "this.controls := Map()\nthis.controls[\"input\"] := this.gui.AddEdit(\"w200\")",
+                    "incorrect": "this.input := this.gui.AddEdit(\"w200\")",
+                    "message": "Store GUI controls in a Map for organized and consistent access"
                 }
             ]
         },
@@ -137,6 +144,48 @@
                     "correct": "class Child extends Parent {\n    __New() {\n        super.__New()\n    }\n}",
                     "incorrect": "class Child {\n    __New() {\n        this.base := Parent()\n    }\n}",
                     "message": "Use 'extends' keyword for inheritance and call super.__New() in constructor"
+                },
+                {
+                    "name": "backing_field_convention",
+                    "description": "Use underscore prefix for backing fields",
+                    "correct": "class User {\n    _name := \"\"\n    \n    Name {\n        get => this._name\n        set => this._name := value\n    }\n}",
+                    "incorrect": "class User {\n    name := \"\"\n    \n    Name {\n        get => this.name\n        set => this.name := value\n    }\n}",
+                    "message": "Use underscore prefix for backing fields to distinguish from property accessors"
+                },
+                {
+                    "name": "constructor_initialization",
+                    "description": "Initialize instance properties in constructor",
+                    "correct": "class Example {\n    __New(param) {\n        this.value := param\n        this.initialized := true\n    }\n}",
+                    "incorrect": "class Example {\n    value := \"\"\n    initialized := false\n}",
+                    "message": "Initialize instance-specific properties in the constructor (__New method)"
+                },
+                {
+                    "name": "static_member_usage",
+                    "description": "Use static properties for shared data",
+                    "correct": "class Config {\n    static Settings := Map(\n        \"theme\", \"dark\",\n        \"fontSize\", 12\n    )\n}",
+                    "incorrect": "global Config := Map(\n    \"theme\", \"dark\",\n    \"fontSize\", 12\n)",
+                    "message": "Use static class properties for shared data instead of global variables"
+                },
+                {
+                    "name": "error_handling_method",
+                    "description": "Implement __Call for handling undefined methods",
+                    "correct": "class Example {\n    __Call(method, args*) {\n        MsgBox(\"Method '\" method \"' does not exist in this class\")\n    }\n}",
+                    "incorrect": "",
+                    "message": "Implement __Call meta-method to catch and handle undefined method calls"
+                },
+                {
+                    "name": "method_call_syntax",
+                    "description": "Use dot notation for method calls",
+                    "correct": "result := obj.Method(param)",
+                    "incorrect": "result := obj[\"Method\"](param)",
+                    "message": "Always use dot notation for method calls, not bracket syntax"
+                },
+                {
+                    "name": "class_instantiation_pattern",
+                    "description": "Initialize classes at the top of the script",
+                    "correct": "AppMain()\nclass AppMain {\n    __New() {\n        ; Implementation\n    }\n}",
+                    "incorrect": "class AppMain {\n    __New() {\n        ; Implementation\n    }\n}\napp := AppMain()",
+                    "message": "Initialize primary classes at the top of the script before their definitions"
                 }
             ]
         },
@@ -156,12 +205,57 @@
                     "correct": "HotIfWinActive(\"ahk_class Notepad\")\nHotkey(\"^c\", CopyNotepad)\nHotIf()",
                     "incorrect": "#IfWinActive ahk_class Notepad\n^c::CopyNotepad()\n#If",
                     "message": "Use HotIf directives instead of #If for context-sensitive hotkeys"
+                },
+                {
+                    "name": "hotkey_class_integration",
+                    "description": "Organize hotkeys within a class method",
+                    "correct": "class HotkeyManager {\n    SetupHotkeys() {\n        Hotkey(\"^s\", this.Save.Bind(this))\n        Hotkey(\"^o\", this.Open.Bind(this))\n    }\n}",
+                    "incorrect": "^s::Save()\n^o::Open()",
+                    "message": "Organize hotkeys within dedicated class methods for better maintainability"
+                }
+            ]
+        },
+        "ahkv2_data_structures": {
+            "description": "AHK v2 Data Structure Patterns",
+            "patterns": [
+                {
+                    "name": "map_usage",
+                    "description": "Use Map() for key-value data structures",
+                    "correct": "config := Map(\n    \"width\", 800,\n    \"height\", 600,\n    \"title\", \"My Application\"\n)",
+                    "incorrect": "config := {width: 800, height: 600, title: \"My Application\"}",
+                    "message": "Always use Map() for key-value data structures, never object literals"
+                },
+                {
+                    "name": "array_usage",
+                    "description": "Use arrays for indexed collections",
+                    "correct": "items := [\"apple\", \"banana\", \"orange\"]",
+                    "incorrect": "items := {1: \"apple\", 2: \"banana\", 3: \"orange\"}",
+                    "message": "Use array syntax for indexed collections, not object literals or maps"
+                },
+                {
+                    "name": "map_keys_method",
+                    "description": "Implement proper methods to get Map keys",
+                    "correct": "Map.Prototype.DefineProp(\"Keys\", {Call: get_keys})\nmyKeys := myMap.Keys()",
+                    "incorrect": "for key, _ in myMap\n    keys.Push(key)",
+                    "message": "Define and use proper methods for Map key extraction"
+                },
+                {
+                    "name": "nested_data_structures",
+                    "description": "Use proper nesting of data structures",
+                    "correct": "config := Map(\n    \"window\", Map(\n        \"width\", 800,\n        \"height\", 600\n    ),\n    \"theme\", Map(\n        \"dark\", true,\n        \"colors\", [\"#202020\", \"#E0E0E0\"]\n    )\n)",
+                    "incorrect": "config := {window: {width: 800, height: 600}, theme: {dark: true, colors: [\"#202020\", \"#E0E0E0\"]}}",
+                    "message": "Use proper nesting of Maps and Arrays, not object literals"
                 }
             ]
         }
     },
     "documentation": {
-        "version_history": "1.0.0 - Initial release with core AHK v2 rules",
-        "usage": "Include this file in your project root to enable Cline to enforce AHK v2 code standards"
+        "version_history": "1.0.0 - Initial release with core AHK v2 rules\n1.1.0 - Added comprehensive OOP patterns and guidelines",
+        "usage": "Include this file in your project root to enable Cline to enforce AHK v2 code standards",
+        "related_files": [
+            "memory-bank/techContext.md",
+            "memory-bank/systemPatterns.md",
+            "memory-bank/Module_Classes.md"
+        ]
     }
 }

@@ -1,0 +1,16 @@
+benchmarkId: function_square
+timestamp: 20250420205846
+passed: false
+---
+
+---
+
+---
+
+; Implement a function that returns the square of a number
+YourFunction(number) {
+    ; Your code here
+}
+
+---
+

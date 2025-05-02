@@ -1,0 +1,44 @@
+id: calculator_class
+name: Calculator Class
+category: OOP Design
+difficulty: Medium
+timeEstimate: 30 minutes
+author: System
+version: 1.0
+---
+Create a calculator class with methods for basic arithmetic operations. This benchmark tests object-oriented programming skills.
+---
+Implement a Calculator class that supports addition, subtraction, multiplication, and division operations.
+
+Requirements:
+1. Class must be named Calculator
+2. Must have Add, Subtract, Multiply, and Divide methods
+3. Each method should take two parameters and return the result
+4. The Divide method should handle division by zero by returning 'Error'
+---
+; Implement a Calculator class
+class Calculator {
+    ; Your code here
+}
+---
+; Test framework
+TestFunction(name, result, expected) {
+    testPassed := result == expected
+    FileAppend(name ": " (testPassed ? "PASS" : "FAIL") "
+", A_Temp "\ahkbench\testResults.txt")
+
+    if (!testPassed) {
+        FileAppend("Test " name " failed. Expected: " expected ", Got: " result "
+", A_Temp "\ahkbench\testErrors.txt")
+    }
+}
+
+; Create calculator instance
+calc := Calculator()
+
+; Run tests
+TestFunction("Addition", calc.Add(5, 3), 8)
+TestFunction("Subtraction", calc.Subtract(10, 4), 6)
+TestFunction("Multiplication", calc.Multiply(6, 7), 42)
+TestFunction("Division", calc.Divide(20, 5), 4)
+TestFunction("DivisionByZero", calc.Divide(10, 0), "Error")

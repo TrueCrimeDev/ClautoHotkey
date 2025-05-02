@@ -1,0 +1,41 @@
+id: fibonacci_sequence
+name: Fibonacci Sequence
+category: Algorithms
+difficulty: Medium
+timeEstimate: 20 minutes
+author: System
+version: 1.0
+---
+Implement a function to generate the nth Fibonacci number. This benchmark tests understanding of recursive or iterative algorithms.
+---
+Create a function that returns the nth Fibonacci number.
+
+Requirements:
+1. Function must be named Fibonacci
+2. Must handle inputs from 1 to 20
+3. Fibonacci(1) = 1, Fibonacci(2) = 1, Fibonacci(3) = 2, etc.
+---
+; Implement a function that returns the nth Fibonacci number
+Fibonacci(n) {
+    ; Your code here
+}
+---
+; Test framework
+TestFunction(name, result, expected) {
+    testPassed := result == expected
+    FileAppend(name ": " (testPassed ? "PASS" : "FAIL") "
+", A_Temp "\ahkbench\testResults.txt")
+
+    if (!testPassed) {
+        FileAppend("Test " name " failed. Expected: " expected ", Got: " result "
+", A_Temp "\ahkbench\testErrors.txt")
+    }
+}
+
+; Run tests
+TestFunction("Fibonacci1", Fibonacci(1), 1)
+TestFunction("Fibonacci2", Fibonacci(2), 1)
+TestFunction("Fibonacci3", Fibonacci(3), 2)
+TestFunction("Fibonacci4", Fibonacci(4), 3)
+TestFunction("Fibonacci5", Fibonacci(5), 5)
+TestFunction("Fibonacci10", Fibonacci(10), 55)

@@ -1,0 +1,16 @@
+benchmarkId: simple_gui
+timestamp: 20250421091813
+passed: false
+---
+
+---
+
+---
+
+; Implement a GUI that reverses text
+class TextReverserGUI {
+    ; Your code here
+}
+
+---
+

@@ -11,7 +11,7 @@ class ExampleApplication {
         "version", "1.0.0",
         "theme", Map(
             "background", "White",
-            "foreground", "Black",
+            "foreground", "202020",
             "accent", "#0078D7"
         )
     )

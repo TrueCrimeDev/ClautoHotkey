@@ -1,0 +1,16 @@
+benchmarkId: fibonacci_sequence
+timestamp: 20250420205542
+passed: false
+---
+
+---
+
+---
+
+; Implement a function that returns the nth Fibonacci number
+Fibonacci(n) {
+    ; Your code here
+}
+
+---
+

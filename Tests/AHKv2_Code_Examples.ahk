@@ -545,12 +545,12 @@ demoGui.AddButton("w300 h30", "Show Basic GUI Example").OnEvent("Click", (*) => 
 
 ; Hotkey Management demo
 hotkeyButton := demoGui.AddButton("w300 h30", "Register Ctrl+Shift+T Hotkey")
-hotkeyButton.OnEvent("Click", (*) => {
+hotkeyButton.OnEvent("Click", (*) {
     static registered := false
     local hkm := HotkeyManager()
     
     if !registered {
-        hkm.Register("^+t", (*) => {
+        hkm.Register("^+t", (*) {
             hkm.ShowTooltip("Hotkey Triggered: Ctrl+Shift+T")
         })
         hotkeyButton.Text := "Unregister Ctrl+Shift+T Hotkey"
@@ -564,7 +564,7 @@ hotkeyButton.OnEvent("Click", (*) => {
 
 ; Timer demo
 timerButton := demoGui.AddButton("w300 h30", "Start Tooltip Timer")
-timerButton.OnEvent("Click", (*) => {
+timerButton.OnEvent("Click", (*) {
     static timer := TooltipTimer()
     static active := false
     
@@ -580,7 +580,7 @@ timerButton.OnEvent("Click", (*) => {
 })
 
 ; File operations demo
-demoGui.AddButton("w300 h30", "Write Sample File").OnEvent("Click", (*) => {
+demoGui.AddButton("w300 h30", "Write Sample File").OnEvent("Click", (*) {
     fh := FileHandler()
     result := fh.WriteTextFile(A_ScriptDir "\sample.txt", "This is a sample file created by AHK v2.`nTimestamp: " A_Now)
     if result["success"] {

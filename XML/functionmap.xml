@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FunctionMap>
+  <!-- Memory Bank Structure Functions -->
+  <StructureFunctions>
+    <Function id="createProjectBrief">Create the foundational project brief document</Function>
+    <Function id="createProductContext">Document why the project exists and problems it solves</Function>
+    <Function id="createSystemPatterns">Document system architecture and design patterns</Function>
+    <Function id="createTechContext">Document technologies, setup and dependencies</Function>
+    <Function id="createActiveContext">Document current work focus and next steps</Function>
+    <Function id="createProgressDoc">Document what works and what's left to build</Function>
+    <Function id="createFileTree">Document project file structure and component relationships</Function>
+    <Function id="createSystemConfig">Document system mode and configuration settings</Function>
+  </StructureFunctions>
+  
+  <!-- Workflow Phase Functions -->
+  <WorkflowFunctions>
+    <Phase name="Initialization">
+      <Function id="initializeProject">Start the project planning process</Function>
+      <Function id="checkMemoryBankExists">Verify if memory bank directory exists</Function>
+      <Function id="createMemoryBankDirectory">Create the memory bank directory structure</Function>
+      <Function id="scaffoldMemoryBankStructure">Create the initial structure for memory bank files</Function>
+      <Function id="readMemoryBank">Read all memory bank files to understand project context</Function>
+      <Function id="selectSystemMode">Select between LITE and FULL modes</Function>
+    </Phase>
+    
+    <Phase name="Planning">
+      <Function id="verifyFilesComplete">Check if all required memory bank files exist</Function>
+      <Function id="createMissingFiles">Create any missing memory bank files</Function>
+      <Function id="analyzeProblem">Thoroughly understand requirements before coding</Function>
+      <Function id="createPlan">Develop a comprehensive implementation plan</Function>
+      <Function id="createTaskLog">Initialize a new task log with goal and timestamp</Function>
+      <Function id="verifyContext">Verify understanding of project context</Function>
+      <Function id="developStrategy">Develop implementation strategy based on context</Function>
+      <Function id="presentApproach">Present the implementation approach to user</Function>
+      <Function id="defineErrorHandlingStrategy">Define the error handling approach for this task</Function>
+      <Function id="defineTestingStrategy">Define the testing strategy for this task</Function>
+    </Phase>
+    
+    <Phase name="Implementation">
+      <Function id="executeTask">Execute a specific implementation task</Function>
+      <Function id="createInitialSolution">Generate the initial solution</Function>
+      <Function id="reviewSolution">Self-review the solution for issues</Function>
+      <Function id="optimizeCode">Optimize the solution for performance and clarity</Function>
+      <Function id="handleEdgeCases">Address edge cases and exceptional conditions</Function>
+      <Function id="implementErrorHandling">Implement robust error handling mechanisms</Function>
+      <Function id="validateSolution">Validate the solution against requirements</Function>
+      <Function id="documentImplementation">Document the implementation details</Function>
+      <Function id="updateTaskLog">Update the task log with implementation progress</Function>
+    </Phase>
+    
+    <Phase name="Testing">
+      <Function id="createTests">Develop appropriate tests (unit, integration, etc.)</Function>
+      <Function id="implementTestCases">Implement specific test cases</Function>
+      <Function id="ensureEdgeCaseCoverage">Ensure tests cover edge cases</Function>
+      <Function id="documentTestStrategy">Document the testing approach</Function>
+      <Function id="evaluateTestCoverage">Assess test coverage and completeness</Function>
+    </Phase>
+    
+    <Phase name="Documentation">
+      <Function id="finalizeTaskLog">Complete the task log with performance evaluation</Function>
+      <Function id="updateMemoryBank">Update all relevant memory bank files</Function>
+      <Function id="documentCurrentState">Document the current state of the project</Function>
+      <Function id="clarifyNextSteps">Clarify next steps in the development process</Function>
+      <Function id="updateProjectRules">Update project rules and insights</Function>
+      <Function id="identifyPatterns">Identify recurring patterns worth documenting</Function>
+      <Function id="prioritizeMemoryBankUpdates">Identify critical files to update first</Function>
+    </Phase>
+    
+    <Phase name="Evaluation">
+      <Function id="evaluateEfficiency">Assess algorithm and implementation efficiency</Function>
+      <Function id="evaluateCompleteness">Verify solution completeness</Function>
+      <Function id="evaluateBestPractices">Check adherence to best practices</Function>
+      <Function id="evaluateEdgeCases">Verify edge case handling</Function>
+      <Function id="evaluateErrorHandling">Assess the quality of error handling</Function>
+      <Function id="evaluateReadability">Assess code readability and maintainability</Function>
+      <Function id="evaluateTestQuality">Assess the quality and coverage of tests</Function>
+      <Function id="calculateOverallScore">Calculate overall implementation score</Function>
+    </Phase>
+    
+    <Phase name="ErrorHandling">
+      <Function id="identifyPotentialErrors">Identify potential error points</Function>
+      <Function id="categorizeErrors">Categorize errors by severity and type</Function>
+      <Function id="designErrorRecovery">Design recovery mechanisms for errors</Function>
+      <Function id="implementErrorLogging">Implement appropriate error logging</Function>
+      <Function id="createEscalationPath">Define error escalation procedures</Function>
+      <Function id="documentErrorApproach">Document the error handling approach</Function>
+    </Phase>
+  </WorkflowFunctions>
+  
+  <!-- Task Log Management Functions -->
+  <TaskLogFunctions>
+    <Function id="createTaskLog">Initialize a new task log with goal and timestamp</Function>
+    <Function id="updateTaskImplementation">Document implementation details as work progresses</Function>
+    <Function id="completeTaskLog">Finalize the log with completion time and performance score</Function>
+    <Function id="reviewRecentTaskLogs">Examine recent logs to maintain context continuity</Function>
+    <Function id="identifyPatternFromTaskLogs">Discover recurring patterns across multiple logs</Function>
+  </TaskLogFunctions>
+  
+  <!-- Function Map Management -->
+  <MapManagementFunctions>
+    <Function id="extendFunctionMap">Add new functions to the Function Map (requires user permission)</Function>
+    <Function id="customizeFunctionPhase">Customize an existing workflow phase</Function>
+    <Function id="documentMapChanges">Document changes to the Function Map</Function>
+    <Function id="optimizeFunctionMap">Optimize the Function Map for current project needs</Function>
+  </MapManagementFunctions>
+</FunctionMap>

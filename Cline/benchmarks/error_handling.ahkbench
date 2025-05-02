@@ -1,0 +1,54 @@
+id: error_handling
+name: Robust Error Handling
+category: Error Handling
+difficulty: Medium
+timeEstimate: 25 minutes
+author: System
+version: 1.0
+---
+Create a function with robust error handling for file operations. This benchmark tests proper error handling techniques.
+---
+Implement a function that reads a file and returns its contents. If the file doesn't exist or can't be read, the function should handle the error appropriately.
+
+Requirements:
+1. Function must be named ReadFileContents
+2. Must take a file path as input
+3. Must return the file contents if successful
+4. Must return an error message if the file doesn't exist
+5. Must handle other potential errors
+---
+; Implement a function that reads a file with error handling
+ReadFileContents(filePath) {
+    ; Your code here
+}
+---
+; Test framework
+TestFunction(name, result, expected) {
+    testPassed := result == expected
+    FileAppend(name ": " (testPassed ? "PASS" : "FAIL") "
+", A_Temp "\ahkbench\testResults.txt")
+
+    if (!testPassed) {
+        FileAppend("Test " name " failed. Expected: " expected ", Got: " result "
+", A_Temp "\ahkbench\testErrors.txt")
+    }
+}
+
+; Create a test file
+testFilePath := A_Temp "\ahkbench\testfile.txt"
+testContent := "This is a test file."
+try {
+    FileOpen(testFilePath, "w").Write(testContent)
+} catch {
+    FileAppend("Failed to create test file
+", A_Temp "\ahkbench\testErrors.txt")
+}
+
+; Run tests
+TestFunction("FileExists", ReadFileContents(testFilePath), testContent)
+TestFunction("FileDoesNotExist", InStr(ReadFileContents(A_Temp "\ahkbench\nonexistent.txt"), "Error"), true)
+
+; Clean up
+try {
+    FileDelete(testFilePath)
+} catch {}

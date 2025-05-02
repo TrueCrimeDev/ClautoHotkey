@@ -1,0 +1,58 @@
+id: simple_gui
+name: Simple GUI
+category: GUI Development
+difficulty: Hard
+timeEstimate: 45 minutes
+author: System
+version: 1.0
+---
+Create a simple GUI with buttons and text fields. This benchmark tests understanding of AutoHotkey's GUI capabilities.
+---
+Implement a GUI that contains a text input field, a button, and a display field. When the button is clicked, the text from the input field should be reversed and displayed in the display field.
+
+Requirements:
+1. Must be implemented as a class named TextReverserGUI
+2. Must have an input field, a button labeled 'Reverse', and a display field
+3. When the button is clicked, the text in the input field should be reversed and shown in the display field
+4. The class must have a Show method to display the GUI
+---
+; Implement a GUI that reverses text
+class TextReverserGUI {
+    ; Your code here
+}
+---
+; Test framework
+TestFunction(name, result, expected) {
+    testPassed := result == expected
+    FileAppend(name ": " (testPassed ? "PASS" : "FAIL") "
+", A_Temp "\ahkbench\testResults.txt")
+
+    if (!testPassed) {
+        FileAppend("Test " name " failed. Expected: " expected ", Got: " result "
+", A_Temp "\ahkbench\testErrors.txt")
+    }
+}
+
+; Create and show the GUI
+gui := TextReverserGUI()
+gui.Show()
+
+; Simulate input
+if !IsSet(gui.inputField) || !IsSet(gui.reverseButton) || !IsSet(gui.displayField) {
+    TestFunction("RequiredFields", false, true)
+} else {
+    gui.inputField.Value := "AutoHotkey"
+    gui.reverseButton.ToolTip := "Clicking"  ; This is just to access the button
+
+    ; Since we can't simulate a click, we'll directly test the reversal logic
+    if IsSet(gui.ReverseText) {
+        TestFunction("ReverseLogic", gui.ReverseText("AutoHotkey"), "kehtohAotuA")
+    } else {
+        TestFunction("ReverseMethod", false, true)
+    }
+
+    ; Close the GUI
+    try {
+        gui.gui.Destroy()
+    }
+}
