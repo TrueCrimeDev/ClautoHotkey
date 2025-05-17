@@ -18,6 +18,12 @@ debug.log
 !.vscode/extensions.json
 *.code-workspace
 
+# Ignore all README variants (not tracked in this repo)
+README.md
+readme.md
+ReadMe.md
+README.MD
+
 # User-specific files
 **/settings.ini
 **/config.ini

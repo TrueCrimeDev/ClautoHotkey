@@ -1,18 +1,1 @@
-[
-	{
-		"body": "Create a clipboard text editor that:\n- Opens the GUI when the script starts\n- Shows the clipboard contents when the GUI opens in an edit box without the text selected\n- Create three buttons to change the case of the text \n- Save the newly edited version to the users clipboard",
-		"title": "Clipboard Editor"
-	},
-	{
-		"body": "Create an OOP-based AutoHotkey v2 script that:\n- Monitors clipboard changes in real-time\n- Analyzes clipboard content and identifies if it's one of:\n  - Email address\n  - URL\n  - File path\n  - Phone number\n  - 7-digit number\n- Displays a tooltip showing the detected type\n- Includes a test GUI with 5 single-line edit boxes containing examples of each type\n\nRequirements:\n- Use proper AHK v2 OOP patterns with classes\n- Implement a reliable clipboard monitoring system\n- Use regex for accurate content type detection\n- Include a clean test GUI for copying example content\n- Follow AHK v2 coding standards (no object literals for data storage)\n\nClass Structure:\n- Main ClipboardAnalyzer class to handle clipboard monitoring\n- Content detector methods for each content type\n- Tooltip display functionality\n- Test GUI implementation with examples\n\nFor clipboard monitoring, consider using the OnClipboardChange event handler.",
-		"title": "Link List"
-	},
-	{
-		"body": "Create an AutoHotkey v2 script for a Snippet Manager tool with the following features:\n- Store a collection of predefined text snippets (like greetings, closings, reminders)\n- Display them in a listbox GUI\n- Allow copying the selected snippet to clipboard\n- Option to send the snippet directly to the previous active window\n- Show temporary tooltips for user feedback\n\nAdditional Requirements:\n- Store snippets in a static Map\n- Track the previously active window\n- Have a clean, resizable GUI\n- Display tooltips that automatically disappear\n\nInclude these specific snippets: \"Greeting\", \"Closing\", \"Reminder\", and \"Follow-up\" with appropriate text content for each.\nMake sure to follow AutoHotkey v2 best practices with proper event binding, control management, and variable scoping.",
-		"title": "Snippet Manager"
-	},
-	{
-		"body": "f",
-		"title": "Test 4: Custom"
-	}
-]
+[]
