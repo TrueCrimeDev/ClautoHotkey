@@ -7,7 +7,7 @@
 >[!IMPORTANT] 
 >This readme was not created using AI, so it's worth reading lol
 
-ClautoHotkey is a comprehensive suite of prompts, modules, and scripts designed to enhance AutoHotkey v2 development, especially when leveraging AI assistants like Claude. It provides structured instructions, debugging tools, and strict coding guidelines to help generate high-quality, maintainable, and object-oriented AHK v2 code.
+ClautoHotkey is a suite of prompts, modules, and scripts for AutoHotkey v2 development when using AI. There are structured instructions, debugging tools, and strict coding guidelines to help generate high-quality, maintainable, and object-oriented AHK v2 code.
 
 ## ✨ Key Features
 
