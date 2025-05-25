@@ -1,5 +1,9 @@
 [
 	{
+		"body": "Implement an AutoHotkey v2 class that monitors a directory for file changes and triggers callbacks when files are created, modified, or deleted.",
+		"title": ""
+	},
+	{
 		"body": "Create a clipboard text editor that:\n- Opens the GUI when the script starts\n- Shows the clipboard contents when the GUI opens in an edit box without the text selected\n- Create three buttons to change the case of the text\n- Save the newly edited version to the users clipboard",
 		"title": "Clipboard"
 	},

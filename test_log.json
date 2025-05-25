@@ -1,21 +1,5 @@
 [
 	{
-		"Code": "#Requires AutoHotkey v2.0\n\nFileSystemWatcher()\n\nclass FileSystemWatcher {\n    static WatchMap := Map()\n    \n    __New() {\n        this.watches := Map()\n    }\n    \n    Watch(directory, callback) {\n        if !DirExist(directory)\n            throw Error(\"Directory does not exist: \" directory)\n            \n        watcher := FileSystemWatcher._CreateWatcher(directory, callback)\n        this.watches[directory] := watcher\n        return this\n    }\n    \n    static _CreateWatcher(directory, callback) {\n        static FILE_NOTIFY_CHANGE_FILE_NAME := 0x1\n        static FILE_NOTIFY_CHANGE_LAST_WRITE := 0x10\n        \n        flags := FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_LAST_WRITE\n        \n        watcher := CreateObject(\"WScript.Shell\").Exec(\"cmd /c powershell -Command -\")\n        script := \"\n        $watcher = New-Object System.IO.FileSystemWatcher\n        $watcher.Path = '\" directory \"'\n        $watcher.IncludeSubdirectories = $true\n        $watcher.EnableRaisingEvents = $true\n        \"\n        \n        watcher.StdIn.Write(script)\n        watcher.StdIn.Close()\n        \n        return watcher\n    }\n}",
-		"Company": "Meta",
-		"Errors": "Error: Failed to create object using CreateObject(\"WScript.Shell\") with error: Object not found.",
-		"Model": "Llama 3 70B",
-		"Notes": "Interesting approach using PowerShell for file watching. COM object issues need to be addressed.",
-		"PromptBody": "Implement an AutoHotkey v2 class that monitors a directory for file changes and triggers callbacks when files are created, modified, or deleted.",
-		"PromptTitle": "",
-		"Ratings": {
-			"1": 3,
-			"2": 4,
-			"3": 3,
-			"4": 3
-		},
-		"Timestamp": "04/20/25"
-	},
-	{
 		"Code": "ToggleHotkey(hotkeyString, showToolTip := true) {\n    static hotkeyStates := Map()\n    \n    ; Initialize if first time\n    if !hotkeyStates.Has(hotkeyString)\n        hotkeyStates[hotkeyString] := true\n    \n    ; Toggle the state\n    currentState := hotkeyStates[hotkeyString]\n    newState := !currentState\n    hotkeyStates[hotkeyString] := newState\n    \n    ; Enable or disable the hotkey\n    if newState\n        Hotkey hotkeyString, \"On\"\n    else\n        Hotkey hotkeyString, \"Off\"\n    \n    ; Show tooltip if requested\n    if showToolTip {\n        stateText := newState ? \"Enabled\" : \"Disabled\"\n        ToolTip(\"Hotkey \" hotkeyString \" \" stateText)\n        SetTimer () => ToolTip(), -1000  ; Clear after 1 second\n    }\n    \n    return newState\n}",
 		"Company": "Mistral",
 		"Errors": "Error: A parameter is missing its comma or a block is missing its opening brace.",
