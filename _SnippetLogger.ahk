@@ -133,12 +133,21 @@ class ClipboardLogger {
             
             FileDelete(this.getFullPath(filename))
             this.listView.Delete(this.selectedIndex)
-            this.entries.Delete(this.selectedIndex)
+            this.rebuildEntries()
             this.selectedIndex := 0
             this.statusText.Value := "Entry deleted: " filename
         } catch Error as err {
             this.statusText.Value := "Error deleting entry: " err.Message
         }
+    }
+
+    rebuildEntries() {
+        newEntries := Map()
+        Loop this.listView.GetCount() {
+            idx := A_Index
+            newEntries[idx] := this.listView.GetText(idx, 3)
+        }
+        this.entries := newEntries
     }
     
     viewSelected(*) {
