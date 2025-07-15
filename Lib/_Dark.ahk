@@ -1,78 +1,78 @@
 #Requires AutoHotkey v2.1-alpha.16
 #SingleInstance Force
 
-; #DllLoad gdi32.dll
-; #DllLoad uxtheme.dll
-; #DllLoad dwmapi.dll
+#DllLoad gdi32.dll
+#DllLoad uxtheme.dll
+#DllLoad dwmapi.dll
 
-; EnhancedDarkApp()
+EnhancedDarkApp()
 
-; class EnhancedDarkApp {
-;     __New() {
-;         this.InitializeGui()
-;         this.SetupControls()
-;         this.gui.Show()
-;     }
+class EnhancedDarkApp {
+    __New() {
+        this.InitializeGui()
+        this.SetupControls()
+        this.gui.Show()
+    }
 
-;     InitializeGui() {
-;         this.gui := Gui("+Resize +AlwaysOnTop", "Enhanced Dark Mode Demo")
-;         this.gui.SetFont("s10", "Segoe UI")
-;         dm := _Dark(this.gui)
+    InitializeGui() {
+        this.gui := Gui("+Resize +AlwaysOnTop", "Enhanced Dark Mode Demo")
+        this.gui.SetFont("s10", "Segoe UI")
+        dm := _Dark(this.gui)
 
-;         dm.AddDarkText("y15 x15 w300", "Basic Controls")
-;         this.darkCheckbox := dm.AddDarkCheckBox("y+10 x15 w250", "Enable feature")
-;         this.darkListView := dm.AddListView("y+10 x15 w300 h120", ["Item", "Value"])
-;         this.actionButton := dm.AddDarkButton("y+10 x15 w120", "Run Action")
-;         this.darkEdit := dm.AddDarkEdit("y+10 x15 w200 h24", "Sample text input")
-;         this.darkComboBox := dm.AddDarkComboBox("y+10 x15 w200", ["Option 1", "Option 2", "Option 3"])
+        dm.AddDarkText("y15 x15 w300", "Basic Controls")
+        this.darkCheckbox := dm.AddDarkCheckBox("y+10 x15 w250", "Enable feature")
+        this.darkListView := dm.AddListView("y+10 x15 w300 h120", ["Item", "Value"])
+        this.actionButton := dm.AddDarkButton("y+10 x15 w120", "Run Action")
+        this.darkEdit := dm.AddDarkEdit("y+10 x15 w200 h24", "Sample text input")
+        this.darkComboBox := dm.AddDarkComboBox("y+10 x15 w200", ["Option 1", "Option 2", "Option 3"])
 
-;         dm.AddDarkText("y+20 x15 w300", "Advanced Controls")
-;         this.darkGroupBox := dm.AddDarkGroupBox("y+10 x15 w300 h80 cWhite", "Group Settings")
-;         this.darkRadio1 := dm.AddDarkRadio("xp+15 yp+25 w250", "Option A")
-;         this.darkRadio2 := dm.AddDarkRadio("xp y+10 w250", "Option B")
+        dm.AddDarkText("y+20 x15 w300", "Advanced Controls")
+        this.darkGroupBox := dm.AddDarkGroupBox("y+10 x15 w300 h80 cWhite", "Group Settings")
+        this.darkRadio1 := dm.AddDarkRadio("xp+15 yp+25 w250", "Option A")
+        this.darkRadio2 := dm.AddDarkRadio("xp y+10 w250", "Option B")
 
-;         dm.AddDarkText("y+20 x15 w300", "Enhanced Controls")
-;         this.darkSlider := dm.AddDarkSlider("y+10 x15 w200 h30 Range0-100", 50)
-;         this.darkProgress := dm.AddDarkProgress("y+15 x15 w200 h20", 50)
-;         this.darkDateTime := dm.AddDarkDateTime("y+15 x15 w200")
-;         this.darkMonthCal := dm.AddDarkMonthCal("y+15 x15")
-;         this.darkTabs := dm.AddDarkTab3("y+15 x15 w300 h150", ["Tab 1", "Tab 2", "Tab 3"])
+        dm.AddDarkText("y+20 x15 w300", "Enhanced Controls")
+        this.darkSlider := dm.AddDarkSlider("y+10 x15 w200 h30 Range0-100", 50)
+        this.darkProgress := dm.AddDarkProgress("y+15 x15 w200 h20", 50)
+        this.darkDateTime := dm.AddDarkDateTime("y+15 x15 w200")
+        this.darkMonthCal := dm.AddDarkMonthCal("y+15 x15")
+        this.darkTabs := dm.AddDarkTab3("y+15 x15 w300 h150", ["Tab 1", "Tab 2", "Tab 3"])
 
-;         this.gui.Tab := 1
-;         dm.AddDarkText("y+10 x25 w280", "Content for Tab 1")
-;         dm.AddDarkEdit("y+10 x25 w280 h80", "Tab 1 content area")
+        this.gui.Tab := 1
+        dm.AddDarkText("y+10 x25 w280", "Content for Tab 1")
+        dm.AddDarkEdit("y+10 x25 w280 h80", "Tab 1 content area")
 
-;         this.gui.Tab := 2
-;         dm.AddDarkText("y+10 x25 w280", "Content for Tab 2")
-;         dm.AddDarkButton("y+10 x25 w100", "Tab 2 Button")
+        this.gui.Tab := 2
+        dm.AddDarkText("y+10 x25 w280", "Content for Tab 2")
+        dm.AddDarkButton("y+10 x25 w100", "Tab 2 Button")
 
-;         this.gui.Tab := 3
-;         dm.AddDarkText("y+10 x25 w280", "Content for Tab 3")
-;         dm.AddDarkListBox("y+10 x25 w200 h80", ["List Item 1", "List Item 2", "List Item 3"])
+        this.gui.Tab := 3
+        dm.AddDarkText("y+10 x25 w280", "Content for Tab 3")
+        dm.AddDarkListBox("y+10 x25 w200 h80", ["List Item 1", "List Item 2", "List Item 3"])
 
-;         this.gui.Tab := ""
+        this.gui.Tab := ""
 
-;         dm.AddDarkText("y+20 x15 w300", "Theme Settings")
-;         this.themeSelecter := dm.AddDarkComboBox("y+10 x15 w200", ["Dark Blue", "Dark Gray", "Dark Green", "Dark Purple"])
+        dm.AddDarkText("y+20 x15 w300", "Theme Settings")
+        this.themeSelecter := dm.AddDarkComboBox("y+10 x15 w200", ["Dark Blue", "Dark Gray", "Dark Green", "Dark Purple"])
 
-;         this.actionButton.OnEvent("Click", this.ButtonClicked.Bind(this))
-;         this.darkSlider.OnEvent("Change", this.SliderChanged.Bind(this))
-;     }
+        this.actionButton.OnEvent("Click", this.ButtonClicked.Bind(this))
+        this.darkSlider.OnEvent("Change", this.SliderChanged.Bind(this))
+    }
 
-;     ButtonClicked(*) {
-;         MsgBox("Button clicked!")
-;     }
+    ButtonClicked(*) {
+        MsgBox("Button clicked!")
+    }
 
-;     SliderChanged(*) {
-;         this.darkProgress.Value := this.darkSlider.Value
-;     }
+    SliderChanged(*) {
+        this.darkProgress.Value := this.darkSlider.Value
+    }
 
-;     SetupControls() {
-;         this.darkListView.Add(, "Item 1", "Value 1")
-;         this.darkListView.Add(, "Item 2", "Value 2")
-;         this.darkListView.Add(, "Item 3", "Value 3")
-;     }
-; }
+    SetupControls() {
+        this.darkListView.Add(, "Item 1", "Value 1")
+        this.darkListView.Add(, "Item 2", "Value 2")
+        this.darkListView.Add(, "Item 3", "Value 3")
+    }
+}
 
 class _Dark {
     class RECT {

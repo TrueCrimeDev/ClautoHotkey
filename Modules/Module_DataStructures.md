@@ -243,8 +243,6 @@ class SimpleGui {
 </GUI_CLASS_EXAMPLE>
 </CODE_QUALITY_STANDARDS>
 
-## Special Cases
-
 <GUI_REQUIREMENTS>
 Reference "Module_GUI.md" for additional reference
 

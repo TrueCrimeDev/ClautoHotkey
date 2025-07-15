@@ -4,7 +4,7 @@
 #Include ..\Lib\cJson.ahk
 #Include ..\Lib\DarkListView.ahk
 
-Esc:: ExitApp
+Esc::ExitApp
 
 Lg()
 

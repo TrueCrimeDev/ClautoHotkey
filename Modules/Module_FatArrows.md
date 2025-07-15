@@ -73,7 +73,7 @@ class EventPropagation {
     
     OnParentClick(sender, info) {
         MsgBox "Parent button clicked"
-        return true  ; Event handled, don't propagate
+        return true
     }
     
     OnChildClick(sender, info) {

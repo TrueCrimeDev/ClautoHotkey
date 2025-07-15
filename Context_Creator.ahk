@@ -20,19 +20,18 @@ class ModuleSelector {
         }
 
         this.gui.AddText("xm w400 cFFFFFF", "Select modules to include in clipboard:")
-        this.gui.AddText("xm w400 cFFFFFF", "Module Name")
         this.listView := this.gui.AddListView("r10 w400 Checked -Hdr", ["Module Name"])
         this.ApplyDarkListView(this.listView)
-        refreshBtn := this.CreateDarkButton("xm w120", "Refresh Files")
+        refreshBtn := this.CreateDarkButton("xm w90", "Refresh Files")
         refreshBtn.OnEvent("Click", this.LoadModules.Bind(this))
 
-        selectAllBtn := this.CreateDarkButton("x+10 w120", "Select All")
+        selectAllBtn := this.CreateDarkButton("x+10 w90", "Select All")
         selectAllBtn.OnEvent("Click", this.SelectAll.Bind(this))
 
-        clearAllBtn := this.CreateDarkButton("x+10 w120", "Clear All")
+        clearAllBtn := this.CreateDarkButton("x+10 w90", "Clear All")
         clearAllBtn.OnEvent("Click", this.ClearAll.Bind(this))
 
-        copyBtn := this.CreateDarkButton("xm w370 Default", "Copy Selected to Clipboard")
+        copyBtn := this.CreateDarkButton("x+10 w90 Default", "Copy")
         copyBtn.OnEvent("Click", this.CopyToClipboard.Bind(this))
         this.statusBar := this.gui.AddText("xm w400 h20 cFFFFFF vStatusBar", "Ready")
         this.gui.OnEvent("Close", (*) => this.gui.Hide())
