@@ -16,7 +16,7 @@ if (Add(2, 3) = 5)
     success1 := true
 else
     success1 := false
-    
+
 ; String concatenation test
 if (testResult = "Hello World")
     success2 := true

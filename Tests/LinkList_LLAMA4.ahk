@@ -27,7 +27,7 @@ class LinkManager {
         {
             url := Trim(A_LoopField)
             if (url != "") {
-                obj := {url: url, valid: this.ValidateUrl(url), displayName: this.GetDisplayName(url)}
+                obj := { url: url, valid: this.ValidateUrl(url), displayName: this.GetDisplayName(url) }
                 this.links.Push(obj)
             }
         }

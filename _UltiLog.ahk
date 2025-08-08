@@ -4,7 +4,7 @@
 #Include ..\Lib\cJson.ahk
 #Include ..\Lib\DarkListView.ahk
 
-Esc::ExitApp
+Esc:: ExitApp
 
 Lg()
 
@@ -360,37 +360,37 @@ class Lg {
         this.totalEdit.Value := percentage . "%"
     }
 
-SelectCompanyByName(name) {
-    if (!name)
-        return
+    SelectCompanyByName(name) {
+        if (!name)
+            return
 
-    try {
-        if (this.coDdl.HasProp("Items") && this.coDdl.Items.Length > 0) {
-            Loop this.coDdl.Items.Length {
-                if (this.coDdl.Items[A_Index] = name) {
+        try {
+            if (this.coDdl.HasProp("Items") && this.coDdl.Items.Length > 0) {
+                Loop this.coDdl.Items.Length {
+                    if (this.coDdl.Items[A_Index] = name) {
+                        this.coDdl.Choose(A_Index)
+                        return
+                    }
+                }
+            }
+
+            Loop this.coDdl.GetCount() {
+                if (this.coDdl.GetText(A_Index) = name) {
                     this.coDdl.Choose(A_Index)
                     return
                 }
             }
-        }
 
-        Loop this.coDdl.GetCount() {
-            if (this.coDdl.GetText(A_Index) = name) {
-                this.coDdl.Choose(A_Index)
-                return
+            for index, company in Lg.COMPANIES {
+                if (company = name) {
+                    this.coDdl.Choose(index)
+                    return
+                }
             }
+        } catch Error as err {
+            OutputDebug("SelectCompanyByName error: " err.Message)
         }
-
-        for index, company in Lg.COMPANIES {
-            if (company = name) {
-                this.coDdl.Choose(index)
-                return
-            }
-        }
-    } catch Error as err {
-        OutputDebug("SelectCompanyByName error: " err.Message)
     }
-}
 
     AddLbl(x, y, txt, width := 0, align := "") {
         width := width ? width : Lg.LBL_W
@@ -429,41 +429,41 @@ SelectCompanyByName(name) {
     }
 
     SelectPmtByName(name) {
-    if (!name)
-        return
-        
-    try {
-        if (this.pmtBox.HasProp("Items") && this.pmtBox.Items.Length > 0) {
-            Loop this.pmtBox.Items.Length {
-                if (this.pmtBox.Items[A_Index] = name) {
-                    this.pmtBox.Choose(A_Index)
-                    return
-                }
-            }
-        }
-        
-        Loop this.pmtBox.GetCount() {
-            if (this.pmtBox.GetText(A_Index) = name) {
-                this.pmtBox.Choose(A_Index)
-                return
-            }
-        }
-        
-        for ttl, _ in this.pmts {
-            if (ttl = name) {
-                this.PopulatePmtDdl()
-                Loop this.pmtBox.GetCount() {
-                    if (this.pmtBox.GetText(A_Index) = name) {
+        if (!name)
+            return
+
+        try {
+            if (this.pmtBox.HasProp("Items") && this.pmtBox.Items.Length > 0) {
+                Loop this.pmtBox.Items.Length {
+                    if (this.pmtBox.Items[A_Index] = name) {
                         this.pmtBox.Choose(A_Index)
                         return
                     }
                 }
             }
+
+            Loop this.pmtBox.GetCount() {
+                if (this.pmtBox.GetText(A_Index) = name) {
+                    this.pmtBox.Choose(A_Index)
+                    return
+                }
+            }
+
+            for ttl, _ in this.pmts {
+                if (ttl = name) {
+                    this.PopulatePmtDdl()
+                    Loop this.pmtBox.GetCount() {
+                        if (this.pmtBox.GetText(A_Index) = name) {
+                            this.pmtBox.Choose(A_Index)
+                            return
+                        }
+                    }
+                }
+            }
+        } catch Error as err {
+            OutputDebug("SelectPmtByName error: " err.Message)
         }
-    } catch Error as err {
-        OutputDebug("SelectPmtByName error: " err.Message)
     }
-}
 
     OnPmtSelect(*) {
         selPmt := this.pmtBox.Text
@@ -785,7 +785,7 @@ SelectCompanyByName(name) {
         loading := true
         try {
             row := this.lvw.GetNext()
-            
+
             if (!row) {
                 MsgBox("Please select an entry to load.", "Information", "Icon!")
                 loading := false

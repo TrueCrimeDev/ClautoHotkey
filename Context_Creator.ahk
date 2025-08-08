@@ -5,7 +5,7 @@ ModuleSelector()
 
 class ModuleSelector {
     __New() {
-        this.modulesPath := A_ScriptDir "\Modules"
+        this.modulesPath := "C:\Users\user\Documents\Design\Coding\AHK\!Running\AHK_OOP"
         this.files := []
         this.gui := Gui("+Resize", "Module Content Merger")
         this.gui.SetFont("s10")

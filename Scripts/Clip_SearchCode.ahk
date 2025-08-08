@@ -5,7 +5,7 @@ VSCodeSearcher()
 
 class VSCodeSearcher {
   static Config := Map(
-    "hotkey", "!>v",
+    "hotkey", "!^v",
     "vsCodeExe", "Code.exe",
     "searchDelay", 50,
     "activateDelay", 100
