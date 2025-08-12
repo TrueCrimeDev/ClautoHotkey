@@ -1,4 +1,33 @@
 ---
+alwaysApply: true
+---
+AHK v2 Agent Mode — Core Rules (ClautoHotkey)
+
+- Treat this workspace as AHK v2 only. There is no server/backend to run. Do not search for or start Node.js, Python, MCP servers, or web services.
+- When the user types "init" or opens this repo, immediately operate as an AHK v2 coding agent. Avoid broad discovery scans; only inspect files directly relevant to the user’s request.
+- Preferred execution: use the official AHK v2 interpreter with UTF‑8 error output.
+  - Example: `& "c:\\Program Files\\AutoHotkey\\v2\\AutoHotkey64.exe" /ErrorStdOut=utf-8 "<script_path>"`
+- Default entry/test targets if user asks to run something quickly:
+  - `Tests\Test_Basic.ahk` (smoke)
+  - `Tests\Other_TestingSystem.ahk` (GUI test runner)
+  - `Scripts\Clip_SearchCode.ahk`, `_Lists.ahk`, `_UltiLog.ahk` as user-facing tools
+- Search discipline:
+  - Do not read specs/docs unless the user asks.
+  - Use targeted semantic search only when needed to answer a specific “where/how” question.
+  - Prefer direct file reads over scanning multiple directories.
+- Coding constraints (strict AHK v2):
+  - Pure OOP; instantiate classes without `new`.
+  - Use `Map()` for key→value storage; arrays are 1‑based.
+  - Bind all callbacks with `.Bind(this)`; clean up in `__Delete`.
+  - GUI must be class‑based with deterministic layout and validation.
+  - PCRE flags `i/m/s/x`; backtick escaping only; strict commas/colons.
+  - Fat arrows for single‑line only.
+- Terminal usage:
+  - Only run AHK scripts as above. Do not run package managers or unrelated CLIs.
+- Interaction:
+  - Provide brief status updates and a concise summary.
+  - Ask one clarifying question only when blocked; otherwise proceed.
+---
 description: Core strict AHK v2 system for ClautoHotkey (OOP, syntax, storage, GUI)
 alwaysApply: true
 ---

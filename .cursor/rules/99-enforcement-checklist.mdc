@@ -1,4 +1,19 @@
 ---
+alwaysApply: true
+---
+Final Enforcement Checklist (ClautoHotkey)
+
+- AHK-only: No server/backend assumed; only AHK v2 scripts executed
+- Scope: Touched only files required for the task; avoided unnecessary scans
+- OOP: Classes instantiated without `new`; callbacks bound via `.Bind(this)`; `__Delete` where needed
+- Data: Used `Map()` for key→value; arrays are 1‑based
+- GUI: Class-based; deterministic layout; validation present where inputs exist
+- Strings/Regex: Backtick-only escaping; PCRE `i/m/s/x` used appropriately
+- Arrows: Fat arrows used only for single-line expressions
+- Lint: Checked @Linter Errors for edited files; fixed or documented rationale/minimal fix
+- Tests: Ran or provided steps to run relevant `Tests\*.ahk` where applicable
+- Output: Brief status + concise summary; no extraneous logs/specs included
+---
 description: Final enforcement checklist (apply before completing tasks)
 alwaysApply: false
 ---

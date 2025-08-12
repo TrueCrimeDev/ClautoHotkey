@@ -1,4 +1,18 @@
 ---
+alwaysApply: true
+---
+Always-On Linter Policy
+
+- Before completing any task, check @Linter Errors for the active file and all files you edited.
+- Fix all violations relevant to your edits. Do not proceed with unresolved errors unless explicitly acknowledged with rationale.
+- If a lint cannot be fixed immediately, surface the exact messages and file paths and propose a minimal, compliant fix.
+- Prioritize strict AHK v2 syntax and patterns:
+  - `Map()` for key→value storage; arrays are 1‑based
+  - `.Bind(this)` for callbacks; `__Delete` cleanup
+  - Deterministic GUI layout and validation
+  - Backtick escaping; PCRE `i/m/s/x`; strict commas/colons
+  - Fat arrows single‑line only
+---
 description: Always enforce AHK v2 LSP linter review via @Linter Errors
 alwaysApply: true
 ---

@@ -50,3 +50,14 @@ system.log
 test_log.json
 Assets/**
 
+# Explicitly ignore non-essential project directories
+Commands/**
+.claude/**
+Cline/**
+Data/**
+Other/**
+Scripts/**
+Styles/**
+System_Prompts/**
+Tests/**
+

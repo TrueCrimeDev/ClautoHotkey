@@ -1,0 +1,12 @@
+---
+alwaysApply: true
+---
+Cursor Bootstrap (ClautoHotkey)
+
+- Load these first for AHK-only agent mode:
+  - `.cursor/rules/10-core-ahk-system.mdc`
+  - `.cursor/rules/00-always-linter.mdc`
+  - `.cursor/rules/99-enforcement-checklist.mdc`
+
+- Do not auto-load specs or docs unless explicitly requested.
+- Treat this repo as AHK v2 only; there is no server/backend.

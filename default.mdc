@@ -7,6 +7,7 @@ ClautoHotkey: Task Index (Read First)
 How to use
 - Use this file as a router. Load only what you need for the current task.
 - After the task, append a brief line: "Rules used: [filenames]".
+- Force AHK-only agent mode by default: load `.cursor/config.mdc` (bootstraps the core rules) on init.
 
 Pick what you need
 - Code style: docs/best-practices-code-style.mdc
