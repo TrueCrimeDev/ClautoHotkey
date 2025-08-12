@@ -1,0 +1,27 @@
+---
+description: Playbook — AHK v2 GUI tasks (class-based, deterministic layout)
+alwaysApply: false
+---
+
+When to use
+- Any GUI creation/refactor/debug task in this repo.
+
+Playbook
+1) Search first
+   - Check existing patterns in `AHK_Notes/Classes/gui-class-best-practices.md`, `AHK_Notes/Concepts/GUI_Controls_and_Patterns.md`, `AHK_Notes/Concepts/GUI_State_Management.md`.
+   - Grep for similar classes before adding new ones.
+2) Plan
+   - Class-based only; instantiate without `new`. Store control refs in `Map()`.
+   - Bind handlers via `.OnEvent(..., .Bind(this))`. Avoid free-standing callbacks.
+3) Layout
+   - Apply deterministic layout computation; validate boundaries/overlaps; generate a layout report.
+4) Implement
+   - Group methods (init, interaction, mutation). Provide `__Delete` to clean timers/resources.
+   - Use hotkeys only if scoped; avoid global side-effects.
+5) Lint and finalize
+   - Review @Linter Errors and fix introduced issues. Re-run after edits.
+   - Cross-check `.cursor/rules/40-gui-layout.mdc`, `10-core-ahk-system.mdc`, `99-enforcement-checklist.mdc`.
+
+References
+- Rules: `.cursor/rules/40-gui-layout.mdc`, `.cursor/rules/10-core-ahk-system.mdc`, `.cursor/rules/99-enforcement-checklist.mdc`, `.cursor/rules/00-always-linter.mdc`
+- Notes: `AHK_Notes/Classes/gui-class-best-practices.md`, `AHK_Notes/Concepts/GUI_Controls_and_Patterns.md`, `AHK_Notes/Concepts/GUI_State_Management.md`

@@ -1,0 +1,16 @@
+---
+description: Core strict AHK v2 system for ClautoHotkey (OOP, syntax, storage, GUI)
+alwaysApply: true
+---
+
+Core constraints
+- Pure AHK v2 OOP; instantiate classes without `new`.
+- Strict commas/colons; backtick-only escaping; PCRE `i/m/s/x`.
+- Use `Map()` for key→value storage; arrays are 1-based.
+- Fat arrows are single-line only; use traditional functions for multi-line logic.
+- Bind all callbacks with `.Bind(this)`; cleanup in `__Delete`.
+- GUI must be class-based; deterministic layout calculation, validation, and reporting.
+
+References
+- Modules first: `Modules/Module_Instructions.md`, `Modules/Module_Objects.md`, `Modules/Module_DataStructures.md`, `Modules/Module_Classes.md`
+- Then examples/patterns: `AHK_Notes/`

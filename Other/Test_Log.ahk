@@ -21,7 +21,7 @@ class Lg {
     static BUTTON_HEIGHT := 30
 
     __New() {
-        this.logFile := A_ScriptDir "\test_log.json"
+        this.logFile := A_ScriptDir "\Lib\test_log.json"
         this.entries := []
 
         this.LoadData()

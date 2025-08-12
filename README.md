@@ -133,7 +133,7 @@ This is a simple way to combine your modules to make them easy to copy and paste
 
 This is a script I put together to easily copy and paste sections of code in VsCode from the LLM GUIs. This helps me because it searches for the first line of the clipboard in the codebase and collapses the function/class and writes over it with the new code. This is possible by selecting the write areas in the LLM GUI by having a response style that will edit the code in chunks. Look at the response `Styles\Style_CodeArchitect.md` for an example of that.
 
-### JSON List Manager (`__Lists.ahk`)
+### JSON List Manager (`_Lists.ahk`)
 
 JSON List Editor is a dark-themed list-management tool that helps organize snippets, links, prompts, and other text-based collections inside a clean split-pane interface. On the left, a numbered **ListView** displays each item’s title and a short preview, while on the right a multi-line editor lets you modify the full content. Lists are grouped into sections selectable from a dropdown, and any first line that begins with `//` is automatically promoted to the item’s title. Fast, real-time search filtering keeps everything easy to find, and familiar shortcuts—`Ctrl+Z` / `Ctrl+Y` for undo / redo and `Ctrl+S` for an instant auto-save (with a brief “✓ Saved!” tooltip)—make editing feel natural. `Tab` and `Shift+Tab` cycle through items for rapid review, making the editor perfect for maintaining well-organized collections of frequently used text snippets, code examples, or prompt templates that need quick access and continual refinement.
 

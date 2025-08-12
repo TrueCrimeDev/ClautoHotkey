@@ -1,0 +1,22 @@
+---
+description: Module-first context routing (consult Modules/ before AHK_Notes/)
+alwaysApply: true
+---
+
+Context lookup order (when more detail is needed)
+1) Modules (authoritative, concise rules and examples)
+   - Modules/Module_Instructions.md (core)
+   - Modules/Module_Objects.md
+   - Modules/Module_TextProcessing.md
+   - Modules/Module_GUI.md
+   - Modules/Module_Escapes.md
+   - Modules/Module_DynamicProperties.md
+   - Modules/Module_DataStructures.md
+   - Modules/Module_Classes.md
+   - Modules/Module_Arrays.md
+2) AHK_Notes (expanded patterns, deep dives, and grep-able examples)
+   - AHK_Notes/Classes/, AHK_Notes/Concepts/, AHK_Notes/Methods/, AHK_Notes/Patterns/, AHK_Notes/Snippets/
+
+Guidance
+- Prefer Modules for canonical guidance; only pull AHK_Notes for additional examples or edge cases.
+- When citing context in replies or decisions, mention the specific Module file first, then any AHK_Notes used.

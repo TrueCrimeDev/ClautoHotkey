@@ -489,7 +489,7 @@ class CodingCompanionSystem {
 
     Log(message) {
         try {
-            FileAppend(FormatTime(, "yyyy-MM-dd HH:mm:ss") " - " message "`n", A_ScriptDir "\system.log")
+            FileAppend(FormatTime(, "yyyy-MM-dd HH:mm:ss") " - " message "`n", A_ScriptDir "\Lib\system.log")
         } catch {
             ; Silent fail for logging
         }

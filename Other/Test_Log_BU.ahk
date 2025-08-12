@@ -27,7 +27,7 @@ class Lg {
     static COL_NOTES   := 5
 
   __New() {
-    this.logFile := A_ScriptDir "\test_log.json"
+    this.logFile := A_ScriptDir "\Lib\test_log.json"
     this.entries := []
     this.running := false
     this.runScriptPath := A_Temp "\LLMLoggerRun.ahk"

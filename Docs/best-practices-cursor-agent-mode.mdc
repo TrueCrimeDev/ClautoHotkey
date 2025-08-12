@@ -1,0 +1,14 @@
+Best Practices: Cursor Agent Mode (ClautoHotkey)
+
+Guidance
+- Default to the strict AHK v2 system: see `.cursor/rules/10-core-ahk-system.mdc`.
+- Load only the relevant rule files per task to minimize context.
+- At the end of the task, list "Rules used: ..." to aid retrieval optimization.
+
+Interaction
+- Prefer class-based designs, deterministic GUI layouts, and validated inputs.
+- Warn if asked to deviate from the system; propose a compliant alternative.
+ 
+Where to look
+- Rules reference: `.cursor/rules/10-core-ahk-system.mdc`, `.cursor/rules/00-always-linter.mdc`, `.cursor/rules/99-enforcement-checklist.mdc`
+- Context search: `AHK_Notes/` (Classes, Concepts, Methods, Patterns, Snippets) for examples and feature notes

@@ -1,0 +1,25 @@
+---
+description: Playbook — AHK v2 text/regex/escaping tasks
+alwaysApply: false
+---
+
+When to use
+- String building, escaping, sanitization, regex matching/replacing, validation.
+
+Playbook
+1) Choose quote/escape strategy
+   - Prefer single vs double quotes to minimize escaping. Use backtick-only escapes.
+2) Use built-ins first
+   - `Trim/StrUpper/StrLower/StrReplace/StrSplit/InStr/SubStr`.
+3) Regex
+   - PCRE with `i/m/s/x`. Escape literals. Prefer named groups when helpful. Validate patterns.
+4) Builders and safety
+   - For multi-part strings use `.=`, `RTrim` joining, or a simple StringBuilder pattern.
+   - Validate untrusted input; sanitize for display/command contexts.
+5) Lint and finalize
+   - Review @Linter Errors and fix introduced issues; re-check after edits.
+   - Cross-check `.cursor/rules/30-text-processing.mdc`, `10-core-ahk-system.mdc`, `99-enforcement-checklist.mdc`.
+
+References
+- Rules: `.cursor/rules/30-text-processing.mdc`, `.cursor/rules/10-core-ahk-system.mdc`, `.cursor/rules/99-enforcement-checklist.mdc`, `.cursor/rules/00-always-linter.mdc`
+- Notes: `AHK_Notes/Concepts/string-handling-in-ahk-v2.md`

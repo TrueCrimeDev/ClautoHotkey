@@ -1,0 +1,52 @@
+# Cursor ignore patterns to trim noisy context
+
+# Build artifacts and dependencies
+**/node_modules/**
+**/dist/**
+**/build/**
+
+# VCS and editor settings
+**/.git/**
+**/.idea/**
+**/.vscode/**
+
+# Binaries and archives
+**/*.exe
+**/*.dll
+**/*.bin
+**/*.zip
+**/*.7z
+**/*.tar
+**/*.gz
+
+# Images and media
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.gif
+**/*.svg
+**/*.ico
+**/*.mp3
+**/*.wav
+**/*.mp4
+**/*.webm
+
+# Logs and temp files
+**/*.log
+**/*.tmp
+**/*.bak
+**/*.orig
+**/*.swp
+**/.DS_Store
+
+# Generated/large data
+**/*.csv
+**/*.tsv
+**/*.xlsx
+**/*.pdf
+
+# Project-specific noise
+system.log
+test_log.json
+Assets/**
+

@@ -1,0 +1,30 @@
+---
+alwaysApply: true
+---
+
+Best Practices: Data Access (ClautoHotkey)
+
+Storage
+- Use `Map()` for key→value state and configuration; avoid object-literal storage.
+- Arrays for ordered lists; 1-based indexing; prefer built-ins (.Push/.Pop/.Sort/.Clone).
+
+Safety
+- Validate inputs early; clear errors; avoid empty catches; ensure cleanup paths.
+- For dynamic properties/methods, validate names (regex) and centralize storage.
+ 
+Where to look
+- Rules reference: `.cursor/rules/50-data-structures-and-arrays.mdc`, `.cursor/rules/99-enforcement-checklist.mdc`
+- Context search: `AHK_Notes/Concepts/data-structures-in-ahk-v2.md`, `AHK_Notes/Concepts/map-usage-best-practices.md`
+Best Practices: Data Access (ClautoHotkey)
+
+Storage
+- Use `Map()` for key→value state and configuration; avoid object-literal storage.
+- Arrays for ordered lists; 1-based indexing; prefer built-ins (.Push/.Pop/.Sort/.Clone).
+
+Safety
+- Validate inputs early; clear errors; avoid empty catches; ensure cleanup paths.
+- For dynamic properties/methods, validate names (regex) and centralize storage.
+ 
+Where to look
+- Rules reference: `.cursor-rules/60-data-structures.md`, `.cursor-rules/99-enforcement-checklists.md`
+- Context search: `AHK_Notes/Concepts/data-structures-in-ahk-v2.md`, `AHK_Notes/Concepts/map-usage-best-practices.md`

@@ -37,7 +37,7 @@ class SimpleConfig {
 ; Main program
 try {
     ; Create config object properly in AHK v2
-    config := SimpleConfig("settings.ini")
+    config := SimpleConfig(A_ScriptDir "\Lib\settings.ini")
     
     ; Display initial settings
     MsgBox(config.DisplaySettings())

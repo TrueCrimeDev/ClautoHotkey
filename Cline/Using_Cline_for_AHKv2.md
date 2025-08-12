@@ -165,4 +165,4 @@ Create an AutoHotkey v2 script that demonstrates [feature], and explain the key 
 
 ## Conclusion
 
-Using these techniques will help you get the most out of Cline for AutoHotkey v2 development. Remember to be specific, request modern practices, and explicitly ask for fixes when needed. For reference, see the AHKv2_Rules.md document in this folder for a comprehensive guide to AutoHotkey v2 best practices.
+Using these techniques will help you get the most out of Cline for AutoHotkey v2 development. Remember to be specific, request modern practices, and explicitly ask for fixes when needed. For reference, see `../docs/AHKv2_Rules.md` for a comprehensive guide to AutoHotkey v2 best practices.

@@ -31,7 +31,7 @@ class ResponsiveListManager {
 
   InitializeState() {
     this.state := Map(
-      "currentFile", A_WorkingDir . "\__Lists.json",
+      "currentFile", A_ScriptDir . "\Lib\__Lists.json",
       "currentSection", "Snippets",
       "hasUnsavedChanges", false,
       "searchTerm", "",

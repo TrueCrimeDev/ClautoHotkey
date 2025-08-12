@@ -1,0 +1,50 @@
+---
+alwaysApply: true
+---
+
+ClautoHotkey: Task Index (Read First)
+
+How to use
+- Use this file as a router. Load only what you need for the current task.
+- After the task, append a brief line: "Rules used: [filenames]".
+
+Pick what you need
+- Code style: docs/best-practices-code-style.mdc
+- Cursor Agent mode: docs/best-practices-cursor-agent-mode.mdc
+- Data access conventions: docs/best-practices-data-access.mdc
+- AHK v2 system (strict): .cursor/rules/10-core-ahk-system.mdc
+  - Then: .cursor/rules/20-objects-and-descriptors.mdc, 30-text-processing.mdc, 40-gui-layout.mdc,
+          50-data-structures-and-arrays.mdc
+- Error handling policy: .cursor/rules/00-always-linter.mdc
+- Final enforcement checklist: .cursor/rules/99-enforcement-checklist.mdc
+
+Output requirement
+- After completing your task, add: "Rules used: [exact file names]".
+ 
+Where to look
+- Rules reference (authoritative): `.cursor/rules/` files listed above
+- Context search (feature examples/patterns): `AHK_Notes/`
+  - Browse by topic: `AHK_Notes/Classes/`, `AHK_Notes/Concepts/`, `AHK_Notes/Methods/`, `AHK_Notes/Patterns/`, `AHK_Notes/Snippets/`
+ClautoHotkey: Task Index (Read First)
+
+How to use
+- Use this file as a router. Load only what you need for the current task.
+- After the task, append a brief line: "Rules used: [filenames]".
+
+Pick what you need
+- Code style: docs/best-practices-code-style.mdc
+- Cursor Agent mode: docs/best-practices-cursor-agent-mode.mdc
+- Data access conventions: docs/best-practices-data-access.mdc
+- AHK v2 system (strict): .cursor-rules/00-global-instructions.md
+  - Then: .cursor-rules/10-objects.md, 20-text-processing.md, 30-gui.md, 40-escapes.md,
+          50-dynamic-properties.md, 60-data-structures.md, 70-classes.md, 80-arrays.md
+- Error handling policy: .cursor-rules/15-error-handling.md
+- Final enforcement checklists: .cursor-rules/99-enforcement-checklists.md
+
+Output requirement
+- After completing your task, add: "Rules used: [exact file names]".
+ 
+Where to look
+- Rules reference (authoritative): `.cursor-rules/` files listed above
+- Context search (feature examples/patterns): `AHK_Notes/`
+  - Browse by topic: `AHK_Notes/Classes/`, `AHK_Notes/Concepts/`, `AHK_Notes/Methods/`, `AHK_Notes/Patterns/`, `AHK_Notes/Snippets/`

@@ -1,0 +1,32 @@
+---
+alwaysApply: true
+---
+
+Best Practices: Code Style (ClautoHotkey)
+
+Essentials
+- Pure AHK v2 OOP; instantiate classes without `new`.
+- Strict commas/colons; backtick-only escaping; PCRE `i/m/s/x`.
+- Use `Map()` for key→value storage; arrays are 1-based.
+- Fat arrows are single-line only; use traditional functions for multi-line logic.
+
+Conventions
+- Descriptive names; early declarations; avoid shadowing.
+- Group methods by behavior (init, interaction, mutation). 
+- Bind all callbacks with `.Bind(this)`; cleanup in `__Delete`.
+ 
+Where to look
+- Rules reference (authoritative): `.cursor/rules/10-core-ahk-system.mdc`, `.cursor/rules/20-objects-and-descriptors.mdc`, `.cursor/rules/50-data-structures-and-arrays.mdc`
+- Context search (feature examples/patterns): `AHK_Notes/` (e.g., `AHK_Notes/Concepts/map-usage-best-practices.md`, `AHK_Notes/Classes/gui-class-best-practices.md`, `AHK_Notes/Methods/objbindmethod.md`)
+Best Practices: Code Style (ClautoHotkey)
+
+Essentials
+- Pure AHK v2 OOP; instantiate classes without `new`.
+- Strict commas/colons; backtick-only escaping; PCRE `i/m/s/x`.
+- Use `Map()` for key→value storage; arrays are 1-based.
+- Fat arrows are single-line only; use traditional functions for multi-line logic.
+
+Conventions
+- Descriptive names; early declarations; avoid shadowing.
+- Group methods by behavior (init, interaction, mutation). 
+- Bind all callbacks with `.Bind(this)`; cleanup in `__Delete`.

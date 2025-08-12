@@ -1,0 +1,12 @@
+---
+description: Data structures (Map-first) and arrays (1-based)
+alwaysApply: false
+---
+
+Storage and arrays
+- Use `Map()` for key→value storage (no object-literal storage).
+- Arrays are 1-based; use built-ins for transforms/sorting; use `Map()` for set ops.
+
+References
+- Modules reference: `Modules/Module_DataStructures.md`, `Modules/Module_Arrays.md`
+- Additional examples: `AHK_Notes/Concepts/data-structures-in-ahk-v2.md`, `AHK_Notes/Concepts/map-usage-best-practices.md`

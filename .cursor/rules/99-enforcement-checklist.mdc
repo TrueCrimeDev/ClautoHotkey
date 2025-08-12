@@ -1,0 +1,14 @@
+---
+description: Final enforcement checklist (apply before completing tasks)
+alwaysApply: false
+---
+
+Checklist
+- Syntax: commas/colons; backtick escapes; no v1 syntax; fat arrows single-line only.
+- OOP: instantiate without `new`; `.Bind(this)`; `__Delete` cleans resources.
+- Storage: `Map()` for key→value; arrays are 1-based.
+- GUI: class-based; deterministic layout; validation/report.
+- Lint: re-check @Linter Errors after edits; fix introduced errors.
+
+References
+- Modules reference: `Modules/Module_Instructions.md` (diagnostic checklist), `Modules/Module_Classes.md`, `Modules/Module_GUI.md`

@@ -27,8 +27,8 @@ class Lg {
     static RATING_OPTIONS := ["★★★★★", "★★★★", "★★★", "★★", "★"]
 
     __New() {
-        this.logFile := A_ScriptDir "\test_log.json"
-        this.pmtFile := A_ScriptDir "\common_prompts.json"
+        this.logFile := A_ScriptDir "\Lib\test_log.json"
+        this.pmtFile := A_ScriptDir "\Lib\common_prompts.json"
         this.entries := []
         this.pmts := Map()
         this.running := false

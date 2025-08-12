@@ -1,0 +1,12 @@
+---
+description: Objects, descriptors, and method binding
+alwaysApply: false
+---
+
+When manipulating objects
+- Modules reference: `Modules/Module_Objects.md`, `Modules/Module_Instructions.md`
+- Additional examples: `AHK_Notes/Concepts/property-descriptors.md`, `AHK_Notes/Methods/objbindmethod.md`
+- Everything is an object; inheritance leads back to `Any`. Use `HasProp/HasMethod/HasBase`.
+- Descriptors: value `{value: x}`, call `{call: f}`, get `{get: f(this)}`, set `{set: f(this, v)}`.
+- Define methods/properties via `DefineProp`. Methods are callable properties.
+- Use `ObjBindMethod`/`Bind` for timers and GUI events to preserve `this`.
