@@ -1,0 +1,83 @@
+{
+  "_metadata": {
+    "version": "1.0",
+    "lastModified": "2025-01-21",
+    "customCategories": []
+  },
+  "Calculations": [
+    {
+      "title": "Fibonacci Sequence",
+      "body": "// Fibonacci Sequence\n\nCalculate the nth Fibonacci number using iterative approach:\nF(n) = F(n-1) + F(n-2)\nBase cases: F(0) = 0, F(1) = 1\n\nExample: F(10) = 55"
+    },
+    {
+      "title": "Prime Number Check",
+      "body": "// Prime Number Check\n\nAlgorithm to check if a number is prime:\n1. Check if n <= 1 (not prime)\n2. Check if n <= 3 (prime if n > 1)\n3. Check if n divisible by 2 or 3 (not prime)\n4. Check odd divisors from 5 to sqrt(n)"
+    },
+    {
+      "title": "Area Formulas",
+      "body": "// Area Formulas\n\nCommon geometric area calculations:\n- Circle: π × r²\n- Rectangle: length × width\n- Triangle: (base × height) / 2\n- Trapezoid: ((a + b) × h) / 2"
+    }
+  ],
+  "Links": [
+    {
+      "title": "AutoHotkey v2 Documentation",
+      "body": "// AutoHotkey v2 Documentation\n\nhttps://www.autohotkey.com/docs/v2/\n\nOfficial documentation for AutoHotkey v2 with comprehensive guides, function references, and examples."
+    },
+    {
+      "title": "GitHub AutoHotkey Community",
+      "body": "// GitHub AutoHotkey Community\n\nhttps://github.com/topics/autohotkey\n\nCommunity scripts, libraries, and tools for AutoHotkey development."
+    },
+    {
+      "title": "AutoHotkey Community Forum",
+      "body": "// AutoHotkey Community Forum\n\nhttps://www.autohotkey.com/boards/\n\nActive community forum for AutoHotkey discussion, help, and script sharing."
+    },
+    {
+      "title": "Claude Code Documentation",
+      "body": "// Claude Code Documentation\n\nhttps://docs.anthropic.com/en/docs/claude-code\n\nOfficial documentation for Claude Code CLI tool with guides and examples."
+    }
+  ],
+  "Prompts": [
+    {
+      "title": "Code Review Request",
+      "body": "// Code Review Request\n\nPlease review this AutoHotkey v2 code for:\n- Syntax compliance and best practices\n- Error handling and edge cases\n- Performance optimizations\n- Code organization and readability\n\n[Paste your code here]"
+    },
+    {
+      "title": "GUI Design Prompt",
+      "body": "// GUI Design Prompt\n\nCreate an AutoHotkey v2 GUI application with:\n- Dark theme styling\n- Responsive layout\n- Proper event handling\n- Input validation\n- Clean close behavior\n\nRequirements:\n[Describe your GUI requirements here]"
+    },
+    {
+      "title": "Debugging Assistant",
+      "body": "// Debugging Assistant\n\nHelp me debug this AutoHotkey v2 script:\n\nError message: [Paste error here]\nExpected behavior: [Describe what should happen]\nActual behavior: [Describe what actually happens]\n\nCode:\n[Paste problematic code here]"
+    },
+    {
+      "title": "Feature Implementation",
+      "body": "// Feature Implementation\n\nImplement the following feature in AutoHotkey v2:\n\nFeature description: [Describe the feature]\nInput/Output: [Specify expected inputs and outputs]\nConstraints: [Any specific requirements or limitations]\n\nUse modern AHK v2 OOP patterns and follow coding standards."
+    }
+  ],
+  "Snippets": [
+    {
+      "title": "Class Template",
+      "body": "// Class Template\n\nclass MyClass {\n    __New(param1, param2) {\n        this.property1 := param1\n        this.property2 := param2\n        this.Initialize()\n    }\n    \n    Initialize() {\n        ; Initialization code here\n    }\n    \n    __Delete() {\n        ; Cleanup code here\n    }\n}"
+    },
+    {
+      "title": "GUI Basic Structure",
+      "body": "// GUI Basic Structure\n\nclass MyGUI {\n    __New() {\n        this.gui := Gui(\"+Resize\", \"Window Title\")\n        this.CreateControls()\n        this.SetupEvents()\n        this.gui.Show()\n    }\n    \n    CreateControls() {\n        this.gui.AddText(, \"Hello World\")\n        this.btn := this.gui.AddButton(\"w100 h30\", \"Click Me\")\n    }\n    \n    SetupEvents() {\n        this.btn.OnEvent(\"Click\", this.OnButtonClick.Bind(this))\n        this.gui.OnEvent(\"Close\", this.OnClose.Bind(this))\n    }\n    \n    OnButtonClick(*) {\n        MsgBox(\"Button clicked!\")\n    }\n    \n    OnClose(*) {\n        this.gui.Destroy()\n    }\n}"
+    },
+    {
+      "title": "Map Data Structure",
+      "body": "// Map Data Structure\n\n; Create and populate a Map\ndata := Map()\ndata[\"key1\"] := \"value1\"\ndata[\"key2\"] := \"value2\"\n\n; Check if key exists\nif data.Has(\"key1\")\n    value := data[\"key1\"]\n\n; Iterate through Map\nfor key, value in data {\n    ; Process each key-value pair\n}"
+    },
+    {
+      "title": "Error Handling Pattern",
+      "body": "// Error Handling Pattern\n\ntry {\n    ; Code that might throw an error\n    result := RiskyOperation()\n} catch Error as e {\n    ; Handle specific error\n    MsgBox(\"Error: \" . e.Message, \"Error\", \"Icon_Error\")\n    return false\n} finally {\n    ; Cleanup code that always runs\n    CleanupResources()\n}\n\nreturn true"
+    },
+    {
+      "title": "File Operations",
+      "body": "// File Operations\n\n; Read file content\nif FileExist(filePath) {\n    content := FileRead(filePath)\n}\n\n; Write to file\ntry {\n    FileDelete(filePath)  ; Remove if exists\n    FileAppend(content, filePath)\n} catch Error as e {\n    MsgBox(\"Failed to write file: \" . e.Message)\n}"
+    },
+    {
+      "title": "Hotkey Setup",
+      "body": "// Hotkey Setup\n\n; Simple hotkey\nF1::MsgBox(\"F1 pressed\")\n\n; Conditional hotkey\nHotIfWinActive(\"ahk_class Notepad\")\nCtrl & j::Send(\"Hello World\")\nHotIfWinActive()\n\n; Dynamic hotkey\nHotkey(\"F2\", MyFunction)\n\nMyFunction(*) {\n    MsgBox(\"F2 pressed\")\n}"
+    }
+  ]
+}

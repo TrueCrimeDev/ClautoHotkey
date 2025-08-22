@@ -5,7 +5,7 @@
 **/dist/**
 **/build/**
 
-# VCS and editor settings
+# VCS and editor settin
 **/.git/**
 **/.idea/**
 **/.vscode/**

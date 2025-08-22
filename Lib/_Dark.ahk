@@ -368,6 +368,7 @@ class _Dark {
         static LVM_SETBKCOLOR := 0x1001
         static LVM_SETTEXTCOLOR := 0x1033
         static LVM_SETTEXTBKCOLOR := 0x1026
+        static LVM_SETOUTLINECOLOR := 0x10B1 ; custom outline (grid) color
         static LVM_GETHEADER := 0x101F
         static UIS_SET := 1
         static UISF_HIDEFOCUS := 0x1
@@ -379,6 +380,8 @@ class _Dark {
         _Dark.SendMessage(LVM_SETTEXTCOLOR, 0, 0xFFFFFF, lv.hWnd)
         _Dark.SendMessage(LVM_SETBKCOLOR, 0, _Dark.Dark["Background"], lv.hWnd)
         _Dark.SendMessage(LVM_SETTEXTBKCOLOR, 0, _Dark.Dark["Background"], lv.hWnd)
+        ; Set darker gridline color (darker grey)
+        try _Dark.SendMessage(LVM_SETOUTLINECOLOR, 0, 0x1E1E1E, lv.hWnd)
 
         ; Enable grid lines and double buffering
         lv.Opt("+Grid +LV0x10000")

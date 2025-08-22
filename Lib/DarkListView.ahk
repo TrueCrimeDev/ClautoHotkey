@@ -39,6 +39,7 @@ class _DarkListView extends Gui.ListView
         static WM_CHANGEUISTATE    := 0x0127
         static WM_NOTIFY           := 0x4E
         static WM_THEMECHANGED     := 0x031A
+			static LVM_SETOUTLINECOLOR := 0x10B1
 
         lv.Header := lv.GetHeader()
 		
@@ -68,7 +69,10 @@ class _DarkListView extends Gui.ListView
 
         lv.Opt("+LV" LVS_EX_DOUBLEBUFFER)
         
-        SendMessage(WM_CHANGEUISTATE, (UIS_SET << 8) | UISF_HIDEFOCUS, 0, lv)
+			SendMessage(WM_CHANGEUISTATE, (UIS_SET << 8) | UISF_HIDEFOCUS, 0, lv)
+
+			; Set darker gridline color
+			try SendMessage(LVM_SETOUTLINECOLOR, 0, 0x1E1E1E, lv)
 
         SetWindowTheme(lv.Header, "DarkMode_ItemsView")
         SetWindowTheme(lv.Hwnd, "DarkMode_" style)

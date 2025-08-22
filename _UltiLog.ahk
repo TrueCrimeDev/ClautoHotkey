@@ -76,11 +76,14 @@ class Lg {
         static LVM_SETTEXTCOLOR := 0x1024
         static LVM_SETTEXTBKCOLOR := 0x1026
         static LVM_SETBKCOLOR := 0x1001
+        static LVM_SETOUTLINECOLOR := 0x10B1
         this.lvw := this.gui.AddListView(Format("x{} y{} w{} h{} {}", Lg.PAD, Lg.PAD, Lg.LEFT_W, 620, "Grid cWhite"), ["Company", "Model", "Prompt", "Notes"])
         this.lvw.Opt("-Redraw")
         SendMessage(LVM_SETTEXTCOLOR, 0, 0xFFFFFF, this.lvw.Hwnd)
         SendMessage(LVM_SETTEXTBKCOLOR, 0, 0x202020, this.lvw.Hwnd)
         SendMessage(LVM_SETBKCOLOR, 0, 0x202020, this.lvw.Hwnd)
+        ; Darker gridline color
+        try SendMessage(LVM_SETOUTLINECOLOR, 0, 0x1E1E1E, this.lvw.Hwnd)
         this.lvw.Opt("+Redraw")
         if (this.lvw.HasMethod("SetDarkMode"))
             this.lvw.SetDarkMode()

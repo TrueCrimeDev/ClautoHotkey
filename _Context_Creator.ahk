@@ -54,9 +54,12 @@ class ModuleSelector {
         static LVM_SETTEXTCOLOR := 0x1024
         static LVM_SETTEXTBKCOLOR := 0x1026
         static LVM_SETBKCOLOR := 0x1001
+        static LVM_SETOUTLINECOLOR := 0x10B1
         SendMessage(LVM_SETTEXTCOLOR, 0, 0xFFFFFF, lv)
         SendMessage(LVM_SETTEXTBKCOLOR, 0, 0x202020, lv)
         SendMessage(LVM_SETBKCOLOR, 0, 0x202020, lv)
+        ; Darker gridline color
+        try SendMessage(LVM_SETOUTLINECOLOR, 0, 0x1E1E1E, lv)
         lv.Opt("+Grid +LV0x10000")
         DllCall("uxtheme\SetWindowTheme", "Ptr", lv.Hwnd, "Str", "DarkMode_Explorer", "Ptr", 0)
         DllCall("InvalidateRect", "Ptr", lv.Hwnd, "Ptr", 0, "Int", true)

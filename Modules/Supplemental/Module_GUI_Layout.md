@@ -118,7 +118,3 @@ An injectable role-based prompt that employs UltraThink methodology to guide AI 
 - Visual hierarchy principles
 - Window boundary calculations
 - Responsive layout patterns
-
-## Tags
-
-#AutoHotkey #GUI #Agent #Prompt #Layout #UltraThink #XML #SystemPrompt #Injection #DeepAnalysis #Mathematical #Psychology

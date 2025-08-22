@@ -1,0 +1,7 @@
+{
+  "workbench.colorCustomizations": {
+    "debugConsole.infoForeground": "#00FF00",
+    "debugConsole.warningForeground": "#fdec34ff",
+    "debugConsole.errorForeground": "#ff2828ff"
+  }
+}
