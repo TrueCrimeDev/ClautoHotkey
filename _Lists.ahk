@@ -1,23 +1,25 @@
 #Requires AutoHotkey v2.1-alpha.17
 #SingleInstance Force
 
-#Include ..\Lib\cJSON.ahk
+#Include Lib/cJSON.ahk
 
 jsonEditor := ResponsiveListManager()
+
+Esc:: ExitApp()
 
 class ResponsiveListManager {
   static MARGIN := 10
   static PADDING := 10
   static SECTION_SPACING := 10
   static CONTROL_HEIGHT := 28
-  static BUTTON_HEIGHT := 28
-  static ICON_BTN_SIZE := 28
+  static BUTTON_HEIGHT := 32
+  static ICON_BTN_SIZE := 32
   static TEXT_BTN_WIDTH := 100
-  static BUTTON_GAP := 8
-  static COMBO_WIDTH := 120
-  static LEFT_PANEL_WIDTH := 250
-  static RIGHT_PANEL_WIDTH := 280
-  static MIN_GUI_WIDTH := 560
+  static BUTTON_GAP := 12
+  static COMBO_WIDTH := 150
+  static LEFT_PANEL_WIDTH := 235
+  static RIGHT_PANEL_WIDTH := 265
+  static MIN_GUI_WIDTH := 520
   static MIN_GUI_HEIGHT := 450
 
   __New() {
@@ -31,8 +33,8 @@ class ResponsiveListManager {
 
   InitializeState() {
     this.state := Map(
-      "currentFile", A_ScriptDir . "\Lib\__Lists.json",
-      "currentSection", "Snippets",
+      "currentFile", A_WorkingDir . "\_Lists.json",
+      "currentSection", "Calculations",
       "hasUnsavedChanges", false,
       "searchTerm", "",
       "nextId", 1
@@ -47,8 +49,8 @@ class ResponsiveListManager {
 
     this.settings := Map(
       "maxUndoSteps", 50,
-      "sections", ["Snippets", "Links", "Prompts", "Snippets"],
-      "sectionNames", ["Snippets", "Links", "Prompts", "Snippets"]
+      "sections", ["Calculations", "Links", "Prompts", "Snippets"],
+      "sectionNames", ["Calculations", "Links", "Prompts", "Snippets"]
     )
 
     this.controls := Map()
@@ -63,7 +65,6 @@ class ResponsiveListManager {
 
     this.CreateHeaderSection()
     this.CreateMainSection()
-    this.CreateButtonSection()
 
     this.CalculateInitialDimensions()
   }
@@ -71,110 +72,165 @@ class ResponsiveListManager {
   CreateHeaderSection() {
     margin := ResponsiveListManager.MARGIN
     currentY := margin
+    spacing := ResponsiveListManager.SECTION_SPACING
+    gap := ResponsiveListManager.BUTTON_GAP
+    leftPanelBoundary := margin + ResponsiveListManager.LEFT_PANEL_WIDTH
 
+    ; Single row layout: ComboBox and buttons/search aligned horizontally
+    ; Calculate all X positions mathematically
+
+    ; ComboBox: Left-aligned at margin, exact 150px width
+    comboX := margin
+    comboWidth := ResponsiveListManager.COMBO_WIDTH  ; Exactly 150px
+
+    ; Add Button: Positioned after ComboBox with gap
+    addBtnX := comboX + comboWidth + gap
+    addBtnWidth := ResponsiveListManager.ICON_BTN_SIZE
+
+    ; Duplicate Button: Positioned after Add button with gap
+    duplicateBtnX := addBtnX + addBtnWidth + gap
+    duplicateBtnWidth := ResponsiveListManager.ICON_BTN_SIZE
+
+    ; Search Edit: Fill remaining space to left panel boundary
+    searchX := duplicateBtnX + duplicateBtnWidth + gap
+    searchWidth := leftPanelBoundary - searchX
+
+    ; Create all controls at the same Y coordinate for horizontal alignment
+    controlY := currentY
+
+    ; ComboBox - Force exact 150px width
     this.controls["sectionSelector"] := this.gui.AddComboBox(
-      Format("x{} y{} w{} h150",
-        margin,
-        currentY,
-        ResponsiveListManager.COMBO_WIDTH
+      Format("x{} y{} w{} h{}",
+        comboX,
+        controlY,
+        comboWidth,
+        ResponsiveListManager.CONTROL_HEIGHT
       ),
       this.settings["sectionNames"]
     )
     this.controls["sectionSelector"].Choose(1)
 
-    buttonX := margin + ResponsiveListManager.COMBO_WIDTH + ResponsiveListManager.BUTTON_GAP
-
+    ; Add Button - properly centered text
     this.controls["addBtn"] := this.gui.AddButton(
-      Format("x{} y{} w{} h{}",
-        buttonX,
-        currentY,
-        ResponsiveListManager.ICON_BTN_SIZE,
-        ResponsiveListManager.BUTTON_HEIGHT
+      Format("x{} y{} w{} h{} Center",
+        addBtnX,
+        controlY,
+        addBtnWidth,
+        ResponsiveListManager.CONTROL_HEIGHT
       ),
       "+"
     )
 
-    buttonX += ResponsiveListManager.ICON_BTN_SIZE + ResponsiveListManager.BUTTON_GAP
-
-    this.controls["reloadBtn"] := this.gui.AddButton(
-      Format("x{} y{} w{} h{}",
-        buttonX,
-        currentY,
-        ResponsiveListManager.ICON_BTN_SIZE,
-        ResponsiveListManager.BUTTON_HEIGHT
+    ; Duplicate Button - properly centered text
+    this.controls["duplicateBtn"] := this.gui.AddButton(
+      Format("x{} y{} w{} h{} Center",
+        duplicateBtnX,
+        controlY,
+        duplicateBtnWidth,
+        ResponsiveListManager.CONTROL_HEIGHT
       ),
-      "↻"
+      "⮺"
     )
 
-    searchX := margin + ResponsiveListManager.LEFT_PANEL_WIDTH + ResponsiveListManager.PADDING
-    searchWidth := ResponsiveListManager.MIN_GUI_WIDTH - searchX - margin
-
+    ; Search Edit - calculated to fit remaining space exactly
     this.controls["searchEdit"] := this.gui.AddEdit(
       Format("x{} y{} w{} h{}",
         searchX,
-        currentY,
+        controlY,
         searchWidth,
         ResponsiveListManager.CONTROL_HEIGHT
       ),
       "Search..."
     )
 
-    this.layout["headerY"] := currentY
-    this.layout["headerHeight"] := ResponsiveListManager.CONTROL_HEIGHT
+    ; Advance currentY by control height plus spacing for next section
+    currentY += ResponsiveListManager.CONTROL_HEIGHT + spacing
+
+    ; Store layout information
+    this.layout["headerY"] := margin
+    this.layout["headerHeight"] := currentY - margin
   }
 
   CreateMainSection() {
     margin := ResponsiveListManager.MARGIN
-    mainY := margin + ResponsiveListManager.CONTROL_HEIGHT + ResponsiveListManager.SECTION_SPACING
+    mainY := margin + this.layout["headerHeight"] + ResponsiveListManager.SECTION_SPACING
 
     this.layout["mainY"] := mainY
 
-    mainContentHeight := ResponsiveListManager.MIN_GUI_HEIGHT - mainY - (ResponsiveListManager.MARGIN * 2)
+    mainContentHeight := ResponsiveListManager.MIN_GUI_HEIGHT - mainY - ResponsiveListManager.MARGIN
 
     this.controls["bodyEdit"] := this.gui.AddEdit(
       Format("x{} y{} w{} h{} +Multi +WantReturn",
         margin + ResponsiveListManager.LEFT_PANEL_WIDTH + ResponsiveListManager.PADDING,
         mainY,
-        ResponsiveListManager.RIGHT_PANEL_WIDTH,
+        ResponsiveListManager.RIGHT_PANEL_WIDTH - margin,
         mainContentHeight
       ),
       ""
     )
   }
 
-  CreateButtonSection() {
-    ; Buttons moved to header section
-  }
-
   ApplyDarkTheme() {
     this.darkTheme := _Dark(this.gui)
 
-    mainContentHeight := ResponsiveListManager.MIN_GUI_HEIGHT - this.layout["mainY"] - (ResponsiveListManager.MARGIN * 2)
+    mainContentHeight := ResponsiveListManager.MIN_GUI_HEIGHT - this.layout["mainY"] - ResponsiveListManager.MARGIN
 
     this.listView := this.darkTheme.AddListView(
-      Format("x{} y{} w{} h{} +LV0x10000",
+      Format("x{} y{} w{} h{} +LV0x10000 -HScroll +NoSortHdr",
         ResponsiveListManager.MARGIN,
         this.layout["mainY"],
         ResponsiveListManager.LEFT_PANEL_WIDTH,
         mainContentHeight
       ),
-      ["#", "Title", "Body Preview"]
+      ["#", "Title", "Body Preview", "   "]
     )
 
     this.ConfigureListView()
     this.ApplyControlTheming()
+
+    _Dark.ColorEditBorder(this.listView, 0x2D2D2D)
   }
 
   ConfigureListView() {
+    ; Remove horizontal scrollbar using Windows API
+    static WS_HSCROLL := 0x100000
+    static GWL_STYLE := -16
+    static LVM_GETHEADER := 0x101F
+
+    ; Get current window style and remove horizontal scroll
+    currentStyle := DllCall("GetWindowLong", "Ptr", this.listView.Hwnd, "Int", GWL_STYLE, "UInt")
+    newStyle := currentStyle & ~WS_HSCROLL
+    DllCall("SetWindowLong", "Ptr", this.listView.Hwnd, "Int", GWL_STYLE, "UInt", newStyle)
+
+    ; Get the header control handle and apply dark theme to entire header
+    headerHwnd := SendMessage(LVM_GETHEADER, 0, 0, this.listView)
+    if headerHwnd {
+      ; Apply dark theme to the header control
+      DllCall("uxtheme\SetWindowTheme", "Ptr", headerHwnd, "Str", "DarkMode", "Ptr", 0)
+
+      ; Force header to extend background color across entire width
+      static HDS_FULLDRAG := 0x0080
+      headerStyle := DllCall("GetWindowLong", "Ptr", headerHwnd, "Int", GWL_STYLE, "UInt")
+      DllCall("SetWindowLong", "Ptr", headerHwnd, "Int", GWL_STYLE, "UInt", headerStyle | HDS_FULLDRAG)
+
+      ; Invalidate header to force redraw with new theme
+      DllCall("InvalidateRect", "Ptr", headerHwnd, "Ptr", 0, "Int", true)
+    }
+
+    ; Calculate column widths to eliminate horizontal scrollbar
+    ; Total must be less than ListView width minus scrollbar space
+    availableWidth := ResponsiveListManager.LEFT_PANEL_WIDTH - 10  ; Reduced buffer for wider columns
+
     col1Width := 25
-    col2Width := 100
-    col3Width := ResponsiveListManager.LEFT_PANEL_WIDTH - col1Width - col2Width - 20
+    col2Width := 90   ; Title column 15px wider (was 75)
+    col4Width := 15   ; Spacing for header appearance
+    col3Width := availableWidth - col1Width - col2Width - col4Width + 25  ; Add 25px extra width (15+10)
 
     this.listView.ModifyCol(1, col1Width)
     this.listView.ModifyCol(2, col2Width)
     this.listView.ModifyCol(3, col3Width)
+    this.listView.ModifyCol(4, col4Width)
 
-    ; Fill empty space with dark background
     Loop 20 {
       this.listView.Add("", "", "", "")
     }
@@ -186,18 +242,18 @@ class ResponsiveListManager {
 
   ApplyControlTheming() {
     _Dark.ColorEditBorder(this.controls["searchEdit"], 0x505050)
-    _Dark.ColorEditBorder(this.controls["bodyEdit"], 0x505050)
+    _Dark.ColorEditBorder(this.controls["bodyEdit"], 0x2D2D2D)
 
-    this.controls["addBtn"].SetFont("s14 Bold")
-    this.controls["reloadBtn"].SetFont("s12 Bold")
+    this.controls["addBtn"].SetFont("s18 Bold")
+    this.controls["duplicateBtn"].SetFont("s14 Bold")
 
-    this.controls["addBtn"].ToolTip := "Add New Item (Ctrl+N)"
-    this.controls["reloadBtn"].ToolTip := "Reload File (F5)"
+    this.controls["addBtn"].ToolTip := "Add Item (Ctrl+N)"
+    this.controls["duplicateBtn"].ToolTip := "Duplicate Item (Ctrl+D)"
     this.controls["searchEdit"].ToolTip := "Search items (Escape to clear)"
     this.controls["sectionSelector"].ToolTip := "Select section"
-    this.controls["bodyEdit"].ToolTip := "First line with // becomes the title (shown in list). Press Tab/Shift+Tab to navigate items"
+    this.controls["bodyEdit"].ToolTip := "First line with // becomes the title (shown in list)"
 
-    this.listView.ToolTip := "Double-click to edit item"
+    this.listView.ToolTip := "Double-click to edit item (Tab/Shift+Tab to navigate)"
 
     this.ApplyComboBoxDarkTheme()
   }
@@ -205,16 +261,43 @@ class ResponsiveListManager {
   ApplyComboBoxDarkTheme() {
     static CB_SETITEMHEIGHT := 0x0153
     static CB_SETDROPPEDWIDTH := 0x0160
+    static CB_SHOWDROPDOWN := 0x014F
+    static CB_GETCOMBOBOXINFO := 0x164
 
+    ; Apply dark theme to main ComboBox
     DllCall("uxtheme\SetWindowTheme", "Ptr", this.controls["sectionSelector"].hWnd, "Str", "DarkMode_CFD", "Ptr", 0)
 
-    ; Match the height of the search edit box
-    PostMessage(CB_SETITEMHEIGHT, -1, ResponsiveListManager.CONTROL_HEIGHT, this.controls["sectionSelector"])
-    PostMessage(CB_SETITEMHEIGHT, 0, 22, this.controls["sectionSelector"])
-    DllCall("user32\SendMessage", "Ptr", this.controls["sectionSelector"].hWnd, "UInt", CB_SETDROPPEDWIDTH, "Ptr", 200, "Ptr", 0)
+    ; Calculate dropdown height to show all items (4 sections + padding)
+    itemCount := this.settings["sections"].Length
+    dropdownHeight := (itemCount * 24) + 8
 
+    ; Set ComboBox dimensions and dropdown behavior
+    PostMessage(CB_SETITEMHEIGHT, -1, ResponsiveListManager.CONTROL_HEIGHT, this.controls["sectionSelector"])
+    PostMessage(CB_SETITEMHEIGHT, 0, 24, this.controls["sectionSelector"])
+    DllCall("user32\SendMessage", "Ptr", this.controls["sectionSelector"].hWnd, "UInt", CB_SETDROPPEDWIDTH, "Ptr", ResponsiveListManager.COMBO_WIDTH + 50, "Ptr", 0)
+    
+    ; Set dropdown height to show all items
+    static CB_SETDROPPEDHEIGHT := 0x0161
+    DllCall("user32\SendMessage", "Ptr", this.controls["sectionSelector"].hWnd, "UInt", CB_SETDROPPEDHEIGHT, "Ptr", dropdownHeight, "Ptr", 0)
+
+    ; Apply ListView border color to ComboBox edit component
+    try {
+      comboInfo := Buffer(60, 0)
+      NumPut("UInt", 60, comboInfo, 0)
+      if DllCall("user32\GetComboBoxInfo", "Ptr", this.controls["sectionSelector"].hWnd, "Ptr", comboInfo) {
+        editHwnd := NumGet(comboInfo, A_PtrSize + 4, "Ptr")
+        if editHwnd {
+          _Dark.ColorEditBorder({ Hwnd: editHwnd }, 0x2D2D2D)
+        }
+      }
+    }
+
+    ; Apply font and refresh
     this.controls["sectionSelector"].SetFont("cFFFFFF")
+
+    ; Force redraw to apply theming
     DllCall("InvalidateRect", "Ptr", this.controls["sectionSelector"].hWnd, "Ptr", 0, "Int", true)
+    DllCall("UpdateWindow", "Ptr", this.controls["sectionSelector"].hWnd)
   }
 
   CalculateInitialDimensions() {
@@ -239,17 +322,17 @@ class ResponsiveListManager {
     this.controls["bodyEdit"].OnEvent("Change", this.OnBodyChange.Bind(this))
 
     this.controls["addBtn"].OnEvent("Click", this.OnAddItem.Bind(this))
-    this.controls["reloadBtn"].OnEvent("Click", this.OnReloadFile.Bind(this))
+    this.controls["duplicateBtn"].OnEvent("Click", this.OnDuplicateItem.Bind(this))
   }
 
   SetupHotkeys() {
     HotIfWinActive("ahk_id " . this.gui.Hwnd)
     Hotkey("Tab", this.OnTabNavigation.Bind(this))
     Hotkey("+Tab", this.OnShiftTabNavigation.Bind(this))
-    Hotkey("^s", this.OnSaveFile.Bind(this))
     Hotkey("^z", this.OnUndo.Bind(this))
     Hotkey("^y", this.OnRedo.Bind(this))
     Hotkey("^n", this.OnAddItem.Bind(this))
+    Hotkey("^d", this.OnDuplicateItem.Bind(this))
     Hotkey("F5", this.OnReloadFile.Bind(this))
     Hotkey("Escape", this.OnEscapeKey.Bind(this))
     HotIfWinActive()
@@ -261,12 +344,23 @@ class ResponsiveListManager {
 
     margin := ResponsiveListManager.MARGIN
     padding := ResponsiveListManager.PADDING
+    gap := ResponsiveListManager.BUTTON_GAP
+    leftPanelBoundary := margin + ResponsiveListManager.LEFT_PANEL_WIDTH
 
-    searchX := margin + ResponsiveListManager.LEFT_PANEL_WIDTH + padding
-    searchWidth := width - searchX - margin
+    ; Recalculate search box position and width using same mathematical positioning as CreateHeaderSection
+    comboX := margin
+    comboWidth := ResponsiveListManager.COMBO_WIDTH
+    addBtnX := comboX + comboWidth + gap
+    addBtnWidth := ResponsiveListManager.ICON_BTN_SIZE
+    duplicateBtnX := addBtnX + addBtnWidth + gap
+    duplicateBtnWidth := ResponsiveListManager.ICON_BTN_SIZE
+    searchX := duplicateBtnX + duplicateBtnWidth + gap
+    searchWidth := leftPanelBoundary - searchX
+
+    ; Update search edit control with recalculated width
     this.controls["searchEdit"].Move(searchX, , searchWidth)
 
-    mainContentHeight := height - this.layout["mainY"] - (margin * 2)
+    mainContentHeight := height - this.layout["mainY"] - margin
 
     this.listView.Move(, , , mainContentHeight)
 
@@ -274,8 +368,6 @@ class ResponsiveListManager {
     rightPanelWidth := width - rightPanelX - margin
 
     this.controls["bodyEdit"].Move(rightPanelX, , rightPanelWidth, mainContentHeight)
-
-    ; Buttons are now in header, no need to move them on resize
   }
 
   LoadInitialData() {
@@ -317,7 +409,14 @@ class ResponsiveListManager {
       }
     }
 
+    ; Validate ComboBox Value property (can be 0 or unset)
     selectedIndex := this.controls["sectionSelector"].Value
+    if !IsSet(selectedIndex) || selectedIndex < 1 || selectedIndex > this.settings["sections"].Length {
+      ; Default to first section if invalid index
+      selectedIndex := 1
+      this.controls["sectionSelector"].Choose(selectedIndex)
+    }
+
     this.state["currentSection"] := this.settings["sections"][selectedIndex]
     this.LoadCurrentSection()
   }
@@ -511,6 +610,62 @@ class ResponsiveListManager {
     }
   }
 
+  OnDuplicateItem(*) {
+    selected := this.listView.GetNext()
+    if selected > 0 && selected <= this.collections["filteredData"].Length {
+      this.SaveState()
+      originalItem := this.collections["filteredData"][selected]
+
+      originalTitle := this.ParseTitleFromBody(originalItem["body"])
+      newTitle := originalTitle . " (Copy)"
+      bodyLines := StrSplit(originalItem["body"], "`n", "`r")
+      if bodyLines.Length > 0 && SubStr(Trim(bodyLines[1]), 1, 2) = "//" {
+        bodyLines[1] := "// " . newTitle
+      } else {
+        bodyLines.InsertAt(1, "// " . newTitle)
+      }
+      newBody := ""
+      for line in bodyLines {
+        newBody .= line . "`n"
+      }
+      newBody := RTrim(newBody, "`n")
+
+      newItem := Map(
+        "id", this.GenerateID(),
+        "title", newTitle,
+        "body", newBody
+      )
+
+      if originalItem.Has("id") {
+        mainIndex := this.FindItemInMainData(originalItem["id"])
+        if mainIndex > 0 {
+          this.collections["jsonData"][this.state["currentSection"]].InsertAt(mainIndex + 1, newItem)
+        } else {
+          this.collections["jsonData"][this.state["currentSection"]].Push(newItem)
+        }
+      } else {
+        this.collections["jsonData"][this.state["currentSection"]].Push(newItem)
+      }
+
+      this.state["hasUnsavedChanges"] := true
+      this.ApplyFilter()
+
+      newSelectedIndex := 0
+      for index, item in this.collections["filteredData"] {
+        if item.Has("id") && item["id"] = newItem["id"] {
+          newSelectedIndex := index
+          break
+        }
+      }
+
+      if newSelectedIndex > 0 {
+        this.listView.Modify(newSelectedIndex, "Select Focus")
+        this.controls["bodyEdit"].Value := newItem["body"]
+        this.controls["bodyEdit"].Focus()
+      }
+    }
+  }
+
   OnUndo(*) {
     if this.collections["undoStack"].Length > 0 {
       currentData := this.GetCurrentSectionData()
@@ -533,14 +688,6 @@ class ResponsiveListManager {
     }
   }
 
-  OnSaveFile(*) {
-    this.SaveJSONFile()
-    
-    ; Show save notification near the center top of the window
-    CoordMode("ToolTip", "Window")
-    ToolTip("✓ Saved!", ResponsiveListManager.LEFT_PANEL_WIDTH // 2, ResponsiveListManager.MARGIN + 35, 1)
-    SetTimer(() => ToolTip("", , , 1), -1200)
-  }
 
   OnReloadFile(*) {
     if this.state["hasUnsavedChanges"] {
@@ -811,17 +958,25 @@ class ResponsiveListManager {
   RefreshListView() {
     this.listView.Delete()
 
+    col1Width := 25
+    col2Width := 85
+    col3Width := ResponsiveListManager.LEFT_PANEL_WIDTH - col1Width - col2Width + 2
+
     Loop this.collections["filteredData"].Length {
       item := this.collections["filteredData"][A_Index]
-      bodyPreview := this.TruncateText(item["body"], 50)
-      this.listView.Add("", A_Index, item["title"], bodyPreview)
+      bodyPreview := this.TruncateText(item["body"], 25)
+      this.listView.Add("", A_Index, item["title"], bodyPreview, "")
     }
   }
 
   RefreshListViewItem(index) {
     if index > 0 && index <= this.collections["filteredData"].Length {
+      col1Width := 25
+      col2Width := 85
+      col3Width := ResponsiveListManager.LEFT_PANEL_WIDTH - col1Width - col2Width + 2
+
       item := this.collections["filteredData"][index]
-      bodyPreview := this.TruncateText(item["body"], 50)
+      bodyPreview := this.TruncateText(item["body"], 25)
       this.listView.Modify(index, "", index, item["title"], bodyPreview)
     }
   }
@@ -852,7 +1007,7 @@ class ResponsiveListManager {
     if cleanText = ""
       return ""
     if StrLen(cleanText) > maxLength {
-      return SubStr(cleanText, 1, maxLength - 3) . "..."
+      return SubStr(cleanText, 1, maxLength)
     }
     return cleanText
   }
@@ -894,13 +1049,11 @@ _DarkHeaderCustomDrawCallback(hWnd, uMsg, wParam, lParam, uIdSubclass, dwRefData
           Fmt := NumGet(HDITEM, 12 + (2 * A_PtrSize), "UInt") & 3
           Order := NumGet(HDITEM, 20 + (3 * A_PtrSize), "Int")
           HDC := NumGet(lParam + OHDC, "Ptr")
-          if (Item = 0) && (Order = 0)
-            NumPut("Int", NumGet(lParam, ORect, "Int") + LM, lParam + ORect)
+
           dcBrush := DllCall("GetStockObject", "UInt", DC_BRUSH, "ptr")
           DllCall("SetDCBrushColor", "Ptr", HDC, "UInt", HC["Bkg"])
           DllCall("FillRect", "Ptr", HDC, "Ptr", lParam + ORect, "Ptr", dcBrush)
-          if (Item = 0) && (Order = 0)
-            NumPut("Int", NumGet(lParam, ORect, "Int") - LM, lParam, ORect)
+
           DllCall("SetBkMode", "Ptr", HDC, "UInt", TRANSPARENT)
           DllCall("SetTextColor", "Ptr", HDC, "UInt", 0xFFFFFF)
           DllCall("InflateRect", "Ptr", lParam + ORect, "Int", -TM, "Int", 0)
@@ -908,7 +1061,14 @@ _DarkHeaderCustomDrawCallback(hWnd, uMsg, wParam, lParam, uIdSubclass, dwRefData
           DllCall("DrawText", "Ptr", HDC, "Ptr", ItemTxt, "Int", -1, "Ptr", lParam + ORect, "UInt", DT_ALIGN)
           return CDRF_SKIPDEFAULT
         }
-        return (DrawStage = CDDS_PREPAINT) ? CDRF_NOTIFYITEMDRAW : CDRF_DODEFAULT
+        if (DrawStage = CDDS_PREPAINT) {
+          HDC := NumGet(lParam + OHDC, "Ptr")
+          dcBrush := DllCall("GetStockObject", "UInt", DC_BRUSH, "ptr")
+          DllCall("SetDCBrushColor", "Ptr", HDC, "UInt", HC["Bkg"])
+          DllCall("FillRect", "Ptr", HDC, "Ptr", lParam + ORect, "Ptr", dcBrush)
+          return CDRF_NOTIFYITEMDRAW
+        }
+        return CDRF_DODEFAULT
       }
     }
   } else if (uMsg = 0x02) {
@@ -1257,8 +1417,8 @@ class _Dark {
     _Dark.SendMessage(ListViewConstants["LVM_SETTEXTCOLOR"], 0, fg, lv.Hwnd)
     _Dark.SendMessage(ListViewConstants["LVM_SETTEXTBKCOLOR"], 0, bg, lv.Hwnd)
     _Dark.SendMessage(ListViewConstants["LVM_SETEXTENDEDLISTVIEWSTYLE"],
-      ListViewConstants["LVS_EX_DOUBLEBUFFER"] | ListViewConstants["LVS_EX_GRIDLINES"] | ListViewConstants["LVS_EX_FULLROWSELECT"],
-      ListViewConstants["LVS_EX_DOUBLEBUFFER"] | ListViewConstants["LVS_EX_GRIDLINES"] | ListViewConstants["LVS_EX_FULLROWSELECT"], lv.Hwnd)
+      ListViewConstants["LVS_EX_DOUBLEBUFFER"] | ListViewConstants["LVS_EX_FULLROWSELECT"],
+      ListViewConstants["LVS_EX_DOUBLEBUFFER"] | ListViewConstants["LVS_EX_FULLROWSELECT"], lv.Hwnd)
     _Dark.SendMessage(ListViewConstants["LVM_SETOUTLINECOLOR"], 0, grid, lv.Hwnd)
 
     DllCall("uxtheme\SetWindowTheme", "Ptr", lv.Hwnd, "Str", "DarkMode_Explorer", "Ptr", 0)
@@ -1268,7 +1428,6 @@ class _Dark {
     if headerHwnd {
       DllCall("uxtheme\SetWindowTheme", "Ptr", headerHwnd, "Str", "", "Ptr", 0)
 
-      ; Force header to fill entire width with dark background
       static HDM_LAYOUT := 0x1205
       _Dark.SendMessage(HDM_LAYOUT, 0, 0, headerHwnd)
     }
