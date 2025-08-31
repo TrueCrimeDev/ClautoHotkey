@@ -1,7 +1,279 @@
 {
-  "workbench.colorCustomizations": {
-    "debugConsole.infoForeground": "#00FF00",
-    "debugConsole.warningForeground": "#fdec34ff",
-    "debugConsole.errorForeground": "#ff2828ff"
+  // 📂 Multi-root folders (reordered per your request)
+  "folders": [
+    {
+      "path": "../AHK/!Running/ClautoHotkey"
+    },
+    {
+      "name": "Claude",
+      "path": "../../../../AppData/Roaming/Claude"
+    },
+    {
+      "path": "C:/Program Files/AutoHotkey/v2/CodeQuickTester/"
+    },
+    {
+      "path": "../AHK/!Running/CodeQuickTester"
+    }
+  ],
+
+  // ⚙️ Workspace settings
+  "settings": {
+    // 🎨 Workbench colors & theme (UI-only — no token/text colors)
+    "workbench.colorCustomizations": {
+      // debug console
+      "debugConsole.infoForeground": "#00FF00",
+      "debugConsole.warningForeground": "#fdec34ff",
+      "debugConsole.errorForeground": "#ff2828ff",
+      "debug.console.fontSize": 12,
+
+      // Activity Bar
+      "activityBar.background": "#33b85d",
+      "activityBar.activeBackground": "#33b85d",
+      "activityBar.foreground": "#15202b",
+      "activityBar.inactiveForeground": "#15202b99",
+      "activityBar.activeBorder": "#33c481",
+      "activityBar.activeFocusBorder": "#33c481",
+      "activityBarBadge.background": "#ece6f8",
+      "activityBarBadge.foreground": "#15202b",
+
+      // Tabs & editor groups
+      "tab.inactiveBackground": "#000000",
+      "tab.activeBackground": "#1F1F1F",
+      "tab.lastPinnedBorder": "#197b43",
+      "editorGroupHeader.tabsBackground": "#000000",
+      "editorGroup.border": "#000000",
+
+      // Sidebar & widgets
+      "sideBar.background": "#141414",
+      "editorWidget.background": "#141414",
+      "editorSuggestWidget.background": "#000000",
+      "editorSuggestWidget.border": "#000000",
+
+      // Status Bar & Title Bar
+      "statusBar.background": "#197b43",
+      "statusBar.noFolderBackground": "#197b43",
+      "statusBar.debuggingBackground": "#b8338e",
+      "statusBar.debuggingForeground": "#e7e7e7",
+      "statusBarItem.hoverBackground": "#289049",
+      "statusBarItem.remoteBackground": "#33b85d",
+      "statusBarItem.remoteForeground": "#15202b",
+      "titleBar.activeBackground": "#197b43",
+      "titleBar.activeForeground": "#e7e7e7",
+      "titleBar.inactiveBackground": "#28904999",
+      "titleBar.inactiveForeground": "#e7e7e799",
+
+      // Editor UI (background, selection, hover, but NOT token colors)
+      "editor.background": "#1F1F1F",
+      "selection.background": "#ADD6FF20",
+      "editor.selectionBackground": "#197b4380",
+      "editor.selectionHighlightBackground": "#65656580",
+      "editorCursor.foreground": "#FFFFFF",
+      "editorWhitespace.foreground": "#C4C4C4",
+      "editorLineNumber.foreground": "#C4C4C4",
+      "editorLineNumber.activeForeground": "#197b43",
+      "editor.lineHighlightBackground": "#1073cf2d",
+      "editor.lineHighlightBorder": "#9fced11f",
+      "editor.foldBackground": "#00000000",
+      "minimap.selectionHighlight": "#197b43",
+
+      // ⚠️ Tooltip / Hover (changed from green -> neutral)
+      "editorHoverWidget.background": "#242424", // tooltip background (was green)
+      "editorHoverWidget.foreground": "#C4C4C4", // tooltip text
+      "editorHoverWidget.border": "#000000", // tooltip border
+      "editor.hoverHighlightBackground": "#65656520", // hover-highlight (subtle)
+      "editorHoverWidget.statusBarBackground": "#1F1F1F",
+
+      // Peek view
+      "peekViewTitle.background": "#197b43",
+      "peekView.border": "#000000",
+      "peekViewResult.background": "#141414",
+      "peekViewEditor.background": "#000000",
+
+      // Indent guides (kept your numbered backgrounds without duplicates)
+      "editorIndentGuide.background": "#33c481",
+      "editorIndentGuide.background1": "#404040",
+      "editorIndentGuide.background2": "#404040",
+      "editorIndentGuide.background3": "#404040",
+      "editorIndentGuide.background4": "#404040",
+      "editorIndentGuide.background5": "#404040",
+      "editorIndentGuide.background6": "#404040",
+      "editorIndentGuide.activeBackground": "#FFFFFF",
+      "editorIndentGuide.activeBackground1": "#707070",
+      "editorIndentGuide.activeBackground2": "#707070",
+      "editorIndentGuide.activeBackground3": "#707070",
+      "editorIndentGuide.activeBackground4": "#707070",
+      "editorIndentGuide.activeBackground5": "#707070",
+      "editorIndentGuide.activeBackground6": "#707070",
+
+      // Toolbar, buttons & focus
+      "debugToolBar.background": "#197b43",
+      "focusBorder": "#FFFFFF",
+      "button.background": "#197b43",
+
+      // Inputs & dropdowns
+      "dropdown.background": "#242424",
+      "input.background": "#202020",
+      "inputOption.activeBorder": "#197b43",
+      "inputValidation.infoBackground": "#197b43",
+      "inputValidation.infoBorder": "#197b43",
+
+      // Lists, quick input & menus
+      "list.hoverBackground": "#242424",
+      "list.activeSelectionBackground": "#242424",
+      "list.inactiveSelectionBackground": "#197b43",
+      "list.dropBackground": "#197b43",
+      "quickInputList.focusBackground": "#197b43",
+      "list.highlightForeground": "#92c353",
+      "menu.background": "#1F1F1F",
+      "menu.foreground": "#C2C2C2",
+      "menu.selectionForeground": "#FFFFFF",
+      "menu.selectionBackground": "#454545",
+      "pickerGroup.foreground": "#C4C4C4",
+      "pickerGroup.border": "#197b43",
+
+      // Badges, progress, errors, extensions
+      "badge.background": "#197b43",
+      "badge.foreground": "#ffffff",
+      "progressBar.background": "#197b43",
+      "errorForeground": "#FF0000",
+      "extensionButton.prominentBackground": "#197b43",
+      "extensionButton.prominentHoverBackground": "#197b43",
+
+      // Terminal colors (preserved)
+      "terminal.background": "#1D1F21",
+      "terminal.foreground": "#c3c3c3ff",
+      "terminalCursor.background": "#C5C8C6",
+      "terminalCursor.foreground": "#C5C8C6",
+      "terminal.ansiBlack": "#1D1F21",
+      "terminal.ansiBlue": "#3971ED",
+      "terminal.ansiBrightBlack": "#969896",
+      "terminal.ansiBrightBlue": "#3971ED",
+      "terminal.ansiBrightCyan": "#3971ED",
+      "terminal.ansiBrightGreen": "#198844",
+      "terminal.ansiBrightMagenta": "#A36AC7",
+      "terminal.ansiBrightRed": "#CC342B",
+      "terminal.ansiBrightWhite": "#FFFFFF",
+      "terminal.ansiBrightYellow": "#FBA922",
+      "terminal.ansiCyan": "#3971ED",
+      "terminal.ansiGreen": "#198844",
+      "terminal.ansiMagenta": "#A36AC7",
+      "terminal.ansiRed": "#CC342B",
+      "terminal.ansiWhite": "#C5C8C6",
+      "terminal.ansiYellow": "#FBA922"
+    },
+
+    // 🦚 Peacock (workspace color) — preserved
+    "peacock.color": "#289049ff",
+    "peacock.darkForegroundColor": "#15202b",
+    "peacock.keepForegroundColor": false,
+    "peacock.lightForegroundColor": "#e7e7e7",
+
+    // ✏️ Editor & Notebook defaults (unchanged)
+    "editor.defaultFormatter": "thqby.vscode-autohotkey2-lsp",
+    "editor.defaultFoldingRangeProvider": "thqby.vscode-autohotkey2-lsp",
+    "editor.accessibilitySupport": "off",
+    "notebook.defaultFormatter": "thqby.vscode-autohotkey2-lsp",
+    "editor.tokenColorCustomizations": {
+      "textMateRules": [
+        {
+          "name": "One Dark italic",
+          "scope": [
+            "comment",
+            "entity.other.attribute-name",
+            "keyword",
+            "markup.underline.link",
+            "storage.modifier",
+            "storage.type",
+            "string.url",
+            "variable.language.super",
+            "variable.language.this"
+          ],
+          "settings": { "fontStyle": "italic" }
+        },
+        {
+          "name": "One Dark italic reset",
+          "scope": [
+            "keyword.operator",
+            "keyword.other.type",
+            "storage.modifier.import",
+            "storage.modifier.package",
+            "storage.type.built-in",
+            "storage.type.function.arrow",
+            "storage.type.generic",
+            "storage.type.java",
+            "storage.type.primitive"
+          ],
+          "settings": { "fontStyle": "" }
+        }
+      ],
+      "comments": ""
+    },
+
+    // 🌐 Terminal
+    "terminal.integrated.minimumContrastRatio": 5,
+
+    // 📁 Files, Explorer & Excludes
+    "files.defaultLanguage": ".ahk",
+    "files.exclude": {
+      "**/.DS_Store": true,
+      "**/.git": true,
+      "**/.hg": true,
+      "**/.history": true,
+      "**/.svn": true,
+      "**/largeFolder": true,
+      "**/Thumbs.db": true
+    },
+
+    // 🌍 Language-specific overrides
+    "[xml]": { "editor.defaultFormatter": "DotJoshJohnson.xml" },
+    "[jsonc]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+
+    // 🐍 Python
+    "python.languageServer": "Jedi",
+    "python.analysis.diagnosticSeverityOverrides": {
+      "reportShadowedImports": "none",
+      "reportMissingModuleSource": "none"
+    },
+
+    // 🤖 AutoHotkey 2
+    "AutoHotkey2.InterpreterPath": "c:\\Program Files\\AutoHotkey\\v2\\AutoHotkey.exe",
+    "AutoHotkey2.AutoLibInclude": "User and Standard",
+    "AutoHotkey2.CompleteFunctionParens": true,
+    "AutoHotkey2.Warn.LocalSameAsGlobal": true,
+    "AutoHotkey2.Warn.VarUnset": true,
+    "AutoHotkey2.Syntaxes": "C:\\Users\\user\\.vscode\\extensions\\thqby.vscode-autohotkey2-lsp-2.7.2\\syntaxes",
+    "AutoHotkey2.DebugConfiguration": {
+      "port": "9002-9100",
+      "useAnnounce": "detail",
+      "useAutoJumpToError": true,
+      "useDebugDirective": true,
+      "usePerfTips": true
+    },
+
+    // 🧩 Extensions & Features
+    "DockerRun.DisableDockerrc": true,
+    "dotnet.preferCSharpExtension": true,
+    "dotnet.defaultSolution": "disable",
+    "favorites.sortDirection": "ASC",
+    "codeBlocks.ignoredLanguageIds": [
+      "json",
+      "jsonc",
+      "twbl",
+      "bat",
+      "plaintext"
+    ],
+    "seito-openfile.openNewTab": true,
+    "new-from-template.templateDirectories": [
+      "$WORKSPACE/.vscode/templates",
+      "$HOME/VSCodeTemplates"
+    ],
+    "liveServer.settings.multiRootWorkspaceName": "Lib",
+
+    // 🧠 Other workspace prefs
+    "powershell.cwd": "!Running",
+    "highlightOnCopy.foregroundColor": "",
+    "cline.modelSettings.o3Mini.reasoningEffort": "low",
+    "fusion-360-helper.enabled": false
   }
 }
+
