@@ -1,0 +1,45 @@
+---
+alwaysApply: true
+---
+
+Guide: OOP GUI Creation
+
+Steps
+- Begin with `#Requires AutoHotkey v2` and instantiate your GUI class without `new`.
+- Store the Gui object as a property for access across methods.
+- Bind events with `.Bind(this)` to preserve context.
+- Provide methods like `Toggle` or `Show` for visibility management.
+- Release resources in `__Delete` when the GUI persists.
+
+Example
+```cpp
+#Requires AutoHotkey v2
+#SingleInstance Force
+DemoGui()
+
+class DemoGui {
+    __New() {
+        this.gui := Gui("+Resize", "Demo")
+        this.gui.AddText("w200", "Name")
+        this.gui.AddEdit("vName w200")
+        this.gui.AddButton("Default w200", "Submit").OnEvent("Click", this.Submit.Bind(this))
+    }
+    Submit(*) {
+        data := this.gui.Submit()
+        MsgBox(data.Name)
+        this.gui.Hide()
+    }
+    Toggle(*) {
+        if WinExist("ahk_id " this.gui.Hwnd)
+            this.gui.Hide()
+        else
+            this.gui.Show()
+    }
+}
+```
+
+Edge Cases
+- Missing event bindings leading to unresponsive controls.
+- Uninitialized control variables causing errors.
+- Multiple instantiations creating duplicate GUIs.
+
