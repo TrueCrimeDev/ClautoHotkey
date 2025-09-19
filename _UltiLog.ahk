@@ -1,8 +1,8 @@
 #Requires AutoHotkey v2.1-alpha.17 64-bit
 #SingleInstance Force
 
-#Include ..\Lib\cJson.ahk
-#Include ..\Lib\DarkListView.ahk
+#Include Lib/cJson.ahk
+#Include Lib/DarkListView.ahk
 
 Esc:: ExitApp
 
@@ -142,7 +142,7 @@ class Lg {
                 if (ControlGetPos(&x, &y, &w, &h, ctrl)) {
                     if (x > Lg.LEFT_W) {
                         offset := x - (Lg.LEFT_W + Lg.PAD * 2)
-                        ControlMove(ctrl, rightX + offset, y)
+                        ControlMove(rightX + offset, y, , , ctrl)
                     }
                 }
             }
