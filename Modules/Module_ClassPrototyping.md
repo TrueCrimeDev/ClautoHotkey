@@ -1,330 +1,357 @@
-<ROLE_INTEGRATION>
-You are the same AutoHotkey V2 engineer from module_instructions.md. This Module_ClassPrototyping.md extends your code capabilities by providing specialized knowledge for writing clean code that involves class protyping, i.e.: Advanced knowledge about descriptor objects, the creation of new classes at runtime, and best practices to follow when using `DefineProp()` to define custom properties.
+﻿# Module_ClassPrototyping.md
+<!-- DOMAIN: Class Prototyping -->
+<!-- SCOPE: Static class definitions using the `class` keyword, standard inheritance via `extends`, and __Item / __Enum meta-function patterns are not covered — see Module_Classes.md and Module_Objects.md. -->
+<!-- TRIGGERS: DefineProp, ObjSetBase, HasProp, HasMethod, "property descriptor", "descriptor object", "dynamic getter", "readonly property", "intercept property assignment", "change method at runtime", "add property to instance", "runtime class generation", "method decorator", "class generator", "prototyping" -->
+<!-- CONSTRAINTS: Prefer creating descriptor objects with Object() over {}; while both produce an Object instance of the same type and both are accepted by DefineProp, Object() is the explicit, unambiguous convention for descriptor containers in this module series. Every Get/Set/Call descriptor function must accept the object instance as its first parameter — omitting it causes the function to receive shifted arguments with no runtime error. -->
+<!-- CROSS-REF: Module_Classes.md, Module_Objects.md, Module_Errors.md -->
+<!-- VERSION: AHK v2.0+ -->
 
-When users request operations that are related to class prototyping:
+## V1 → V2 BREAKING CHANGES
 
-1. Continue following ALL rules from module_instructions.md and module_objects.md (thinking tiers, syntax validation, OOP principles)
-2. Use this module's patterns and tier system for class prototyping-related operations
-3. Apply the same cognitive tier escalation ("think hard", "think harder", "ultrathink") when dealing with class prototyping scenarios. Class prototyping automatically escalates your tier to at least "think harder".
-4. Maintain the same strict syntax rules, error handling, and code quality standards
-5. Reference the specific patterns from this module while keeping the overall architectural approach from the main instructions.
+| v1 pattern (LLM commonly writes) | v2 correct form | Consequence |
+|----------------------------------|-----------------|-------------|
+| `new ClassName()` | `ClassName()` | `new` keyword does not exist in AHK v2 — immediate parse error |
+| `{Get: MyFunc}` as descriptor literal | `d := Object()` then `d.Get := MyFunc` | Object literal descriptors are technically accepted by DefineProp, but Object() is the explicit convention in this module for descriptor construction |
+| `Class(BaseObj)` (v2.1-alpha) | Manual prototype chain via `ObjSetBase()` | v2.0 `Class()` produces an incomplete object with no `Call` method and is not a subclass of Object — unusable as a class factory in stable releases |
+| Getter/Setter function with no leading parameter | `GetterFunc(Obj)` / `SetterFunc(Obj, Val)` | AHK v2 always injects the object instance as the first argument — omitting it silently shifts all arguments, causing wrong values or property-not-found errors |
+| `(this) => { x := 1 \| return x }` multi-line fat-arrow | Named function block `MyFunc(this) { ... }` | AHK v2 fat-arrow functions are single-expression only — multi-line body is a syntax error |
+| Modifying `Array.Prototype` or `String.Prototype` directly | Wrapper object or subclass with `extends` | Pollutes the global namespace; affects every Array/String in the script silently |
 
-This module does NOT replace your code instructions - it supplements them with specialized class prototyping expertise.
-</ROLE_INTEGRATION>
+## API QUICK-REFERENCE
 
-<MODULE_OVERVIEW>
-Class prototyping in AHK v2 involves the act of dynamically modifying the runtime code (not the source code) by creating and modifying property descriptors, and generating new classes at runtime.
+### Object — Descriptor Construction and Prototype Manipulation
+| Method/Property | Signature | Notes |
+|----------------|-----------|-------|
+| `Object()` | `Object()` | Creates a plain Object instance with no initial own properties — the preferred form for descriptor containers; `{}` creates an Object instance of the same type but Object() makes the descriptor role explicit |
+| `.DefineProp()` | `obj.DefineProp(Name, Descriptor)` | Assigns a property descriptor to `obj`; Descriptor must be an Object with `.Get`, `.Set`, `.Call`, or `.Value` |
+| `.HasProp()` | `obj.HasProp(Name)` | Returns true if the named property exists on `obj` or its prototype chain; does not invoke the getter |
+| `.HasMethod()` | `obj.HasMethod(Name)` | Returns true if the named Call descriptor is resolvable on `obj` or its prototype chain |
+| `ObjSetBase()` | `ObjSetBase(obj, BaseObj)` | Sets `obj`'s prototype to `BaseObj`; used to link instances to a dynamically constructed class prototype |
 
-This module covers creation, manipulation, transformation and deletion of property descriptors, how to generate classes at runtime, and other advanced patterns.
+### Descriptor Object Keys
+| Key | Expected value | Notes |
+|-----|----------------|-------|
+| `.Get` | `GetFunc(Obj)` | Called when the property is read; first param is always the target object |
+| `.Set` | `SetFunc(Obj, Value)` | Called when the property is assigned; second param is the assigned value |
+| `.Call` | `CallFunc(Obj, Args*)` | Called when the property is invoked as a method; first param is always the target object |
+| `.Value` | Any AHK value | Simple static value — no function is executed; cannot coexist with `.Get`/`.Set` on the same descriptor |
 
-INTEGRATION WITH MAIN INSTRUCTIONS:
+### Func — Binding for Static Call Descriptors
+| Method/Property | Signature | Notes |
+|----------------|-----------|-------|
+| `.Bind()` | `FuncRef.Bind(BoundArgs*)` | Returns a new BoundFunc with leading parameters pre-filled; use to attach a static function as a Call descriptor while passing context through a bound prefix argument |
 
-- All syntax validation rules from module_instructions.md still apply
-- Reuse and copy the reference code in this module as much as possible, because class prototyping is very fragile, and the examples are guaranteed to work properly
-</MODULE_OVERVIEW>
+### Type Inspection
+| Function | Signature | Notes |
+|----------|-----------|-------|
+| `Type()` | `Type(Value)` | Returns a string: `"Integer"`, `"String"`, `"Float"`, `"Object"`, `"Array"`, `"Map"`, etc.; use for type guards inside Set descriptors |
+| `IsObject()` | `IsObject(Value)` | Returns true for any object reference — preliminary guard before calling `.DefineProp()` |
 
-<CLASS_PROTOTYPING_DETECTION_SYSTEM>
-  <EXPLICIT_TRIGGERS>
-  Reference this module when user mentions:
+## AHK V2 CONSTRAINTS
 
-  "prototyping", "class generator", "property descriptor", "prop desc"
-  </EXPLICIT_TRIGGERS>
+- **Prefer `Object()` for descriptor objects over `{}`** — although both produce an Object instance of the same type and both are accepted by DefineProp, `Object()` is the explicit convention in this module to keep descriptor construction unambiguous and separated from general object literal usage.
+- **Every Get descriptor function must have exactly one parameter: the object instance** — `GetterFunc(Obj)`. AHK v2 injects the target object as the first argument unconditionally; a zero-parameter getter will receive the object and discard it, returning unpredictable results.
+- **Every Set descriptor function must have exactly two parameters: the object instance and the assigned value** — `SetterFunc(Obj, Value)`. Omitting `Obj` shifts `Value` into the wrong slot.
+- **Every Call descriptor function must accept the object instance as its first parameter** — `MethodFunc(Obj, Args*)`. The invocation `myObj.Prop(x)` internally becomes `Desc.Call(myObj, x)`.
+- **Do not use `Class(BaseObj)` in v2.0 scripts** — it is a v2.1-alpha feature; the resulting object lacks a `.Call` method and cannot act as a class factory. Use manual prototype chain construction with `ObjSetBase()` instead.
+- **Do not modify built-in prototypes (`Array.Prototype`, `Map.Prototype`, etc.) unless explicitly required** — changes propagate globally to every instance of that type in the script, creating invisible coupling and name collision risk.
+- **Fat-arrow functions assigned to descriptors must be single-expression** — `(Obj) => Obj.Name` is valid; `(Obj) => { x := 1 \| return x }` is a syntax error. Use a named function block for any multi-statement descriptor logic.
 
-  <IMPLICIT_TRIGGERS>
-  - "dynamically generate", "framework" → evaluate, if class prototyping is an appropriate solution
-  </IMPLICIT_TRIGGERS>
+Safe-access priority order for prototype manipulation:
+  1. `.HasProp(Name)` — check existence before reading or redefining; avoids UnsetError on absent properties
+  2. `.HasMethod(Name)` — call-specific guard; confirms a Call descriptor is present before invoking
+  3. `IsObject(Target)` — preliminary guard before calling any Object method; prevents MethodError on non-objects
+  4. `try/catch` — only when the DefineProp call itself may fail and the exception message carries diagnostic information
 
-  <DETECTION_PRIORITY>
-  1. EXPLICIT keywords → Direct Module_ClassPrototyping.md reference
-  2. IMPLICIT keywords → Evaluate if Module_Objects.md provides optimal reference
-  </DETECTION_PRIORITY>
+Pair of every prohibition with its consequence and positive alternative:
+- ✗ `desc := {Get: MyFunc}` — object literal descriptors are avoided in this module; Object() is the explicit convention for descriptor containers
+- ✓ `desc := Object()` then `desc.Get := MyFunc` — Object() is the preferred descriptor container in this module series
+- ✗ `GetterFunc()` with no parameters — object instance silently discarded; returns wrong value
+- ✓ `GetterFunc(Obj)` — receives the target object as first argument
+- ✗ `(Obj) => { x := 1 \| return x }` — syntax error; multi-line fat-arrow is not valid in AHK v2
+- ✓ Named function block `MyFunc(Obj) { x := 1 \| return x }` — full function body supported
 
-  <ANTI_PATTERNS>
-  Do NOT use class prototyping when:
-  
-  - The same functionality can be achieved with regular properties → avoid using class prototyping
-  - Simple tasks → Use standalone functions or other utilities
-  </ANTI_PATTERNS>
-</CLASS_PROTOTYPING_DETECTION_SYSTEM>
+## TIER 1 — Descriptor Object Fundamentals: Dynamic Call Assignment
+> METHODS COVERED: Object() · DefineProp() · .Call (descriptor key)
 
-## Fundamentals of Class Prototyping
+A Call descriptor turns any function into a method on a specific object instance. The descriptor must be a raw `Object()` — not an object literal — and the function it holds must accept the target object as its first parameter. This tier covers the minimal DefineProp pattern: create descriptor, assign function, attach to instance.
+```ahk
+CustomMethod(Obj, Prefix) {
+    return Prefix . ": " . Obj.Name
+}
 
-<PREAMBLE>
-The main idea behind class prototyping is to add or modify the functionality of classes at runtime.
-This is typically done by redefining the property descriptors that describe an object's methods and properties.
-Except for the value-descriptor (which is equivalent to a regular, mutable field of an object),
-these property descriptors (namely: `get`, `set`, and `call`) contain functions executed when an object's property
-is being used in an expression. One very powerful methodology is the use of functional programming techniques like
-function composition and closures for use in property descriptors.
-</PREAMBLE>
+; Create the object
+MyObj := Object()
+MyObj.Name := "Alpha"
 
-<PROPERTY_DESCRIPTORS>
-  <OVERVIEW>
-  Property descriptors define how an object's property behaves when being accessed.
-  Value-descriptors describe a regular, mutable field. Usually, they should not be used directly.
-  Get-, set-, and call-descriptors contain functions executed when the value of a property is being accessed or
-  changed, or when the property is being called as a method. The act of dynamically creating these functions
-  and applying them as custom properties is the most crucial aspect of class prototyping.
-  </OVERVIEW>
-  <CALL_DESCRIPTOR>
-    <SUMMARY>
-    A call-descriptor is used to describe an object's method.
-    </SUMMARY>
-    <PARAMETERS>
-    Its first parameter is always a reference to the relevant object ("`this`"), followed by zero or more parameters passed between parentheses.
-    </PARAMETERS>
-    <EXAMPLE>
+; ✓ Object() produces a plain Object instance — the preferred form for descriptor containers
+PropDesc := Object()
+PropDesc.Call := CustomMethod
 
-    ```cpp
-    Method(Obj, Args*) {
-        ; ...
+; ✓ DefineProp attaches the descriptor; MyObj.Greet now resolves as a callable method
+MyObj.DefineProp("Greet", PropDesc)
+
+; ✓ Implicitly calls CustomMethod(MyObj, "Status") — AHK injects MyObj as first argument
+Result := MyObj.Greet("Status")
+
+; ✗ Avoid {} as the descriptor object in this module — use Object() for explicit descriptor construction
+; PropDesc := {Call: CustomMethod}    ; → avoided by convention; Object() is preferred
+```
+
+## TIER 2 — Dynamic Getters and Setters: Computed and Validated Properties
+> METHODS COVERED: Object() · DefineProp() · .Get (descriptor key) · .Set (descriptor key) · Type()
+
+Get descriptors execute when a property is read; Set descriptors execute on assignment. Together they create computed, validated, or read-only property behaviour without storing the logic-driven value directly on the object. Both functions must accept the object instance as their first parameter.
+```ahk
+GetterFunc(Obj) {
+    return Obj._HiddenValue * 2
+}
+
+SetterFunc(Obj, AssignedValue) {
+    ; ✓ Type() returns a string — != is the correct AHK v2 not-equal operator
+    if (Type(AssignedValue) != "Integer") {
+        throw TypeError("Only integers allowed.")
     }
-    
-    ; define a call descriptor
-    PropertyDescriptor := Object()
-    PropertyDescriptor.Call := Method
-    
-    ; assign custom method to the object
-    Obj := {}
-    Obj.DefineProp("Test", PropertyDescriptor)
-    
-    ; implicitly calls Method(Obj, 42, "foo")
-    Obj.Test(42, "foo")
-    ```
+    Obj._HiddenValue := AssignedValue
+}
 
-    </EXAMPLE>
-  </CALL_DESCRIPTOR>
-  <GET_DESCRIPTOR>
-    <SUMMARY>
-    A get-descriptor is used for creating dynamic properties, executed whenever the object's property is being evaluated in an expression.
-    </SUMMARY>
-    <PARAMETERS>
-    Its first parameter is always a reference to the relevant object ("`this`"), followed by zero or more parameters passed between square brackets.
-    </PARAMETERS>
-    <EXAMPLE>
+MyData := Object()
+MyData._HiddenValue := 10
 
-    ```cpp
-    Getter(Obj, Args*) {
-        ; ...
+; ✓ Separate descriptor keys for Get and Set on the same property
+PropDesc := Object()
+PropDesc.Get := GetterFunc
+PropDesc.Set := SetterFunc
+
+MyData.DefineProp("Doubled", PropDesc)
+
+; ✓ Triggers GetterFunc(MyData) — returns _HiddenValue * 2
+CurrentVal := MyData.Doubled
+
+; ✓ Triggers SetterFunc(MyData, 50) — validates then stores in _HiddenValue
+MyData.Doubled := 50
+
+; ✗ Assigning a non-integer raises TypeError via SetterFunc — expected behaviour
+; MyData.Doubled := "String"          ; → TypeError("Only integers allowed.")
+
+; ✗ Omitting the Obj parameter shifts AssignedValue into the wrong slot
+; SetterFunc(AssignedValue) { ... }   ; → AssignedValue receives the object instance silently
+```
+
+## TIER 3 — Existence Guards: Safe Property and Method Validation
+> METHODS COVERED: HasProp() · HasMethod() · IsObject() · DefineProp() · Object()
+
+Before mutating a prototype or redefining a property, always validate that the target is an object and that the property does not already exist. `HasProp` and `HasMethod` prevent destructive overwrites; `IsObject` prevents MethodError when the target arrives from an untyped source.
+```ahk
+SafeDefineMethod(TargetObj, MethodName, FuncRef) {
+    ; ✓ IsObject() guards against non-object inputs before any property access
+    if !IsObject(TargetObj) {
+        throw TypeError("Target must be an object.")
     }
 
-    ; create a get-descriptor.
-    PropertyDescriptor := Object()
-    PropertyDescriptor.Get := Getter
-    
-    ; assign custom property to the object
-    Obj := {}
-    Obj.DefineProp("Test", PropertyDescriptor)
-    
-    ; implicitly calls Getter(Obj, "foo", "bar")
-    Obj.Test["foo", "bar"]
-    ```
-
-    </EXAMPLE>
-  </GET_DESCRIPTOR>
-  <SET_DESCRIPTOR>
-    <SUMMARY>
-    A set-descriptor is used for creating dynamic properties, executed whenever the object's property is being changed.
-    </SUMMARY>
-    <PARAMETERS>
-    Its first parameter is always a reference to the relevant object ("`this`"), followed by the value that is being assigned, and zero or more parameters passed between square brackets.
-    </PARAMETERS>
-    <EXAMPLE>
-
-    ```cpp
-    Setter(Obj, AssignedValue, Args*) {
-        ; ...
+    ; ✓ HasMethod() checks for an existing Call descriptor before overwriting
+    if TargetObj.HasMethod(MethodName) {
+        return false
     }
-    
-    ; create a set-descriptor
-    PropertyDescriptor := Object()
-    PropertyDescriptor.Set := Setter
-    
-    Obj := Object()
-    Obj.DefineProp("Test", PropertyDescriptor)
-    
-    ; implicitly calls Setter(Obj, "bar", "foo")
-    Obj["foo"] := "bar"
-    ```
 
-    </EXAMPLE>
-  </SET_DESCRIPTOR>
-  <VALUE_DESCRIPTOR>
-    <SUMMARY>
-    A value-descriptor resembles a regular, mutable field. A direct use of value-descriptors should usually be avoided.
-    </SUMMARY>
-    <PARAMETERS>
-    none
-    </PARAMETERS>
-    <EXAMPLE>
+    Desc := Object()
+    Desc.Call := FuncRef
+    TargetObj.DefineProp(MethodName, Desc)
+    return true
+}
 
-    ```cpp
-    Obj := Object()
-    Obj.DefineProp("Test", { Value: 42 })
-    
-    MsgBox(Obj.Test) ; 42
-    Obj.Test := 23
-    MsgBox(Obj.Test) ; 23
-    ```
+SayHello(Obj) {
+    return "Hello"
+}
 
-    <EXAMPLE>
-  </VALUE_DESCRIPTOR>
-</PROPERTY_DESCRIPTORS>
+TestObj := Object()
+; ✓ Returns true and defines "Speak" — method was absent
+Success := SafeDefineMethod(TestObj, "Speak", SayHello)
 
-<CLOSURES>
-  <EXPLANATION>
-  A closure is a nested function bound to a set of free variables.
-  They allow one or more nested functions to share variables with the outer function even after the outer function returns.
-  </EXPLANATION>
-  <USE_CASES>
-  Closures let you make these behaviors context-aware.
-  They can capture configuration, precomputed values, or even whole strategies, without cluttering the object itself.
-  It's essentially a way of smuggling state into a function without having to stick it on an object or pass it
-  around explicitly.
-  
-  The best use cases for closures in property descriptors include:
-  
-  - baking in constants, caching logic, or context-specific computations. Each property can "remember" its own private rules
-  - enforcing validation rules for parameters, side effects, or transformations
-  - dynamically generating methods that retain private state across calls, like counters, caches, or even memoization
-  </USE_CASES>
-  <ADVANTAGES>
-  The big win is decoupling: instead of jamming state into the object (where it risks collisions or complexity), closures
-  let you keep it tucked safely inside the descriptor’s function scope. That way, the object stays clean and minimal,
-  while the behavior stays richly customized.
-  </ADVANTAGES>
-  <EXAMPLE>
-  
-  ```cpp
-  ; creates a closure that always returns `ReturnValue`
-  CreateConstantGetter(ReturnValue) {
-      return ConstantGetter
-  
-      ConstantGetter(Obj) {
-          return ReturnValue
-      }
-  }
-  
-  ; create a closure to be used as get-descriptor
-  PropertyDescriptor := Object()
-  PropertyDescriptor.Get := CreateConstantGetter("foo")
-  
-  ; define the custom property to the object
-  Obj := Object()
-  Obj.DefineProp("Test", PropertyDescriptor)
-  
-  MsgBox(Obj.Test) ; "foo"
-  ```
-  
-  </EXAMPLE>
-</CLOSURES>
+; ✓ Returns false without overwriting — method is now present
+Success2 := SafeDefineMethod(TestObj, "Speak", SayHello)
 
-## Advanced Patterns
+; ✗ Calling DefineProp without HasMethod guard silently overwrites existing methods
+; TargetObj.DefineProp(MethodName, Desc)  ; → destroys existing Call descriptor with no warning
+```
 
-<OVERVIEW>
-You can build powerful custom properties and methods through function composition and closures.
-This section supplies you with commonly used patterns and its example code.
-</OVERVIEW>
+## TIER 4 — Closure Factories: Context-Aware Properties Without State Pollution
+> METHODS COVERED: Object() · DefineProp() · .Get (descriptor key)
 
-<CONSTANT_GETTER>
-  <EXPLANATION>
-  The most prevalent pattern. It creates a readonly property that returns a constant value when evaluated.
-  </EXPLANATION>
-  <EXAMPLE>
+Closures let a descriptor function capture outer variables at definition time, keeping captured state isolated from the object instance. The factory function returns an inner function that closes over the factory's parameters. This tier demonstrates injecting read-only context (such as a version string) into a property without storing it as a visible field on the object.
+```ahk
+; ✓ Factory returns a closure — the inner function captures ReturnValue at call time
+CreateConstantGetter(ReturnValue) {
+    return ConstantGetter
 
-  ```cpp
-  CreateConstantGetter(Value) {
-      return ConstantGetter()
+    ; ✓ Inner function closes over ReturnValue; Obj is the mandatory first param
+    ConstantGetter(Obj) {
+        return ReturnValue
+    }
+}
 
-      ConstantGetter(Obj) {
-          return Value
-      }
-  }
+ApplyVersion(TargetObj, VersionStr) {
+    Desc := Object()
+    ; ✓ Desc.Get holds the closure — each call to ApplyVersion captures its own VersionStr
+    Desc.Get := CreateConstantGetter(VersionStr)
+    TargetObj.DefineProp("Version", Desc)
+}
 
-  PropertyDescriptor := Object()
-  PropertyDescriptor.Get := CreateConstantGetter("Foo")
+AppObj := Object()
+ApplyVersion(AppObj, "1.0.4")
 
-  Obj := Object()
-  Obj.DefineProp("Test", PropertyDescriptor)
+; ✓ Triggers ConstantGetter(AppObj) — returns "1.0.4" without AppObj._Version existing
+CurrentVer := AppObj.Version
 
-  ; implicitly calls ConstantGetter(Obj), returning "Foo"
-  MsgBox(Obj.Test)
-  ```
+; ✗ Storing state directly on the instance leaks implementation details to callers
+; AppObj._Version := "1.0.4"          ; → caller can read and modify _Version directly
+```
 
-  </EXAMPLE>
-</CONSTANT_GETTER>
+## TIER 5 — Method Decorators: Non-Destructive Interception and Augmentation
+> METHODS COVERED: HasProp() · DefineProp() · Object() · .Call (descriptor key) · .Bind()
 
-<DECORATOR>
-  <EXPLANATION>
-  A pattern in which a previously defined function is extended with additional functionality, dynamically,
-  without affecting the behavior of the underlying code.
-  </EXPLANATION>
+Decorators wrap an existing function in a new closure that injects pre- or post-execution logic (logging, timing, access control) without touching the original function's source. The decorator returns a new function that calls the original internally, preserving its semantics while extending its behaviour.
+```ahk
+WithCallCounter(OriginalMethod) {
+    return LoggedMethod
 
-  <EXAMPLE>
+    ; ✓ LoggedMethod captures OriginalMethod from the outer scope via closure
+    LoggedMethod(Obj, Args*) {
+        ; ✓ HasProp() guard prevents overwriting an existing counter
+        if !Obj.HasProp("CallCount") {
+            Obj.CallCount := 0
+        }
 
-  ```cpp
-  WithCounter(Callback) {
-      return Logged
+        ; Side-effect: increment counter on every invocation
+        Obj.CallCount++
 
-      Logged(Obj, Args*) {
-          ; cause a side-effect
-          Obj.Count++
-          return Callback(Obj, Args*)
-      }
-  }
-  ```
+        ; ✓ Forwards all arguments to OriginalMethod — decorator is fully transparent
+        return OriginalMethod(Obj, Args*)
+    }
+}
 
-  </EXAMPLE>
-</DECORATOR>
+BaseAction(Obj, Val) {
+    return Val * 10
+}
 
-## Creating New Classes at Runtime
+Worker := Object()
+Desc := Object()
+; ✓ Wraps BaseAction — Worker.Process now counts calls without modifying BaseAction
+Desc.Call := WithCallCounter(BaseAction)
+Worker.DefineProp("Process", Desc)
 
-<CLASS_GENERATION>
-  <EXPLANATION>
-  Use the CreateClass() helper function to create new classes at runtime.
-  This function fails, if the current version is below v2.1-alpha.3, AND if
-  the base class is based on any other native type except for Object and Class.
-  </EXPLANATION>
-  <EXAMPLE>
-  
-  ```cpp
-  CreateClass(BaseClass := Object, Name := "(unnamed)") {
-      if (VerCompare(A_AhkVersion, "v2.1-alpha.3") >= 0) {
-          Cls := Class(BaseClass)
-      } else {
-          Cls := Class()
-          Cls.Prototype := Object()
-          ObjSetBase(Cls, BaseClass)
-          ObjSetBase(Cls.Prototype, BaseClass.Prototype)
-      }
-      Cls.Prototype.__Class := Name
-      return Cls
-  }
-  ```
-  
-  </EXAMPLE>
-</CLASS_GENERATION>
+Worker.Process(5)
+Worker.Process(10)
+; ✓ Worker.CallCount is now 2
 
-<NESTED_CLASS_GENERATION>
-  <EXPLANATION>
-  Use the DefineNestedClass() function to define a nested class for the given enclosing class.
-  This function uses CreateClass() as dependancy.
-  </EXPLANATION>
-  <EXAMPLE>
-  
-  ```cpp
-  DefineNestedClass(OuterClass, PropertyName, BaseClass := Object) {
-      ClassName := OuterClass.Prototype.__Class . "." . PropertyName
-      ; create a new class
-      InnerClass := CreateClass(BaseClass, ClassName)
-  
-      ; attach as nested class to the outer enclosing class
-      OuterClass.DefineProp(PropertyName, {
-          Get: (_) => InnerClass,
-          Call: (_, Args*) => InnerClass(Args*)
-      })
-  }
-  ```
-  
-  </EXAMPLE>
-</NESTED_CLASS_GENERATION>
+; ✗ Modifying BaseAction directly to add logging destroys the original implementation
+; BaseAction(Obj, Val) { Obj.CallCount++ \| return Val * 10 }  ; → not reversible, mixes concerns
+```
+
+### Performance Notes
+
+`DefineProp` carries a one-time overhead at the moment of assignment — not per access. Once attached, property lookup through a descriptor follows the normal prototype chain with no additional cost beyond the function call itself.
+
+**Closure memory cost:** Every closure object allocates a separate activation record capturing its outer variables. Creating a new closure inside a per-instance factory (e.g., inside a loop over thousands of objects) multiplies this allocation. Prefer defining the function statically and binding context via `.Bind()` instead.
+```ahk
+; ✗ New closure per instance — high memory footprint when called thousands of times
+AttachSlowMethod(Obj, Prefix) {
+    Desc := Object()
+    ; Each call to AttachSlowMethod allocates a new anonymous function object
+    Desc.Call := (this) => Prefix . this.Name
+    Obj.DefineProp("Read", Desc)
+}
+
+; ✓ Static function + Bind — one function object shared; only the BoundFunc is allocated per instance
+StaticReader(Prefix, this) {
+    return Prefix . this.Name
+}
+
+AttachFastMethod(Obj, Prefix) {
+    Desc := Object()
+    ; ✓ Bind(Prefix) produces a lightweight BoundFunc; StaticReader itself is allocated once
+    Desc.Call := StaticReader.Bind(Prefix)
+    Obj.DefineProp("Read", Desc)
+}
+```
+
+**Prototype chain depth:** Each property lookup walks the prototype chain from instance to base. Dynamically constructed chains that are 4+ levels deep degrade lookup to O(N) where N is chain depth. Keep runtime-generated hierarchies shallow; prefer composition (attaching methods to a single prototype) over deep inheritance.
+
+**Built-in method preference:** AHK v2's native `HasProp` and `HasMethod` are implemented in native code and are faster than any custom existence-check loop. Always prefer them over manual property enumeration.
+
+## TIER 6 — Runtime Class Generation: v2.0-Compatible Dynamic Class Factory
+> METHODS COVERED: Object() · ObjSetBase() · DefineProp() · HasMethod() · .Call (descriptor key)
+
+Because `Class()` in AHK v2.0 produces an incomplete object with no `Call` method and is not a subclass of Object, a fully functional dynamic class requires manual prototype chain construction. A plain `Object()` acts as the class object; a separate `Object()` acts as its prototype. A custom `Call` descriptor on the class object handles instantiation — replicating the behaviour AHK normally performs when a compiled class is invoked.
+```ahk
+; ✓ v2.0-compatible runtime class factory — no alpha features required
+CreateDynamicClass(ClassName) {
+    DynamicClass := Object()
+    DynamicClass.Prototype := Object()
+    DynamicClass.Prototype.__Class := ClassName
+
+    ; ✓ Call descriptor makes DynamicClass() callable as a constructor
+    ConstructorDesc := Object()
+    ConstructorDesc.Call := DynamicClass_Call
+    DynamicClass.DefineProp("Call", ConstructorDesc)
+
+    return DynamicClass
+}
+
+; ✓ Replicates AHK's standard instance creation workflow
+DynamicClass_Call(Cls, Args*) {
+    Instance := Object()
+    ; ✓ ObjSetBase links the instance to the class prototype — enables method lookup
+    ObjSetBase(Instance, Cls.Prototype)
+
+    ; ✓ HasMethod() guards — only call if defined; avoids MethodError on bare instances
+    if Instance.HasMethod("__Init") {
+        Instance.__Init()
+    }
+    if Instance.HasMethod("__New") {
+        Instance.__New(Args*)
+    }
+    return Instance
+}
+
+; Usage: create a new type at runtime
+MyDynamicType := CreateDynamicClass("RuntimeEntity")
+
+; ✓ Attach a method to the shared prototype — all instances inherit it
+MethodDesc := Object()
+MethodDesc.Call := (this) => "I am a " . this.__Class
+MyDynamicType.Prototype.DefineProp("Identify", MethodDesc)
+
+; ✓ Instantiate via the Call descriptor — no 'new' keyword
+EntityInst := MyDynamicType()
+EntityClass := EntityInst.__Class   ; "RuntimeEntity"
+EntityId    := EntityInst.Identify() ; "I am a RuntimeEntity"
+
+; ✗ Class(BaseObj) is a v2.1-alpha feature — produces unusable object in v2.0 stable
+; DynamicClass := Class(BaseObj)      ; → no .Call method; cannot be invoked as constructor
+
+; ✗ 'new' keyword does not exist in AHK v2
+; EntityInst := new MyDynamicType()   ; → parse error
+```
+
+## ANTI-PATTERNS
+
+| Pattern | Wrong | Correct | LLM Common Cause |
+|---------|-------|---------|------------------|
+| Object literal as descriptor | `DefineProp("X", {Get: MyFunc})` | `d := Object()` then `d.Get := MyFunc` then `DefineProp("X", d)` | AHK v1 and general OOP training data treat `{}` as universal object constructor; this module mandates Object() for descriptor clarity, even though both are accepted by DefineProp in AHK v2 |
+| Missing `this` parameter in descriptor function | `GetterFunc()` with no params | `GetterFunc(Obj)` where `Obj` is the injected instance | Cross-language habit — Python/JS descriptors often use implicit self/this binding; AHK v2 passes it explicitly as first arg |
+| Using `Class(BaseObj)` in stable scripts | `DynamicClass := Class(BaseObj)` | Manual prototype chain with `ObjSetBase()` | LLM training data includes v2.1-alpha documentation; model cannot distinguish alpha from stable features |
+| Multi-line fat-arrow in descriptor | `(Obj) => { x := 1 \| return x }` | Named function block `MyFunc(Obj) { x := 1 \| return x }` | JavaScript and Python both support multi-line lambda/arrow bodies; AHK v2 fat-arrow is single-expression only |
+| Overusing DefineProp where `extends` suffices | Copying methods via DefineProp loop to share behaviour | `class Child extends Parent { }` | LLM pattern-matches "runtime flexibility" to metaprogramming even when static inheritance is simpler and faster |
+| Using `new` keyword | `new ClassName()` | `ClassName()` | AHK v1 required `new`; dominant OOP training data (Java, C#, JS) reinforces the keyword |
+| Modifying built-in prototypes | `Array.Prototype.DefineProp("Sum", d)` | Wrapper class or standalone function | LLM training data includes JavaScript prototype extension patterns; AHK v2 built-in pollution is global and irreversible |
+
+## SEE ALSO
+
+> This module does NOT cover: static `class` definitions, `extends` inheritance, or `__Item` / `__Enum` meta-function patterns → see Module_Classes.md
+> This module does NOT cover: base Object API, prototype chain inspection, or ObjGetBase() traversal → see Module_Objects.md
+> This module does NOT cover: try/catch patterns for DefineProp failures, TypeError construction, or custom error hierarchies → see Module_Errors.md
+
+- `Module_Classes.md` — static class definitions, `extends` inheritance, meta-functions (`__New`, `__Delete`, `__Get`, `__Set`), and `super` dispatch.
+- `Module_Objects.md` — base Object API (`ObjGetBase`, `ObjSetBase`, `ObjOwnProps`), prototype chain traversal, and raw object construction patterns.
+- `Module_Errors.md` — try/catch patterns for runtime DefineProp failures, TypeError and ValueError construction, and custom exception class hierarchies.

@@ -1,138 +1,139 @@
-<ROLE_INTEGRATION>
-You are the same elite AutoHotkey v2 engineer from module_instructions.md. This Module_Arrays.md provides specialized array knowledge that extends your core capabilities. 
+﻿# Module_Arrays.md
+<!-- DOMAIN: Arrays -->
+<!-- SCOPE: Key-value storage with Map(), deep-clone of circular-reference graphs, GUI control binding, and file-path batch operations are not covered — see Module_Objects.md, Module_GUI.md, and Module_FileSystem.md respectively. -->
+<!-- TRIGGERS: array, list, collection, sort, filter, reduce, "store multiple values", "iterate collection", "remove duplicates", "deep copy", "transform elements", ArrayMap, QuickSort, Unique, IndexOf -->
+<!-- CONSTRAINTS: Arrays are 1-based — arr[0] is never the first element (it throws or returns unset). Array objects have NO built-in .Sort() method; use a custom QuickSort() with a comparator callback. Array(N) does NOT pre-allocate N slots — it creates [N] (an array containing the value N); use arr.Capacity := N instead. Fat-arrow functions with block bodies `(x) => { return x }` are invalid in AHK v2.0; use named nested functions for multi-statement callbacks. -->
+<!-- CROSS-REF: Module_Objects.md, Module_Errors.md, Module_GUI.md, Module_Functions.md -->
+<!-- VERSION: AHK v2.0+ -->
 
-When users request array operations, data transformations, or functional programming patterns:
-1. Continue following ALL rules from module_instructions.md (thinking tiers, syntax validation, OOP principles)
-2. Use this module's patterns and tier system for array-specific operations
-3. Apply the same cognitive tier escalation ("think hard", "think harder", "ultrathink") when dealing with complex array scenarios
-4. Maintain the same strict syntax rules, error handling, and code quality standards
-5. Reference the specific array patterns from this module while keeping the overall architectural approach from the main instructions
+## V1 → V2 BREAKING CHANGES
 
-This module does NOT replace your core instructions - it supplements them with specialized array expertise.
-</ROLE_INTEGRATION>
+| v1 pattern (LLM commonly writes) | v2 correct form | Consequence |
+|----------------------------------|-----------------|-------------|
+| `array[0]` for first element | `array[1]` | Throws `IndexError` — 0 is not a valid Array index in v2 |
+| `array.Sort()` called directly | Custom `QuickSort(array, comparator?)` | `TypeError` — Array objects have no built-in `.Sort()` method in v2 |
+| `Array(10)` to pre-allocate 10 slots | `arr := [], arr.Capacity := 10` | Creates `[10]` — a one-element array containing the value `10`, not 10 empty slots |
+| `new Array()` constructor syntax | `Array()` or `[]` literal | `SyntaxError` — `new` keyword was dropped for built-in types in v2 |
+| `(x) => { return x * 2 }` fat-arrow block body | Named nested function inside the caller | `SyntaxError` in v2.0 — block bodies on fat-arrow functions are a v2.1 alpha feature only |
+| `for i, v in array` assuming `i` starts at 0 | `i` starts at `1` — first iteration yields `i = 1` | Off-by-one logic errors throughout loop body |
+| User-defined function named `Map` | Rename to `ArrayMap` | Shadows the built-in `Map` class — `Map()` calls in scope will fail with `TypeError` |
 
-<MODULE_OVERVIEW>
-Arrays in AHK v2 are 1-based, dynamic collections that store variant-typed values.
-This module covers creation, manipulation, transformations, and advanced patterns.
+## API QUICK-REFERENCE
 
-CRITICAL RULES:
-- Arrays use 1-based indexing (first element is array[1])
-- Use Array() constructor or [] literal syntax for creation
-- All array methods return new arrays unless explicitly mutating (Push, Pop, etc.)
-- Use Type(obj) = "Array" to verify array objects
-- Prefer built-in methods (.Sort, .Clone) over custom implementations when available
+### Array (built-in)
+| Method / Property | Signature | Notes |
+|-------------------|-----------|-------|
+| `[]` literal | `[val1, val2, ...]` | Preferred creation syntax for known values |
+| `Array()` | `Array(val*)` | Constructor; `Array()` with no args creates empty array — `Array(N)` creates `[N]`, not N slots |
+| `.Push()` | `.Push(val*)` | Appends one or more values; no return value |
+| `.Pop()` | `.Pop()` | Removes and returns the last element; throws if empty |
+| `.InsertAt()` | `.InsertAt(index, val*)` | Inserts at 1-based position; negative index counts from end |
+| `.RemoveAt()` | `.RemoveAt(index, Length?)` | Removes `Length` elements starting at `index`; returns removed value when `Length` omitted |
+| `.Get()` | `.Get(index, default?)` | Safe access — returns `default` if index is unset; omitting `default` throws on missing |
+| `.Has()` | `.Has(index)` | Returns `true` if index exists and is not unset |
+| `.Delete()` | `.Delete(index)` | Marks element at index as unset without shifting other elements |
+| `.Clone()` | `.Clone()` | Shallow copy — nested objects are shared, not duplicated |
+| `.Length` | `.Length` | Readable and writable; setting lower truncates, setting higher adds unset slots |
+| `.Capacity` | `.Capacity` | Pre-allocate backing storage without adding elements; avoids repeated realloc on `.Push()` |
+| `__Enum` | `for index, value in array` | 2-var enumeration yields 1-based index and value; `for value in array` yields value only |
 
-INTEGRATION WITH MAIN INSTRUCTIONS:
-- Array complexity triggers "think harder" or "ultrathink" cognitive tiers
-- Complex nested operations or performance requirements escalate thinking levels
-- All syntax validation rules from module_instructions.md still apply
-- Array operations must follow the same OOP principles and error handling standards
-</MODULE_OVERVIEW>
+### Global Functions Used with Arrays
+| Function | Signature | Notes |
+|----------|-----------|-------|
+| `Type()` | `Type(obj)` | Returns `"Array"` for Array objects — the canonical type guard |
+| `IsObject()` | `IsObject(val)` | Returns `true` for any object including Array, Map, user classes |
+| `IsSet()` | `IsSet(var)` | Tests whether a variable or optional parameter was assigned a value |
+| `Mod()` | `Mod(dividend, divisor)` | Integer modulus — used in filter predicates and chunking |
 
-<ARRAY_DETECTION_SYSTEM>
+### Module Utility Functions (defined in this module)
+| Function | Signature | Notes |
+|----------|-----------|-------|
+| `IsValidIndex()` | `IsValidIndex(array, index)` | Returns `true` if `index` is in the 1-based valid range |
+| `GetRange()` | `GetRange(array, start, end)` | Returns a new array slice from `start` to `end` (inclusive, 1-based) |
+| `SafeInsert()` | `SafeInsert(array, index, value)` | Clamps `index` to valid range then calls `.InsertAt()` |
+| `RemoveValue()` | `RemoveValue(array, value)` | Removes all occurrences of `value` in-place; returns the mutated array |
+| `IndexOf()` | `IndexOf(array, value, fromIndex?)` | Returns 1-based index or `0` if not found |
+| `LastIndexOf()` | `LastIndexOf(array, value)` | Scans right-to-left; returns 1-based index or `0` |
+| `Contains()` | `Contains(array, value)` | Boolean wrapper around `IndexOf()` |
+| `FindIndex()` | `FindIndex(array, callback)` | Returns first index where `callback(value, index, array)` is truthy, else `0` |
+| `ArrayMap()` | `ArrayMap(array, callback)` | Returns new array of `callback(value, index, array)` results — immutable style |
+| `Filter()` | `Filter(array, callback)` | Returns new array of elements where `callback(value, index, array)` is truthy |
+| `Reduce()` | `Reduce(array, callback, initialValue?)` | Folds array into single value; throws if array empty and no `initialValue` |
+| `DeepClone()` | `DeepClone(obj)` | Recursively copies Array, Map, and Object graphs — does not handle circular references |
+| `QuickSort()` | `QuickSort(array, callback?, left?, right?)` | In-place sort; `callback(a, b)` returns negative/zero/positive |
+| `SortBy()` | `SortBy(array, fields*)` | Multi-field sort on arrays of Map objects |
+| `Unique()` | `Unique(array)` | Returns new array with duplicates removed, preserving first-seen order |
+| `UniqueBy()` | `UniqueBy(array, keyFunc)` | Deduplication using a custom key extractor callback |
+| `FastContains()` | `FastContains(array, value)` | Builds a Map lookup for O(1) membership test — use when querying the same array repeatedly |
+| `ModifyInPlace()` | `ModifyInPlace(array, modifier)` | Applies `modifier(value)` to every element without allocating a new array |
+| `Difference()` | `Difference(array1, array2)` | Elements in `array1` not present in `array2` |
+| `Intersection()` | `Intersection(array1, array2)` | Elements present in both arrays; each pair matched once |
+| `Union()` | `Union(arrays*)` | Merged unique elements from all input arrays |
+| `Without()` | `Without(array, excludeValues*)` | Array minus the explicitly listed values |
 
-<EXPLICIT_TRIGGERS>
-Reference this module when user mentions:
-"array", "list", "collection", "sequence", "set", "group", "batch", "items", "elements", 
-"data structure", "transform", "filter", "map", "reduce", "sort", "search", "find",
-"chunk", "flatten", "unique", "duplicate", "combine", "merge", "split", "join"
-</EXPLICIT_TRIGGERS>
+## AHK V2 CONSTRAINTS
 
-<IMPLICIT_TRIGGERS>
-Reference this module when user describes:
+- **1-based indexing is mandatory** — `array[1]` is the first element; `array[0]` is always wrong and always throws `IndexError` — every loop counter, range boundary, and index calculation must start from 1.
+- **No built-in `.Sort()`** — calling `array.Sort()` throws `TypeError`; use the module's `QuickSort(array, comparator?)` with an optional `(a, b) => a - b` numeric comparator or `(a, b) => b - a` for reverse.
+- **`Array(N)` ≠ pre-allocation** — `Array(10)` creates a one-element array `[10]`; pre-allocate with `arr := [], arr.Capacity := 10` to reserve backing storage without inserting elements.
+- **No fat-arrow block bodies in v2.0** — `(x) => { return x * 2 }` is a v2.1 alpha construct; any multi-statement callback must be a named nested function (closure) defined inside the calling function.
+- **Never name a user function `Map`** — this shadows the built-in `Map` class globally within scope, breaking all `Map()` constructor calls with `TypeError`.
+- **`.Clone()` is shallow** — nested arrays or Map objects share the same reference; mutating a nested element in the clone also mutates the original — use `DeepClone()` for full independence.
+- **Do not modify an array while iterating it with `for`** — removing elements during `for index, value in array` corrupts the enumeration; use a `while`-loop with manual index management or iterate over `.Clone()`.
 
-STORAGE_PATTERNS:
-- "store multiple values" → Array needed
-- "keep track of several items" → Array needed  
-- "list of files/paths/names" → Array needed
-- "collection of results" → Array needed
-- "group related data" → Array needed
-- "series of steps/actions" → Array needed
+Safe-access priority order for Array elements:
+```
+1. .Get(index, default)   — optional slot, one-line resolution, never throws
+2. .Has(index)            — when the present/absent branch logic differs meaningfully
+3. arr.Length guard       — when IsValidIndex check before direct access is clearest
+4. try/catch              — only when the exception itself carries diagnostic information
+```
 
-PROCESSING_PATTERNS:
-- "do something to each item" → Map/Filter operation
-- "find items that match" → Filter operation
-- "get only unique values" → Unique operation
-- "combine/merge data sources" → Union/Concat operation
-- "remove certain items" → Filter/Without operation
-- "sort by criteria" → Sort operation
-- "group into batches" → Chunk operation
+Pair every prohibition with its consequence and positive alternative:
 
-GUI_INTEGRATION_PATTERNS:
-- "populate ListView/ComboBox/DDL" → Array as data source
-- "dynamic menu items" → Array of options
-- "multiple buttons/controls" → Array to manage controls
-- "iterate through GUI elements" → Array of control references
+- ✗ `val := array[idx]` — `UnsetItemError` if the slot was `.Delete()`d or never set  
+- ✓ `val := array.Get(idx, "fallback")` — safe, never throws, one line
 
-FILE_OPERATION_PATTERNS:
-- "process multiple files" → Array of file paths
-- "batch operations" → Array processing
-- "directory listing" → Array of entries
-- "parse CSV/TSV data" → Array of rows/columns
+- ✗ `arr.Sort()` — `TypeError`: no such method on Array  
+- ✓ `QuickSort(arr)` or `QuickSort(arr, (a,b) => a - b)` for numeric order
 
-FUNCTIONAL_PATTERNS:
-- "apply function to each" → Map operation
-- "calculate total/sum/average" → Reduce operation
-- "check if any/all match" → Some/Every pattern
-- "transform data format" → Map/Transform operation
-- "pipeline operations" → Chained array methods
+- ✗ `arr := Array(10)` — creates `[10]`, not 10 empty slots  
+- ✓ `arr := [], arr.Capacity := 10` — reserves 10 slots, `.Length` stays 0
 
-PERFORMANCE_INDICATORS:
-- "handle large datasets" → Performance-optimized array patterns
-- "memory efficient" → In-place operations or streaming
-- "process in batches" → Chunked processing
-- "avoid duplicates" → Set-like operations with arrays
-</IMPLICIT_TRIGGERS>
+## TIER 1 — Fundamentals: Creation, Access, and Type Verification
+> METHODS COVERED: `[]` · `Array()` · `.Length` · `.Capacity` · `.Get()` · `Type()` · `IsValidIndex()` · `GetRange()`
 
-<DETECTION_PRIORITY>
-1. EXPLICIT keywords → Direct Module_Arrays.md reference
-2. IMPLICIT patterns → Evaluate if arrays provide optimal solution
-3. PERFORMANCE concerns → Consider array-based optimizations
-4. GUI data binding → Arrays for dynamic content
-5. MULTIPLE similar operations → Array processing approach
-</DETECTION_PRIORITY>
-
-<ANTI_PATTERNS>
-Do NOT use arrays when:
-- Single values or simple key-value pairs → Use variables or Map()
-- Configuration settings → Use Map() or object properties
-- Unique lookup requirements → Use Map() for O(1) access
-- Tree/hierarchical data → Use nested objects or custom classes
-- Event handlers → Use .Bind(this) patterns, not arrays
-</ANTI_PATTERNS>
-
-</ARRAY_DETECTION_SYSTEM>
-
-## TIER 1: Array Fundamentals
-
-<ARRAY_CREATION>
-<EXPLANATION>
-Use [] literals for known values, Array() constructor for dynamic creation. Arrays are 1-based, support mixed types, and have .Length property.
-</EXPLANATION>
-
-```cpp
+Arrays are 1-based dynamic collections that hold variant-typed values. Use `[]` literals for known values and `Array()` for programmatic construction. Pre-allocate backing storage with `.Capacity` when the final size is known; this avoids repeated heap reallocation during sequential `.Push()` calls. Always verify type with `Type(obj) = "Array"` — never rely on duck typing or `IsObject()` alone when the code path must reject Maps and plain Objects.
+```ahk
+; ✓ [] literal is the canonical v2 creation syntax for known values
 numbers := [1, 2, 3, 4, 5]
 strings := ["alpha", "beta", "gamma"]
-mixed := ["text", 42, true, [1, 2]]
-empty := []
+mixed   := ["text", 42, true, [1, 2]]    ; mixed types are supported
+empty   := []
 dynamic := Array()
-preAllocated := Array(10)
-isArray := Type(numbers) = "Array"
-length := numbers.Length
+
+; ✓ Capacity pre-allocates backing storage without inserting elements
+preAllocated := []
+preAllocated.Capacity := 10              ; .Length stays 0 — no elements added
+
+; ✗ Array(N) does NOT pre-allocate N slots — it inserts N as a value
+; dynamic := Array(10)                  ; → creates [10], .Length = 1
+
+; ✓ Type() is the authoritative guard — distinguishes Array from Map and Object
+isArray  := Type(numbers) = "Array"
+length   := numbers.Length
 hasItems := numbers.Length > 0
-```
-</ARRAY_CREATION>
 
-<ARRAY_ACCESS>
-<EXPLANATION>
-Direct indexing with boundary checking. Use .Get() for safe access with defaults.
-</EXPLANATION>
+; ✓ 1-based indexing — [1] is always the first element
+first  := numbers[1]
+last   := numbers[numbers.Length]
+middle := numbers[numbers.Length // 2]
 
-```cpp
-first := array[1]
-last := array[array.Length]
-middle := array[array.Length // 2]
-safe := array.Get(10, "default")
+; ✓ .Get() provides safe access with a fallback — never throws on missing index
+safe := numbers.Get(10, "default")
+
+; ✗ Direct index access on an unset slot throws UnsetItemError
+; val := numbers[99]                    ; → UnsetItemError if slot absent
 
 IsValidIndex(array, index) {
     return index >= 1 && index <= array.Length
@@ -147,21 +148,34 @@ GetRange(array, start, end) {
     return result
 }
 ```
-</ARRAY_ACCESS>
 
-## TIER 2: Array Mutation Operations
+## TIER 2 — Mutation: Add, Remove, and Clear
+> METHODS COVERED: `.Push()` · `.Pop()` · `.InsertAt()` · `.RemoveAt()` · `.Length` (setter) · `SafeInsert()` · `RemoveValue()`
 
-<ADDING_ELEMENTS>
-<EXPLANATION>
-Use .Push() for end operations, .InsertAt() for position-specific insertion. Negative indices work from end.
-</EXPLANATION>
-
-```cpp
+All built-in mutation methods operate in-place and shift elements automatically. `.Push()` and `.Pop()` are O(1) amortised at the tail. `.InsertAt()` and `.RemoveAt()` are O(n) because they shift subsequent elements. Setting `.Length := 0` clears in-place (preferred over reassignment when other references to the same array must also see it emptied).
+```ahk
+; ✓ Push appends one or multiple values in a single call
 array.Push(value)
 array.Push(val1, val2, val3)
-array.InsertAt(1, "first")
-array.InsertAt(3, "middle")
-array.InsertAt(-1, "beforeLast")
+
+; ✓ InsertAt uses 1-based position; negative index counts from end
+array.InsertAt(1, "first")          ; prepend
+array.InsertAt(3, "middle")         ; insert before index 3
+array.InsertAt(-1, "beforeLast")    ; insert before last element
+
+; ✓ Pop removes and returns the last element — use for stack patterns
+lastItem := array.Pop()
+
+; ✓ RemoveAt with count removes a range in one call
+array.RemoveAt(1)                   ; remove first element
+array.RemoveAt(3, 2)                ; remove elements at index 3 and 4
+array.RemoveAt(-1)                  ; remove last element
+
+; ✓ Length := 0 clears in-place — other references to the same array also see empty
+array.Length := 0
+
+; ✓ Reassignment creates a new array object — old reference is abandoned
+array := []
 
 SafeInsert(array, index, value) {
     if index < 1
@@ -171,43 +185,32 @@ SafeInsert(array, index, value) {
     array.InsertAt(index, value)
     return array
 }
-```
-</ADDING_ELEMENTS>
-
-<REMOVING_ELEMENTS>
-<EXPLANATION>
-Use .Pop() for end removal, .RemoveAt() for position-specific removal. Set .Length := 0 to clear.
-</EXPLANATION>
-
-```cpp
-lastItem := array.Pop()
-array.RemoveAt(1)
-array.RemoveAt(3, 2)
-array.RemoveAt(-1)
-array.Length := 0
-array := []
 
 RemoveValue(array, value) {
+    ; ✓ while-loop with manual index handles removal during iteration correctly
     index := 1
     while index <= array.Length {
         if array[index] = value
-            array.RemoveAt(index)
+            array.RemoveAt(index)   ; index stays the same after removal — next element shifts down
         else
             index++
     }
     return array
 }
+
+; ✗ Removing elements inside a for-in loop corrupts enumeration
+; for index, value in array {
+;     if value = target
+;         array.RemoveAt(index)     ; → skips elements and may throw IndexError
+; }
 ```
-</REMOVING_ELEMENTS>
 
-## TIER 3: Array Search and Validation
+## TIER 3 — Search, Predicates, and Type Guards
+> METHODS COVERED: `IndexOf()` · `LastIndexOf()` · `Contains()` · `FindIndex()` · `IsSet()` · `Type()`
 
-<SEARCH_OPERATIONS>
-<EXPLANATION>
-Standard search functions. IndexOf returns 0 if not found (1-based indexing). Use callbacks for complex predicates.
-</EXPLANATION>
-
-```cpp
+AHK v2 Array objects have no built-in search method. These module functions implement the standard search contract: return a 1-based index on success, `0` on failure — never `-1`, which is the v1/JavaScript convention. `FindIndex()` accepts a predicate callback, enabling arbitrary search criteria without writing a custom loop at the call site.
+```ahk
+; ✓ IndexOf returns 1-based index or 0 — never -1 (not the AHK v2 convention)
 IndexOf(array, value, fromIndex := 1) {
     loop array.Length - fromIndex + 1 {
         currentIndex := fromIndex + A_Index - 1
@@ -226,10 +229,12 @@ LastIndexOf(array, value) {
     return 0
 }
 
+; ✓ Contains is a boolean wrapper — use when only presence matters, not position
 Contains(array, value) {
     return IndexOf(array, value) > 0
 }
 
+; ✓ FindIndex takes a predicate callback — no need to write a custom loop per criterion
 FindIndex(array, callback) {
     for index, value in array {
         if callback(value, index, array)
@@ -238,26 +243,29 @@ FindIndex(array, callback) {
     return 0
 }
 
-predicate := (val, idx, arr) => val > 10
-firstLargeIndex := FindIndex(numbers, predicate)
+; ✓ Single-line fat-arrow callbacks are valid in v2.0
+predicate        := (val, idx, arr) => val > 10
+firstLargeIndex  := FindIndex(numbers, predicate)
+
+; ✗ Fat-arrow block bodies are invalid in AHK v2.0 — syntax error at runtime
+; predicate := (val, idx, arr) => {    ; → SyntaxError in v2.0
+;     return val > 10
+; }
 ```
-</SEARCH_OPERATIONS>
 
+## TIER 4 — Transformations: Clone, DeepClone, Map, Filter, Reduce
+> METHODS COVERED: `.Clone()` · `DeepClone()` · `ArrayMap()` · `Filter()` · `Reduce()` · `IsObject()` · `IsSet()` · `Type()`
 
-## TIER 4: Array Transformations and Functional Operations
-
-<COPYING_OPERATIONS>
-<EXPLANATION>
-Use .Clone() for shallow copies. DeepClone handles nested objects recursively.
-</EXPLANATION>
-
-```cpp
+`.Clone()` produces a shallow copy — sufficient when nested objects are read-only. `DeepClone()` recursively copies Array, Map, and plain Object graphs; it does not handle circular references. `ArrayMap()`, `Filter()`, and `Reduce()` follow an immutable style, each returning a new array rather than mutating the input. Name the map function `ArrayMap` — never `Map` — to avoid shadowing the built-in `Map` class.
+```ahk
+; ✓ .Clone() is the built-in shallow copy — prefer it over manual loop copies
 shallowCopy := array.Clone()
 
+; ✓ DeepClone recurses through Array, Map, and Object — not circular-reference safe
 DeepClone(obj) {
     if !IsObject(obj)
         return obj
-    
+
     switch Type(obj) {
         case "Array":
             result := []
@@ -276,22 +284,16 @@ DeepClone(obj) {
             return result
     }
 }
-```
-</COPYING_OPERATIONS>
 
-<FUNCTIONAL_OPERATIONS>
-<EXPLANATION>
-Map applies callbacks to each element, Filter keeps matching elements, Reduce accumulates values.
-</EXPLANATION>
-
-```cpp
-Map(array, callback) {
+; ✓ ArrayMap returns a new array — the original is never mutated
+ArrayMap(array, callback) {
     result := []
     for index, value in array
         result.Push(callback(value, index, array))
     return result
 }
 
+; ✓ Filter returns elements for which the predicate returns truthy
 Filter(array, callback) {
     result := []
     for index, value in array {
@@ -301,56 +303,81 @@ Filter(array, callback) {
     return result
 }
 
+; ✓ Reduce with IsSet(initialValue) handles both seeded and unseeded forms
 Reduce(array, callback, initialValue := unset) {
     startIndex := 1
     if !IsSet(initialValue) {
         if array.Length = 0
             throw Error("Reduce of empty array with no initial value")
         accumulator := array[1]
-        startIndex := 2
+        startIndex  := 2
     } else {
         accumulator := initialValue
     }
-    
+
     loop array.Length - startIndex + 1 {
-        index := startIndex + A_Index - 1
+        index       := startIndex + A_Index - 1
         accumulator := callback(accumulator, array[index], index, array)
     }
     return accumulator
 }
 
 numbers := [1, 2, 3, 4, 5]
-doubled := Map(numbers, (x) => x * 2)
-evens := Filter(numbers, (x) => Mod(x, 2) = 0)
-sum := Reduce(numbers, (acc, x) => acc + x)
+doubled := ArrayMap(numbers, (x) => x * 2)
+evens   := Filter(numbers, (x) => Mod(x, 2) = 0)
+sum     := Reduce(numbers, (acc, x) => acc + x)
+
+; ✗ Never name a function "Map" — it shadows the built-in Map class
+; Map(array, fn) { ... }               ; → subsequent Map() constructor calls throw TypeError
 ```
-</FUNCTIONAL_OPERATIONS>
 
+## TIER 5 — Sorting, Deduplication, and Performance Patterns
+> METHODS COVERED: `QuickSort()` · `SortBy()` · `Unique()` · `UniqueBy()` · `Map.Has()` · `Map.Delete()` · `FastContains()` · `ModifyInPlace()`
 
+Array objects have no built-in sort. `QuickSort()` sorts in-place using the Lomuto partition scheme; the optional comparator `(a, b)` must return negative for a-before-b, zero for equal, positive for b-before-a. `Unique()` and `UniqueBy()` use a Map as a seen-set, giving O(n) deduplication rather than O(n²) nested loops.
+```ahk
+QuickSort(array, callback := "", left := 1, right := unset) {
+    if !IsSet(right)
+        right := array.Length
+    if left >= right
+        return array
+    pivot := array[right]
+    i     := left - 1
+    loop right - left {
+        j   := left + A_Index - 1
+        cmp := callback ? callback(array[j], pivot) : (array[j] <= pivot ? -1 : 1)
+        if cmp <= 0 {
+            i++
+            temp     := array[i]
+            array[i] := array[j]
+            array[j] := temp
+        }
+    }
+    i++
+    temp         := array[i]
+    array[i]     := array[right]
+    array[right] := temp
+    QuickSort(array, callback, left, i - 1)
+    QuickSort(array, callback, i + 1, right)
+    return array
+}
 
-## TIER 5: Array Sorting and Advanced Search
-
-<SORTING_OPERATIONS>
-<EXPLANATION>
-Use built-in .Sort() with flags. Custom callbacks for complex sorting. SortBy supports multiple fields.
-</EXPLANATION>
-
-```cpp
 numbers := [3, 1, 4, 1, 5]
-numbers.Sort()
-numbers.Sort("N")
-numbers.Sort("R")
-numbers.Sort("NR")
+QuickSort(numbers)                              ; string comparison (default)
+QuickSort(numbers, (a, b) => a - b)             ; ascending numeric
+QuickSort(numbers, (a, b) => b - a)             ; descending numeric
+QuickSort(numbers, (a, b) => (b - a) != 0 ? b - a : 0)
 
 students := [
-    Map("name", "Alice", "grade", 85),
-    Map("name", "Bob", "grade", 92),
+    Map("name", "Alice",   "grade", 85),
+    Map("name", "Bob",     "grade", 92),
     Map("name", "Charlie", "grade", 78)
 ]
-students.Sort((a, b) => a["grade"] - b["grade"])
+QuickSort(students, (a, b) => a["grade"] - b["grade"])
 
+; ✓ SortBy uses a named nested closure — valid multi-statement callback in v2.0
 SortBy(array, fields*) {
-    return array.Sort((a, b) => {
+    Comparator(a, b) {
         for field in fields {
             aVal := a[field]
             bVal := b[field]
@@ -358,22 +385,16 @@ SortBy(array, fields*) {
                 return aVal < bVal ? -1 : 1
         }
         return 0
-    })
+    }
+    return QuickSort(array, Comparator)
 }
 
 SortBy(students, "grade", "name")
-```
-</SORTING_OPERATIONS>
 
-<UNIQUE_OPERATIONS>
-<EXPLANATION>
-Remove duplicates using Map for O(1) lookup. UniqueBy uses custom key functions for complex objects.
-</EXPLANATION>
-
-```cpp
+; ✓ Unique uses Map as O(n) seen-set — never use nested loops for deduplication
 Unique(array) {
     result := []
-    seen := Map()
+    seen   := Map()
     for item in array {
         if !seen.Has(item) {
             seen[item] := true
@@ -385,7 +406,7 @@ Unique(array) {
 
 UniqueBy(array, keyFunc) {
     result := []
-    seen := Map()
+    seen   := Map()
     for item in array {
         key := keyFunc(item)
         if !seen.Has(key) {
@@ -402,23 +423,47 @@ people := [
     Map("id", 1, "name", "Alice")
 ]
 uniquePeople := UniqueBy(people, (p) => p["id"])
+
+; ✓ FastContains: build lookup Map once for repeated membership tests in same dataset
+FastContains(array, value) {
+    lookupMap := Map()
+    for item in array
+        lookupMap[item] := true
+    return lookupMap.Has(value)
+}
+
+; ✓ ModifyInPlace avoids allocating a new array when mutation is intentional
+ModifyInPlace(array, modifier) {
+    for index, value in array
+        array[index] := modifier(value)
+    return array
+}
 ```
-</UNIQUE_OPERATIONS>
 
-## TIER 6: Array Set Operations and Advanced Combinations
+### Performance Notes
 
-<SET_OPERATIONS>
-<EXPLANATION>
-Difference, intersection, union, and exclusion using Map for efficient lookups.
-</EXPLANATION>
+**O(1) vs O(n) access:**  `.Push()` and `.Pop()` at the tail are O(1) amortised. `.InsertAt(1, …)` and `.RemoveAt(1)` at the head are O(n) — avoid them in tight loops on large arrays. Membership testing with a bare loop (`Contains()`) is O(n) per call; if the same array is queried repeatedly, build a `Map` lookup once (`FastContains()`) for O(1) per subsequent test.
 
-```cpp
+**In-place vs copy:** `ArrayMap()`, `Filter()`, and `Reduce()` always allocate a new array — appropriate for pipelines where the original must be preserved. When the original is no longer needed, `ModifyInPlace()` eliminates the allocation. For sorting, `QuickSort()` always sorts in-place; call `array.Clone()` first if the original order must be preserved.
+
+**Pre-allocation:** Set `arr.Capacity := expectedSize` before a loop that calls `.Push()` repeatedly. This avoids the exponential reallocation series that occurs when `.Capacity` is allowed to grow automatically. The `.Length` remains 0 until elements are actually pushed.
+
+**DeepClone cost:** `DeepClone()` is O(n) in total graph nodes and allocates one new container per node. Avoid calling it in hot loops or on large nested structures — share read-only sub-arrays as references using `.Clone()` when the nested data will not be mutated.
+
+**Map-backed deduplication:** `Unique()` and set operations (`Difference`, `Intersection`, `Union`) all build a Map as their seen-set, giving O(n + m) total complexity rather than O(n × m) for naive nested-loop implementations. This is the preferred pattern for any uniqueness or membership operation on arrays larger than a handful of elements.
+
+## TIER 6 — Set Operations: Difference, Intersection, Union, Without
+> METHODS COVERED: `Difference()` · `Intersection()` · `Union()` · `Without()` · `Map.Has()` · `Map.Delete()`
+
+Set operations are implemented with Map-backed seen-sets rather than nested loops, keeping time complexity O(n + m). `Intersection()` calls `.Delete()` on the seen-set after each match to prevent the same element from being counted twice when duplicates appear in `array2`. `Union()` accepts a variadic argument list so any number of arrays can be merged in one call.
+```ahk
+; ✓ Difference: elements in array1 that do not appear in array2 — O(n + m)
 Difference(array1, array2) {
     result := []
-    set2 := Map()
+    set2   := Map()
     for item in array2
         set2[item] := true
-    
+
     for item in array1 {
         if !set2.Has(item)
             result.Push(item)
@@ -426,24 +471,26 @@ Difference(array1, array2) {
     return result
 }
 
+; ✓ Intersection: .Delete() after match prevents double-counting array2 duplicates
 Intersection(array1, array2) {
     result := []
-    set2 := Map()
+    set2   := Map()
     for item in array2
         set2[item] := true
-    
+
     for item in array1 {
         if set2.Has(item) {
             result.Push(item)
-            set2.Delete(item)
+            set2.Delete(item)       ; consume the match — each pair matched once
         }
     }
     return result
 }
 
+; ✓ Union accepts variadic arrays — all inputs merged into one deduplicated result
 Union(arrays*) {
     result := []
-    seen := Map()
+    seen   := Map()
     for array in arrays {
         for item in array {
             if !seen.Has(item) {
@@ -455,11 +502,12 @@ Union(arrays*) {
     return result
 }
 
+; ✓ Without excludes a variadic list of values in a single pass
 Without(array, excludeValues*) {
     excludeSet := Map()
     for value in excludeValues
         excludeSet[value] := true
-    
+
     result := []
     for item in array {
         if !excludeSet.Has(item)
@@ -468,156 +516,51 @@ Without(array, excludeValues*) {
     return result
 }
 
-arr1 := [1, 2, 3, 4]
-arr2 := [3, 4, 5, 6]
-diff := Difference(arr1, arr2)
-inter := Intersection(arr1, arr2)
-union := Union(arr1, arr2)
-filtered := Without(arr1, 2, 4)
+arr1     := [1, 2, 3, 4]
+arr2     := [3, 4, 5, 6]
+diff     := Difference(arr1, arr2)       ; [1, 2]
+inter    := Intersection(arr1, arr2)     ; [3, 4]
+union    := Union(arr1, arr2)            ; [1, 2, 3, 4, 5, 6]
+filtered := Without(arr1, 2, 4)         ; [1, 3]
+
+; ✗ Nested-loop membership test is O(n × m) — use Map seen-set for large arrays
+; Difference_Slow(a1, a2) {
+;     result := []
+;     for item in a1 {
+;         found := false
+;         for x in a2 {
+;             if x = item {
+;                 found := true
+;                 break
+;             }
+;         }
+;         if !found
+;             result.Push(item)   ; → O(n × m) — degrades severely with large inputs
+;     }
+;     return result
+; }
 ```
-</SET_OPERATIONS>
 
+## ANTI-PATTERNS
 
-## Performance Considerations and Best Practices
+| Pattern | Wrong | Correct | LLM Common Cause |
+|---------|-------|---------|------------------|
+| Zero-based indexing | `array[0]` | `array[1]` / `array[array.Length]` | Dominant habit from JavaScript, Python, C training data |
+| Built-in sort assumed | `arr.Sort()` | `QuickSort(arr, (a,b) => a - b)` | Missing v2 API knowledge — LLM infers `.Sort()` by analogy with String |
+| Array(N) pre-allocation | `Array(10)` | `arr := [], arr.Capacity := 10` | Missing v2 constructor semantics — `Array(N)` parallels `Array(val)` not `new Array(n)` |
+| Fat-arrow block body | `(x) => { return x * 2 }` | Named nested function inside caller | AHK v1 / other-language habit; block bodies are v2.1 alpha only |
+| Shadowing Map class | `Map(arr, fn) { ... }` | `ArrayMap(arr, fn) { ... }` | JavaScript `Array.prototype.map` naming convention transferred to AHK |
+| Mutating during for-in | `for i, v in arr { arr.RemoveAt(i) }` | `while`-loop with manual index | Cross-language habit; Python/JS raise RuntimeError — AHK silently corrupts |
+| Nested-loop membership | `for x in a1 { for y in a2 { if x=y ... } }` | `Map`-backed seen-set (`Unique`, `Difference`) | O(n²) pattern learned from algorithm examples without performance annotations |
 
-<PERFORMANCE_GUIDELINES>
-<EXPLANATION>
-Use Map() for O(1) lookups, prefer built-in methods, and avoid unnecessary array copies for better performance.
-</EXPLANATION>
+## SEE ALSO
 
-```cpp
-FastContains(array, value) {
-    lookupMap := Map()
-    for item in array
-        lookupMap[item] := true
-    return lookupMap.Has(value)
-}
+> This module does NOT cover: key-value storage, object property bags, and Map() API — see Module_Objects.md
+> This module does NOT cover: try/catch patterns for out-of-bounds access and type errors — see Module_Errors.md
+> This module does NOT cover: GUI control binding (ListView, ComboBox population from arrays) — see Module_GUI.md
+> This module does NOT cover: file-path batch operations and directory listing into arrays — see Module_FileSystem.md
 
-ModifyInPlace(array, modifier) {
-    for index, value in array
-        array[index] := modifier(value)
-    return array
-}
-```
-</PERFORMANCE_GUIDELINES>
-
-<ARRAY_INSTRUCTION_META>
-
-<MODULE_PURPOSE>
-This module provides comprehensive array manipulation patterns for AHK v2, organized by complexity tiers.
-LLMs should reference this module when users request array operations, data transformations, or functional programming patterns.
-</MODULE_PURPOSE>
-
-<TIER_SYSTEM>
-TIER 1: Basic operations (creation, access, length)
-TIER 2: Mutation operations (add, remove, modify elements) 
-TIER 3: Search and validation (find, contains, type checking)
-TIER 4: Transformations (map, filter, reduce, slice)
-TIER 5: Advanced search and sorting (custom sorts, unique operations)
-TIER 6: Set operations and combinations (union, intersection, zip, cartesian)
-</TIER_SYSTEM>
-
-<CRITICAL_PATTERNS>
-- Always use 1-based indexing (array[1] is first element)
-- Prefer built-in methods (.Sort, .Clone) over custom implementations
-- Use Map() for O(1) lookups in performance-critical operations
-- Return new arrays from transformation functions (immutable style)
-- Use Type(obj) = "Array" for type verification
-- Handle edge cases: empty arrays, out-of-bounds access, mixed types
-</CRITICAL_PATTERNS>
-
-<LLM_GUIDANCE>
-When user requests array operations:
-1. FIRST: Apply the <THINKING> process from module_instructions.md
-2. THEN: Identify the array complexity tier (1-6) from this module
-3. ESCALATE cognitive tier if:
-   - Complex nested arrays or transformations (think harder)
-   - Performance optimization or memory concerns (ultrathink)
-   - Multiple array operations combined with GUI/OOP patterns (ultrathink)
-4. Use built-in AHK v2 methods when available (.Sort, .Clone, .Push, etc.)
-5. For custom operations, implement using proper loop constructs and 1-based indexing
-6. Apply ALL syntax validation rules from module_instructions.md
-7. Include comprehensive error handling following Module_ErrorHandling.md patterns
-8. Provide usage examples that demonstrate the function in context
-9. Run <CODE_VALIDATOR> process on all array manipulation code
-</LLM_GUIDANCE>
-
-<THINKING_PIPELINE>
-1. Parse the user's goal into one or more array operations
-2. Map each to the closest idiomatic AHK v2 function or loop
-3. If a built-in doesn't exist, implement the behavior explicitly using loop/index logic
-4. If a performance or memory concern is raised, avoid unnecessary copies
-5. For anything nested or deep, recursively apply appropriate level logic
-6. When multiple operations are requested, pipeline them clearly
-7. Return full code blocks with sample usage where meaningful
-</THINKING_PIPELINE>
-
-<QA_VALIDATION>
-After initial response:
-- Check: Is the array output correct and complete for all branches?
-- Check: Are 1-based indices respected?
-- Confirm: Are corner cases like empty, sparse, or ragged arrays handled?
-- Optional: Offer a debug version with MsgBox or OutputDebug tracing
-</QA_VALIDATION>
-
-<FORMAT_CONTROLS>
-- Use clean spacing and proper AHK v2 syntax
-- Wrap all returnable functions as callable
-- Output full function definitions unless user requests inline one-liners
-- Respect idiomatic AHK v2 syntax (no legacy v1 forms)
-- Always return arrays or objects when modifying data
-</FORMAT_CONTROLS>
-
-<CONTEXT_GUIDANCE>
-- Explain why built-ins are used when available
-- When implementing custom functions (e.g. DeepClone, ChunkArray), comment purpose and limits
-- Mention that arrays in AHK v2 are 1-based and all values are variant-typed
-- Use `IsObject()` and `Type()` to distinguish scalars vs arrays vs maps
-</CONTEXT_GUIDANCE>
-
-<EXAMPLES_COVERAGE>
-If user asks for:
-- Shallow copy → use `.Clone()`
-- Deep copy → use recursive function
-- Remove multiple → show `RemoveAt(index, count)`
-- Sort → demo `.Sort()`, `"N"`, and `(a,b)=>a-b`
-- Zip/unzip → include both directions
-- Intersection/Union → 1compare each item manually
-- Compact → skip falsey values (0, "", false, unset)
-</EXAMPLES_COVERAGE>
-
-<COMMON_SCENARIOS>
-"create array" → Use [] literal or Array() constructor
-"find element" → Use IndexOf/Contains custom functions
-"sort array" → Use built-in .Sort() with appropriate flags
-"remove duplicates" → Use Unique function with Map for performance
-"transform elements" → Use Map function with callback
-"combine arrays" → Use Union for merge, Intersection for common elements
-"group elements" → Use Chunk function or GroupBy pattern
-"flatten nested" → Use Flatten/FlattenDeep with recursion
-</COMMON_SCENARIOS>
-
-<ERROR_PATTERNS_TO_AVOID>
-- Using 0-based indexing (wrong: array[0], correct: array[1])
-- Object literals for sets (wrong: {}, correct: Map())
-- Modifying arrays while iterating without proper index management
-- Not handling empty array edge cases
-- Using inefficient nested loops for lookups
-- Forgetting to clone arrays when immutability is desired
-</ERROR_PATTERNS_TO_AVOID>
-
-<ESCALATION_TRIGGERS>
-Escalate to Tier 6 if:
-- User asks for multi-level nesting or structure transforms (zipObject of zipped array)
-- User requests performance optimization, in-place mutation, or no-copy solutions
-- Input includes unclear types (mixed maps + arrays)
-- Deep recursion or clone logic hits unknown object structures
-</ESCALATION_TRIGGERS>
-
-<RESPONSE_TEMPLATES>
-CONCISE: "Here's your AHK v2 array logic. This version is idiomatic, memory-safe, and clear."
-EXPLANATORY: "Done. I used loop/index-based construction because AHK v2 doesn't natively support this transformation. I've also added a sample usage block below to make sure it works the way you expect."
-</RESPONSE_TEMPLATES>
-
-</ARRAY_INSTRUCTION_META>
-
+- `Module_Objects.md` — Map() as an O(1) key-value store; plain Object property bags; when to choose Map over Array.
+- `Module_Errors.md` — try/catch patterns for `IndexError`, `UnsetItemError`, and `TypeError` thrown by Array methods.
+- `Module_Functions.md` — closures, variadic functions, and `.Bind()` patterns used when passing callbacks to ArrayMap/Filter/Reduce.
+- `Module_GUI.md` — populating ListViews, ComboBoxes, and DropDownLists from Array data sources.
