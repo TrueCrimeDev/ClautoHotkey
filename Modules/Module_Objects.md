@@ -1,398 +1,556 @@
-# AutoHotkey V2 Object-Oriented Programming Assistant
+﻿# Module_Objects.md
+<!-- DOMAIN: Objects and OOP -->
+<!-- SCOPE: Advanced meta-functions (__Get/__Set/__Call/__Delete/__Enum), mixin patterns, and deep class hierarchies are not covered — see Module_Classes.md. -->
+<!-- TRIGGERS: object, class, property, method, inheritance, extends, descriptor, prototype, DefineProp, HasProp, HasMethod, HasBase, GetMethod, ObjBindMethod, BoundFunc, "create object", "property validation", "method binding", "computed property", "callback context", "check object type", "read-only property" -->
+<!-- CONSTRAINTS: Instantiate classes with ClassName() — never `new ClassName()`; the keyword was removed in v2 and throws TypeError. Arrow syntax (=>) is valid only for single-expression DefineProp descriptor bodies; multi-line descriptor bodies require named function references or AHK v2 throws a parse error. -->
+<!-- CROSS-REF: Module_Classes.md, Module_DataStructures.md, Module_GUI.md, Module_Errors.md, Module_Arrays.md -->
+<!-- VERSION: AHK v2.0+ -->
 
-<system_instructions>
-You are an expert AutoHotkey V2 coding assistant specializing in object-oriented programming, syntax correction, and best practices. You help users understand AHK's object architecture, proper syntax, and how to write clean, efficient code. Your responses should include working code examples that demonstrate best practices.
+## V1 → V2 BREAKING CHANGES
 
-Always provide fully functional code that follows proper AHK v2 syntax, paying special attention to commas between function parameters and colons in object literals. When helping users debug their code, focus on both fixing immediate syntax issues and explaining the underlying concepts.
-</system_instructions>
+| v1 pattern (LLM commonly writes) | v2 correct form | Consequence |
+|----------------------------------|-----------------|-------------|
+| `new ClassName()` | `ClassName()` | TypeError at runtime — `new` keyword removed entirely in AHK v2 |
+| `{key: val}` as a data container | `Map("key", val)` | Object literals lack `.Has()`, `.Get()`, `.Delete()` — missing keys throw UnsetError with no safe fallback |
+| `IsObject(x)` for type checking | `x is Object` or `Type(x)` | `IsObject()` still exists in v2 and returns non-zero for any object; `is Object` and `Type()` are preferred alternatives when finer-grained type discrimination is needed |
+| `SetTimer, % this.Method, 1000` | `SetTimer(this.Method.Bind(this), 1000)` | v1 percent-expression syntax gone; unbound method loses `this` context at callback time — UnsetError in the callback body |
+| `obj.__Set := func` (v1 meta-function assignment) | `obj.DefineProp("prop", {set: func})` | Meta-function assignment removed — `DefineProp()` is the only v2 hook for intercepting property behavior |
+| `(this, value) => { ... multiline ... }` in DefineProp | Named function reference passed to descriptor key | Parse error at the opening brace — arrow syntax cannot open a multi-line block body in AHK v2 |
+| `Object().DefineProp(SomeProto, "x", d)` | `SomeProto.DefineProp("x", d)` | `DefineProp()` is an instance method; calling it on an anonymous `Object()` with a prototype as argument has no effect on that prototype |
 
-<knowledge_base>
-## Core Concepts: Everything in AHK V2 is an Object
+## API QUICK-REFERENCE
 
-In AutoHotkey V2, everything is an object, including primitives like strings and numbers:
+### Any Class (root — every AHK v2 value inherits these)
+| Method / Property | Signature | Notes |
+|-------------------|-----------|-------|
+| `.HasProp()` | `.HasProp(name)` | Returns 1 if the instance or any prototype in the chain owns named property; never throws |
+| `.HasMethod()` | `.HasMethod(name, paramCount?)` | Returns 1 if a callable method exists; optionally validates expected arity |
+| `.HasBase()` | `.HasBase(baseObj)` | Returns 1 if `baseObj` appears anywhere in the prototype chain |
+| `.GetMethod()` | `.GetMethod(name, paramCount?)` | Returns the method Func object; throws MethodError if not found |
+| `.Base` | `.Base` | Readable and writable reference to the object's direct prototype |
 
-- Objects are containers that group related data and functionality
-- Objects have properties (data) and methods (callable functions)
-- Even primitive values like strings, integers, and floats are actually objects in V2
-- This object-oriented architecture enables inheritance and prototype-based functionality
+### Object (instance methods — available on plain objects and class instances)
+| Method / Property | Signature | Notes |
+|-------------------|-----------|-------|
+| `.DefineProp()` | `.DefineProp(name, descriptor)` | Defines or replaces a property; descriptor is an object literal with `get`, `set`, `call`, or `value` keys |
+| `.DeleteProp()` | `.DeleteProp(name)` | Removes an own property and returns its last value |
+| `.GetOwnPropDesc()` | `.GetOwnPropDesc(name)` | Returns the descriptor object for an own property; useful for inspection |
+| `.OwnProps()` | `.OwnProps()` | Returns an enumerator over own property name–value pairs (excludes prototype chain) |
 
-## AHK's Class Structure
+### Func / BoundFunc
+| Method / Property | Signature | Notes |
+|-------------------|-----------|-------|
+| `.Bind()` | `.Bind(args*)` | Returns a BoundFunc with leading arguments pre-filled; primary tool for capturing `this` in callbacks |
+| `ObjBindMethod()` | `ObjBindMethod(obj, methodName, args*)` | Returns a BoundFunc that calls `obj.methodName`; preferred over `.Bind()` for SetTimer and GUI events |
 
-AutoHotkey V2 has a hierarchical class structure:
+### Type Introspection
+| Function / Operator | Signature | Notes |
+|---------------------|-----------|-------|
+| `Type()` | `Type(value)` | Returns type name string: `"Integer"`, `"Float"`, `"String"`, `"Object"`, or the class name |
+| `is` operator | `expr is TypeOrClass` | Returns 1 if `expr` is an instance of the named type or class; traverses the full prototype chain |
 
-1. **Any Class**: The root of all objects in AHK
-   - Contains 4 methods: `GetMethod()`, `HasBase()`, `HasMethod()`, `HasProp()`
-   - Contains 1 property: `Base`
-   - Every single thing in AHK inherits from this class
+### Supporting Functions (used in examples — defined in other modules)
+| Function | Primary Module | Role in examples |
+|----------|---------------|-----------------|
+| `SetTimer()` | Module_AsyncAndTimers.md | Registers BoundFunc callbacks |
+| `Gui.OnEvent()` | Module_GUI.md | Wires GUI control events to bound methods |
+| `FormatTime()` | Module_TextProcessing.md | Used in computed property examples |
+| `RegExMatch()` | Module_TextProcessing.md | Used in validation helper examples |
+| `StrSplit()` | Module_TextProcessing.md | Used in prototype extension example |
 
-2. **Four Main Types** extending from Any:
-   - **Object**: Standard container object
-   - **Primitive**: Handles strings, integers, floats
-   - **VarRef**: Variable references
-   - **ComValue**: COM interfaces
+## AHK V2 CONSTRAINTS
 
-3. **Extended Classes**: Many specialized classes extend from these base types
-   - Arrays, Maps, Guis, etc. extend from Object
-   - String, Integer, Float extend from Primitive
+- `ClassName()` — never `new ClassName()` — the `new` keyword was removed in AHK v2 and throws TypeError; every class instantiation in v2 is a plain function call.
+- Arrow syntax (`=>`) is valid only for single-expression descriptor bodies — any descriptor body requiring more than one statement must use a named function reference; mixing arrow with a brace block (`=> { ... }`) is a parse error.
+- Class body property descriptors use `get => expr` / `set { ... }` syntax — do NOT write `set => { ... }` (arrow + block); this form is rejected by the AHK v2 parser inside class bodies.
+- Use `Map()` for key-value data storage, not object literals — object literals lack `.Has()`, `.Get()`, and `.Delete()`, making safe missing-key access impossible.
+- `ObjBindMethod()` or `.Bind(this)` is required whenever passing a method as a callback — a raw `this.Method` reference passed to `SetTimer` or `OnEvent` loses `this` context at invocation time, causing UnsetError inside the method body.
+- Prototype extension via `DefineProp` is global — it applies to every instance of that type across the entire script; use judiciously to avoid hidden coupling between unrelated call sites.
 
-## Inheritance in AHK V2
+Safe-access priority order for object property reads:
 
-Inheritance is a core concept in object-oriented programming:
+1. `.HasProp(name)` before access — when absent vs. present requires different branch logic
+2. `Map.Get(key, default)` — for dynamic key-value data; always prefer Map over plain Object for data bags
+3. `.GetOwnPropDesc(name)` — only when you need the descriptor itself, not the property value
+4. `try/catch` on property access — only when the thrown error carries diagnostic information beyond "key absent"
 
-- When a class "extends" another class, it inherits all methods and properties
-- The `extends` keyword specifies inheritance relationships
-- The `Base` property indicates what an object inherits from
-- When you create a class without specifying `extends`, it defaults to `extends Object`
-- You can check inheritance with the `is` operator: `if (item is ClassName)`
-- You can trace inheritance chains, which always lead back to the Any class
+✗ / ✓ pairs:
 
-## Descriptor Objects
+- ✗ `val := obj.missingKey` — UnsetError if property not set
+- ✓ `val := obj.HasProp("missingKey") ? obj.missingKey : defaultVal` — safe, never throws
 
-Descriptor objects define how properties behave when accessed:
+- ✗ `john := new Person("John", 30)` — TypeError, `new` removed in AHK v2
+- ✓ `john := Person("John", 30)` — correct v2 instantiation
 
-1. **Value Descriptor**: Default behavior for storing values in properties
-   - `{value: "SomeValue"}`
-   - Rarely explicitly used because it's the default
+- ✗ `obj.DefineProp("x", {set: (this, v) => { if v < 0 ... }})` — parse error, arrow + block
+- ✓ Named function reference passed as the `set` descriptor value for multi-line bodies
 
-2. **Call Descriptor**: Makes a property callable (becoming a method)
-   - `{call: some_function}`
-   - Always passes object reference as first parameter
-   - Transforms a property into a callable method
+- ✗ `SetTimer(this.Tick, 1000)` — `this` lost at callback time
+- ✓ `SetTimer(this.Tick.Bind(this), 1000)` — BoundFunc preserves object context
 
-3. **Get Descriptor**: Runs code when a property is accessed
-   - `{get: get_function}`
-   - Takes one parameter (object reference)
-   - Returns a computed value
+## TIER 1 — Object Fundamentals, Creation, and the Any Root
+> METHODS COVERED: Type · HasProp · HasMethod · Map (constructor) · DefineProp (class body __New)
 
-4. **Set Descriptor**: Runs code when a property is assigned a value
-   - `{set: set_function}`
-   - Takes two parameters (object reference and new value)
-   - Can validate or transform values before storing
+Every value in AHK v2 — strings, integers, functions, class instances — is an object inheriting from the `Any` root class. This tier establishes the object hierarchy, the introspection methods available on every value, and the two primary creation forms: class instantiation (no `new`) and plain object literals for ad-hoc structures.
+```ahk
+; ✓ Type() reveals the runtime type of any value — everything is a typed object in AHK v2
+greeting := "Hello"
+MsgBox(Type(greeting))   ; "String"
 
-## Methods and Properties
+number := 42
+MsgBox(Type(number))     ; "Integer" — primitives are typed objects, not raw values
 
-Understanding the relationship between methods and properties:
-
-- Methods are just properties with call descriptors
-- All methods receive the object reference as their first parameter
-- You can create custom methods with `DefineProp()` and a call descriptor
-- You can combine descriptors (e.g., get and set) for property validation
-
-## BoundFuncs and ObjBindMethod
-
-AHK V2 offers functionality for creating bound functions:
-
-- BoundFuncs are objects that store a function reference and parameters
-- `Bind()` method creates a BoundFunc with predefined parameters
-- `ObjBindMethod()` specifically helps with binding methods, handling the hidden `this` parameter
-- BoundFuncs are commonly used with callbacks like timers and GUI events
-
-## Critical Syntax Rules for AHK V2
-
-Pay careful attention to these syntax requirements:
-
-1. **Function Call Parameters**: Always separate parameters with commas
-   ```cpp
-   MsgBox "Hello", "World"  ; Correct
-   MsgBox "Hello" "World"   ; Incorrect - missing comma
-   ```
-
-2. **Object Literal Properties**: Always use colons between property names and values
-   ```cpp
-   options := {Background: "Dark", Foreground: "Light"}  ; Correct
-   options := {Background "Dark", Foreground: "Light"}   ; Incorrect - missing colon
-   ```
-
-3. **Method Call Arguments**: Just like functions, separate all arguments with commas
-   ```cpp
-   control.Opt("Background", "Blue")  ; Correct
-   control.Opt("Background" "Blue")   ; Incorrect - missing comma
-   ```
-
-4. **Object Literals in Function Calls**: Ensure each property has a colon
-   ```cpp
-   MyControl.Opt({Background: "Green", Foreground: "White"})  ; Correct
-   MyControl.Opt({Background "Green", Foreground "White"})    ; Incorrect - missing colons
-   ```
-
-5. **Callbacks with Bound Functions**: Maintain proper comma separation in nested calls
-   ```cpp
-   btn.OnMessage(WM_MOUSEMOVE, (ctrl, *) => {
-       ctrl.Opt("Background", this.Theme.buttonHover)  ; Correct
-       ctrl.Opt("Background" this.Theme.buttonHover)   ; Incorrect - missing comma
-   })
-   ```
-</knowledge_base>
-
-<examples>
-## Example: Adding a Length Property to Strings
-
-```cpp
-; Copy DefineProp method from Object prototype to String prototype
-String.Prototype.DefineProp := Object.Prototype.DefineProp
-
-; Define a length property for all strings using a get descriptor
-String.Prototype.DefineProp('length', {get: StrLen})
-
-; Test it
-greeting := 'Hello, world!'
-MsgBox('String contains: ' greeting 
-    '`n`nString char count: ' greeting.length)
-```
-
-## Example: Creating a Method with Call Descriptor
-
-```cpp
-; Create an object
+; ✓ HasProp/HasMethod from Any are available on every value — never throw, return 0 or 1
 obj := {}
+MsgBox(obj.HasProp("SomeProperty"))   ; 0
+MsgBox(obj.HasMethod("ToString"))     ; 0
 
-; Create a call descriptor
-call_desc := {call: my_func}
+; ✓ Class instantiation is a plain function call — 'new' keyword removed in AHK v2
+class Person {
+    __New(name, age) {
+        this.name := name
+        this.age  := age
+    }
 
-; Define a "test" method
-obj.DefineProp('test', call_desc)
-
-; Test the method
-obj.test('Hello from method!')
-
-; Function that handles the method call
-my_func(this, msg) {
-    this.hidden := 'Property added by method'
-    MsgBox(msg '`n`nHidden property: ' this.hidden)
+    Greet() {
+        MsgBox("Hello, I'm " . this.name)
+    }
 }
+
+john := Person("John", 30)   ; Correct v2 form — no 'new'
+john.Greet()
+
+; ✓ Object literal for ad-hoc structured data with known, fixed properties
+person := {
+    name: "John",
+    age:  30
+}
+
+; ✓ Map() for dynamic key-value storage — provides .Has(), .Get(), .Delete()
+settings := Map("theme", "dark", "volume", 80)
+
+; ✗ 'new' keyword removed — TypeError at runtime
+; john := new Person("John", 30)   ; → TypeError
+
+; ✗ Object literal for data with unknown or dynamic keys — no safe missing-key access
+; data := {theme: "dark"}
+; MsgBox(data["nonexistent"])      ; → UnsetError
 ```
 
-## Example: Property Validation with Get/Set Descriptors
+## TIER 2 — Property Descriptors: get, set, call, and DefineProp
+> METHODS COVERED: DefineProp · GetOwnPropDesc · OwnProps · DeleteProp
 
-```cpp
-; Create an object
+Descriptors control exactly how a property behaves when read (`get`), assigned (`set`), or invoked (`call`). `DefineProp()` is the runtime API for any object instance; class body `get`/`set` blocks are the compile-time equivalent with slightly different but compatible syntax. Arrow syntax is valid only for single-expression bodies — multi-line bodies require named function references.
+```ahk
+; ✓ Single-line arrow descriptor — valid because the body is one expression
 obj := {}
+obj.DefineProp("currentTime", {
+    get: (*) => FormatTime(, "yyyy-MM-dd HH:mm:ss")
+})
+MsgBox(obj.currentTime)   ; Always computes fresh on each read
 
-; Create a private property to store the actual value
-obj._num := 0
-
-; Create a get/set descriptor
-desc := {
-    get: (this) => this._num,
-    set: (this, value) => this._num := Integer(value)
+; ✓ Multi-line descriptor body requires a named function reference
+;   Arrow + brace block is a parse error — use this pattern instead
+SetAge(this, value) {
+    if (value < 0 || value > 150)
+        throw ValueError("Invalid age: " . value)
+    this._age := value
 }
+obj.DefineProp("age", {
+    set: SetAge,
+    get: (this) => this._age ?? 0
+})
+obj.age := 25   ; Validated; out-of-range throws ValueError
 
-; Define the property with the descriptor
-obj.DefineProp('num', desc)
+; ✓ Full get+set in DefineProp with separate named setter
+SetComplexValue(this, value) {
+    if (value < 0)
+        throw ValueError("Value must be positive")
+    this._value := value
+}
+obj.DefineProp("complex", {
+    get: (this) => this._value ?? 0,
+    set: SetComplexValue
+})
 
-; Test it - always converts to integer
-obj.num := 3.14
-MsgBox(obj.num)  ; Shows: 3
-```
+; ✗ Arrow syntax with multi-line block — parse error in AHK v2
+; obj.DefineProp("broken", {
+;     set: (this, value) => {    ; → Parse error: arrow cannot open a brace block
+;         if (value < 0)
+;             throw ValueError("Invalid")
+;         this._value := value
+;     }
+; })
 
-## Example: BoundFunc and ObjBindMethod
-
-```cpp
-; Create a class
-class MyClass {
-    static ShowMsg(msg, title := A_ScriptName) {
-        MsgBox(msg, title)
+; ✓ Call descriptor — transforms a property into a callable method
+CalculateOp(this, operation, a, b) {
+    switch operation {
+        case "add":      return a + b
+        case "multiply": return a * b
+        default:         throw ValueError("Unknown operation: " . operation)
     }
 }
+obj.DefineProp("calculate", {call: CalculateOp})
+result := obj.calculate("add", 5, 3)   ; Returns 8
 
-; Create a BoundFunc using ObjBindMethod
-bf := ObjBindMethod(MyClass, 'ShowMsg', 'Hello from timer!')
-
-; Use it as a callback
-SetTimer(bf, -1000)
-```
-
-## Example: Creating a User Profile Class with Validation
-
-```cpp
-; Define a User class with property validation
-class User {
-    ; Private storage properties
-    _name := ""
-    _email := ""
-    _age := 0
-    
-    ; Constructor
-    __New(name, email, age) {
-        this.Name := name    ; Uses the set descriptor
-        this.Email := email  ; Uses the set descriptor
-        this.Age := age      ; Uses the set descriptor
+; ✓ Class body get/set syntax — different form, semantically equivalent to DefineProp
+;   Use 'set { }' NOT 'set => { }' inside a class body
+class Rectangle {
+    __New(width, height) {
+        this._width  := width
+        this._height := height
     }
-    
-    ; Name property with validation
-    Name {
-        get => this._name
-        set => this._name := Trim(value) != "" ? value : throw ValueError("Name cannot be empty")
-    }
-    
-    ; Email property with validation
-    Email {
-        get => this._email
+
+    ; Validated set + simple get — private backing property _width
+    Width {
+        get => this._width
         set {
-            ; Simple email validation
-            if !RegExMatch(value, "i)^[^@\s]+@[^@\s]+\.[^@\s]+$")
-                throw ValueError("Invalid email format")
-            this._email := value
+            if (value <= 0)
+                throw ValueError("Width must be positive")
+            this._width := value
         }
     }
-    
-    ; Age property with validation
-    Age {
-        get => this._age
-        set {
-            ; Age must be a positive integer
-            if !(value is Integer) || value < 0
-                throw ValueError("Age must be a positive integer")
-            this._age := value
-        }
-    }
-    
-    ; Method to display user info
-    ShowInfo() {
-        MsgBox("User Information:`n"
-            . "Name: " this.Name "`n"
-            . "Email: " this.Email "`n"
-            . "Age: " this.Age)
+
+    ; Computed read-only property — get-only descriptor
+    Area {
+        get => this._width * this._height
     }
 }
 
-; Create a user
+rect := Rectangle(10, 5)
+MsgBox("Area: " . rect.Area)   ; 50
+
+; ✓ Class methods are automatically call descriptors — no manual DefineProp needed
+class Calculator {
+    Add(a, b)      => a + b
+    Multiply(a, b) => a * b
+}
+calc   := Calculator()
+result := calc.Add(10, 5)   ; 15
+
+; ✗ 'set => { }' inside class body — not valid class body syntax
+; Width {
+;     set => { this._width := value }   ; → Parse error inside class body
+; }
+```
+
+## TIER 3 — Class Inheritance and Prototype Extension
+> METHODS COVERED: extends · super.__New · is operator · HasBase · String.Prototype.DefineProp
+
+`extends` builds a prototype chain; `super` reaches the parent constructor and methods. The `is` operator traverses the full chain for type checking. Prototype extension via `DefineProp` on a shared prototype adds a method globally to all instances of that type.
+```ahk
+; ✓ extends + super.__New delegates to the parent constructor without duplication
+class Animal {
+    __New(name, species) {
+        this.name    := name
+        this.species := species
+    }
+
+    Speak() {
+        MsgBox(this.name . " makes a sound")
+    }
+}
+
+class Dog extends Animal {
+    __New(name, breed) {
+        super.__New(name, "Dog")   ; Delegate to Animal.__New — sets name and species
+        this.breed := breed
+    }
+
+    ; Override parent method — super.Speak() still accessible if needed
+    Speak() {
+        MsgBox(this.name . " barks: Woof!")
+    }
+}
+
+buddy := Dog("Buddy", "Golden Retriever")
+buddy.Speak()   ; "Buddy barks: Woof!"
+
+; ✓ 'is' operator traverses the full prototype chain
+if (buddy is Animal)
+    MsgBox("Buddy is an Animal")   ; Shows — Dog → Animal is a valid chain
+
+; ✓ HasBase() for programmatic prototype chain inspection
+MsgBox(buddy.HasBase(Animal.Prototype))   ; 1
+
+; ✓ Prototype extension — String.Prototype is not Object-derived; call DefineProp via Object.Prototype
+ReverseStr(this) {
+    chars    := StrSplit(this)
+    reversed := ""
+    Loop chars.Length
+        reversed .= chars[chars.Length - A_Index + 1]
+    return reversed
+}
+ObjDefineProp := Object.Prototype.DefineProp
+ObjDefineProp(String.Prototype, "Reverse", {call: ReverseStr})
+
+text := "Hello World"
+MsgBox("Reversed: " . text.Reverse())   ; "dlroW olleH"
+
+; ✗ Wrong prototype extension syntax — String.Prototype does not inherit from Object.Prototype and has no DefineProp
+; Object().DefineProp(String.Prototype, "Reverse", {call: ReverseStr})   ; → No effect on String.Prototype
+
+; Warning: Prototype extension is global — affects every call site using that type in the script
+```
+
+## TIER 4 — BoundFunc and Callback Context Management
+> METHODS COVERED: .Bind() · ObjBindMethod · SetTimer · Gui.OnEvent
+
+Raw method references (`this.Method`) passed to `SetTimer` or GUI `OnEvent` lose their `this` binding at invocation time because the callback fires outside the object context. `.Bind(this)` or `ObjBindMethod()` must capture the object before the callback is registered — not at invocation time.
+```ahk
+; ✓ .Bind(this) creates a BoundFunc that carries object context into the callback
+class Timer {
+    __New(name) {
+        this.name  := name
+        this.count := 0
+    }
+
+    Start() {
+        ; ✓ Bind captures 'this' — SetTimer receives a BoundFunc, not a raw method reference
+        this.boundTick := this.Tick.Bind(this)
+        SetTimer(this.boundTick, 1000)
+    }
+
+    Tick() {
+        this.count++
+        MsgBox(this.name . " tick #" . this.count)
+    }
+}
+
+timer := Timer("MyTimer")
+timer.Start()
+
+; ✗ Unbound method — 'this' inside Tick() is undefined at callback time
+; SetTimer(this.Tick, 1000)   ; → UnsetError when Tick() accesses this.name
+
+; ✓ GUI event binding — bind every OnEvent handler so class methods access instance state
+class SimpleGUI {
+    __New() {
+        this.CreateGUI()
+    }
+
+    CreateGUI() {
+        this.gui       := Gui("+Resize", "My Application")
+        this.nameEdit  := this.gui.AddEdit("w200")
+        this.submitBtn := this.gui.AddButton("w100", "Submit")
+
+        ; ✓ Bind this before registering — handler fires with correct instance context
+        this.submitBtn.OnEvent("Click", this.OnSubmit.Bind(this))
+        this.gui.OnEvent("Close",       this.OnClose.Bind(this))
+
+        this.gui.Show("w300 h150")
+    }
+
+    OnSubmit(*) {
+        name := this.nameEdit.Value
+        if (name.Length > 0) {
+            MsgBox("Hello, " . name . "!")
+            this.nameEdit.Value := ""
+        }
+    }
+
+    OnClose(*) {
+        ExitApp()
+    }
+}
+
+app := SimpleGUI()
+```
+
+## TIER 5 — Dynamic Properties and Object Composition
+> METHODS COVERED: DefineProp · Map.Set · Map.Get · Map.Has · Map (constructor)
+
+`DefineProp` at runtime enables plugin-style architectures and configuration-driven objects where property names are not known at compile time. Composition — assembling objects from focused collaborator instances — scales more flexibly than deep inheritance for complex domains and produces flatter, faster prototype chains.
+```ahk
+; ✓ Runtime property creation with per-property validator via DefineProp
+class DynamicObject {
+    __New() {
+        this.properties := Map()
+    }
+
+    AddProperty(name, initialValue := "", validator := "") {
+        if (validator != "") {
+            SetValidated(this, value) {
+                if (validator.Call(value))
+                    this.properties.Set(name, value)
+                else
+                    throw ValueError("Invalid value for " . name . ": " . value)
+            }
+            this.DefineProp(name, {
+                get: (this) => this.properties.Get(name, ""),
+                set: SetValidated
+            })
+        } else {
+            this.DefineProp(name, {
+                get: (this) => this.properties.Get(name, ""),
+                set: (this, value) => this.properties.Set(name, value)
+            })
+        }
+
+        this.properties.Set(name, initialValue)
+    }
+}
+
+obj := DynamicObject()
+obj.AddProperty("age", 0, (value) => value >= 0 && value <= 150)
+obj.age := 25
+MsgBox("Age: " . obj.age)
+
+; ✓ Composition — complex objects built from focused single-responsibility collaborators
+class Logger {
+    __New(level := "INFO") {
+        this.level := level
+    }
+
+    Log(message, level := "INFO") {
+        timestamp := FormatTime(, "yyyy-MM-dd HH:mm:ss")
+        MsgBox("[" . timestamp . "] " . level . ": " . message)
+    }
+}
+
+class Database {
+    __New(connectionString) {
+        this.connectionString := connectionString
+        this.connected        := false
+    }
+
+    Connect() {
+        this.connected := true
+        return true
+    }
+
+    Query(sql) {
+        if (!this.connected)
+            throw Error("Not connected to database")
+        return "Result for: " . sql
+    }
+}
+
+; ✓ DataService composes Logger + Database + Map cache — no inheritance needed
+class DataService {
+    __New(connectionString, logLevel := "INFO") {
+        this.logger   := Logger(logLevel)
+        this.database := Database(connectionString)
+        this.cache    := Map()
+    }
+
+    Initialize() {
+        this.logger.Log("Initializing data service")
+        return this.database.Connect()
+    }
+
+    GetData(query, useCache := true) {
+        ; ✓ Map.Has() before Map.Get() — when cache-hit and cache-miss paths differ
+        if (useCache && this.cache.Has(query))
+            return this.cache.Get(query)
+
+        result := this.database.Query(query)
+
+        if (useCache)
+            this.cache.Set(query, result)
+
+        return result
+    }
+}
+
+service := DataService("server=localhost;db=test")
+if (service.Initialize()) {
+    result := service.GetData("SELECT * FROM users")
+    MsgBox("Query result: " . result)
+}
+```
+
+### Performance Notes
+
+- **Descriptor get/set is not free.** Each `DefineProp` get/set invokes a closure on every property read or write. For inner-loop hot paths, compute the value once and cache it in a plain backing property; invalidate on `set` rather than recomputing on every `get`.
+- **Flat prototype chains.** Deep inheritance chains (5+ levels) increase property lookup time proportionally. Composition with single-level collaborator objects is both faster to look up and easier to profile — prefer it for performance-sensitive code.
+- **BoundFunc allocation.** Each `.Bind()` call allocates a new BoundFunc. Create bound callbacks once in `__New` and store them as instance properties; never call `.Bind()` inside event handlers or timer ticks that fire repeatedly.
+- **`OwnProps()` enumerator cost.** Enumerating own properties on objects with many `DefineProp` descriptors is O(n). Avoid enumerating inside tight loops; cache the key set in a Map if repeated iteration is required.
+- **Map over Object for data.** Map lookup is hash-based O(1). Iterating object own properties via `OwnProps()` has overhead proportional to the number of descriptors. Map is not only semantically correct for key-value data — it is also faster.
+
+## TIER 6 — Validated Objects and Config Patterns
+> METHODS COVERED: DefineProp · Map.Get · Map.Set · RegExMatch · ValueError (class)
+
+Combining descriptor-level validation with structured config classes creates a self-enforcing data layer — each property rejects invalid input at assignment time, eliminating repeated defensive checks at every call site that consumes the config.
+```ahk
+; ✓ ValidatedConfig uses set descriptors for per-property validation — callers need no guards
+class ValidatedConfig {
+    __New() {
+        this._settings := Map()
+        this.SetupValidation()
+    }
+
+    SetupValidation() {
+        ; Database host — rejects empty string at assignment time
+        SetDatabaseHost(this, value) {
+            if (value == "")
+                throw ValueError("Database host cannot be empty")
+            this._settings.Set("DatabaseHost", value)
+        }
+        this.DefineProp("DatabaseHost", {
+            get: (this) => this._settings.Get("DatabaseHost", "localhost"),
+            set: SetDatabaseHost
+        })
+
+        ; Database port — type and range validated in the descriptor, not at call sites
+        SetDatabasePort(this, value) {
+            if (!(value is Integer) || value < 1 || value > 65535)
+                throw ValueError("Port must be between 1 and 65535")
+            this._settings.Set("DatabasePort", value)
+        }
+        this.DefineProp("DatabasePort", {
+            get: (this) => this._settings.Get("DatabasePort", 5432),
+            set: SetDatabasePort
+        })
+    }
+
+    ; Reusable validation helper — callable from any set descriptor in this class
+    IsValidEmail(email) {
+        return RegExMatch(email, "i)^[^@\s]+@[^@\s]+\.[^@\s]+$") > 0
+    }
+}
+
+; ✓ Errors surface at assignment boundary — one try/catch, not scattered guards
 try {
-    user := User("John Doe", "john@example.com", 30)
-    user.ShowInfo()
-    
-    ; Try invalid values
-    user.Age := "thirty"  ; This will throw an error
-} catch Error as e {
-    MsgBox("Error: " e.Message)
+    config := ValidatedConfig()
+    config.DatabaseHost := "production.db.company.com"
+    config.DatabasePort := 5432
+
+    MsgBox("Configuration valid - Host: " . config.DatabaseHost)
+
+} catch ValueError as e {
+    MsgBox("Configuration error: " . e.Message)
 }
+
+; ✗ Defensive checking at every call site — fragile, repeated, easy to miss
+; host := GetConfig("host")
+; if (host == "")                          ; → Must repeat this guard everywhere
+;     throw ValueError("Host empty")
+; port := GetConfig("port")
+; if (port < 1 || port > 65535)           ; → Duplicated validation logic
+;     throw ValueError("Invalid port")
 ```
 
-## Example: Theme Manager with Inheritance
+## ANTI-PATTERNS
 
-```cpp
-; Base Theme class
-class Theme {
-    ; Default colors
-    static Background := "#FFFFFF"
-    static Foreground := "#000000"
-    static Accent := "#0078D7"
-    
-    ; Method to get all theme colors as an object
-    GetColors() {
-        return {
-            Background: this.Background,
-            Foreground: this.Foreground,
-            Accent: this.Accent
-        }
-    }
-    
-    ; Apply theme to a control
-    ApplyToControl(control) {
-        control.Opt("Background", this.Background)
-        control.Opt("Color", this.Foreground)
-    }
-}
+| Pattern | Wrong | Correct | LLM Common Cause |
+|---------|-------|---------|------------------|
+| `new` keyword for instantiation | `new Person("John", 30)` | `Person("John", 30)` | AHK v1 and every mainstream OOP language require `new`; v2 dropped it silently |
+| Object literal as data container | `{key: val}` for dynamic storage | `Map("key", val)` | AHK v1 used object literals for all key-value data; v2 Map() is the designated replacement with full API |
+| Arrow + block in DefineProp descriptor | `set: (this, v) => { if v < 0 ... }` | Named function reference for any multi-line body | JS/Python lambda syntax allows multi-line bodies; AHK v2 arrow syntax does not — mixed-language training data causes this |
+| Unbound method as callback | `SetTimer(this.Tick, 1000)` | `SetTimer(this.Tick.Bind(this), 1000)` | AHK v1 percent-expression syntax obscured binding mechanics; LLMs trained on v1 omit `.Bind()` entirely |
+| `IsObject()` for type checking | `if IsObject(x)` | `if x is Object` or `Type(x) != "Integer"` | `IsObject()` still exists in v2; however `is Object` offers chain-aware type checking and `Type()` returns the exact class name, making them more precise alternatives for new v2 code |
+| Wrong prototype extension site | `Object().DefineProp(String.Prototype, "x", d)` | `ObjDefineProp(String.Prototype, "x", d)` where `ObjDefineProp := Object.Prototype.DefineProp` | `String` is not a subclass of `Object` — `String.Prototype` has no `DefineProp` instance method; the underlying implementation must be extracted from `Object.Prototype.DefineProp` and called with `String.Prototype` as the explicit receiver |
+| `set => { }` block in class body | `Width { set => { this._w := value } }` | `Width { set { this._w := value } }` | Conflating DefineProp arrow descriptor syntax with class body `set` block syntax — two different parse contexts |
 
-; Dark theme extends the base theme
-class DarkTheme extends Theme {
-    ; Override default colors
-    static Background := "#1E1E1E"
-    static Foreground := "#FFFFFF"
-    static Accent := "#007ACC"
-    
-    ; Add additional dark theme specific properties
-    static ButtonHover := "#333333"
-    
-    ; Override the apply method to include dark theme specifics
-    ApplyToControl(control) {
-        ; Call the parent method first
-        super.ApplyToControl(control)
-        
-        ; Add dark theme specific settings
-        if (control.HasMethod("OnHover"))
-            control.OnHover(this.ButtonHover)
-    }
-}
+## SEE ALSO
 
-; Create themes
-baseTheme := Theme()
-darkTheme := DarkTheme()
+> This module does NOT cover: meta-functions (`__Get`, `__Set`, `__Call`, `__Delete`, `__Enum`), abstract base classes, and mixin composition patterns — see Module_Classes.md.
+> This module does NOT cover: Map vs Object selection criteria, nested structure patterns, and serialization — see Module_DataStructures.md.
+> This module does NOT cover: try/catch design in object methods, custom exception classes, and error propagation chains — see Module_Errors.md.
 
-; Test inheritance with the 'is' operator
-if (darkTheme is Theme)
-    MsgBox("DarkTheme inherits from Theme")
-
-; Compare colors
-MsgBox("Base Theme Background: " baseTheme.Background "`n"
-     . "Dark Theme Background: " darkTheme.Background)
-```
-</examples>
-
-<error_identification>
-When reviewing user code, look for these common syntax errors:
-
-1. **Missing commas between function parameters**
-   - Check all function and method calls for proper comma separation
-
-2. **Missing colons in object literals**
-   - Ensure all property:value pairs use a colon
-   - This is especially important in nested object literals
-
-3. **Improper method calls**
-   - Verify parameter separation with commas
-   - Check for proper parentheses usage
-
-4. **Incorrect descriptor object syntax**
-   - Ensure get/set/call descriptors follow the correct format
-
-5. **Improper inheritance syntax**
-   - Check that `extends` is used correctly in class definitions
-
-When providing corrections, explain both the syntactic fix and the underlying concept.
-</error_identification>
-
-<debugging_guidance>
-When helping users debug AHK v2 code, follow these steps:
-
-1. **Identify syntax errors first**
-   - Look for missing commas, colons, or parentheses
-   - Check object literal formatting
-   - Verify proper method call syntax
-
-2. **Look for conceptual misunderstandings**
-   - Is the user confusing v1 and v2 syntax?
-   - Are they missing key concepts about objects or descriptors?
-   - Are they misunderstanding inheritance?
-
-3. **Provide working examples**
-   - Show corrected code
-   - Explain why the correction works
-   - Add comments to highlight important concepts
-
-4. **Suggest best practices**
-   - Recommend cleaner alternatives if applicable
-   - Point out potential performance issues
-   - Suggest more object-oriented approaches when relevant
-
-5. **Explain the "why" behind fixes**
-   - Don't just correct syntax—help users understand concepts
-   - Refer to AHK v2's object-oriented nature when relevant
-</debugging_guidance>
-
-<commands>
-As an AHK V2 coding assistant, you should:
-
-1. Prioritize syntax correctness, especially with commas and colons
-2. Explain concepts clearly using AHK's object-oriented terminology
-3. Provide working code examples that demonstrate the concepts
-4. Remember that all AHK V2 values are objects with properties and methods
-5. Help users understand inheritance and descriptor objects
-6. Suggest optimized approaches using V2's object-oriented features
-7. Clarify how methods work as properties with call descriptors
-8. Be aware of AHK's class structure with the Any class at the root
-9. Identify and fix common v1-to-v2 migration errors
-10. Demonstrate proper error handling techniques
-11. Always use correct parameter separation with commas in function calls
-12. Always use proper property:value syntax with colons in object literals
-</commands>
+- `Module_Classes.md` — advanced class hierarchies, meta-functions, abstract bases, and mixin patterns.
+- `Module_DataStructures.md` — authoritative Map vs Object selection, nested structures, and data serialization.
+- `Module_GUI.md` — complete GUI object integration, control event wiring, and GUI lifecycle management.
+- `Module_Errors.md` — try/catch patterns for descriptor-level validation, custom exception classes, and propagation.
+- `Module_Arrays.md` — Array iteration, transformation, and storage of object collections.
