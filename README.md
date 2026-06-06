@@ -156,6 +156,20 @@ a console-enabled build that makes AHK far more AI-friendly:
 Build it from source (branch `alpha`), point `AHK_BIN_WIN` at it, and set `AHK_DIAG_JSON=1`.
 Stock AutoHotkey v2 also works — the harness falls back to `/validate` — but without `Print`/`Eval` or JSON diagnostics.
 
+**Command-line modes**
+
+| Mode | Command |
+|------|---------|
+| Standard run | `AutoHotkey64.exe script.ahk` |
+| Debugger | `AutoHotkey64.exe /Debug script.ahk` |
+| Headless error output | `AutoHotkey64.exe /ErrorStdOut script.ahk` |
+| Hard headless | `AutoHotkey64.exe /Headless script.ahk` |
+| JSON diagnostics | `AutoHotkey64.exe /Headless /Diag=json script.ahk` |
+| Colored errors | `AutoHotkey64.exe /ErrorStdOut:color script.ahk` |
+| Encoding override | `AutoHotkey64.exe /ErrorStdOut=UTF-8 script.ahk` |
+| Check (syntax only) | `AutoHotkey64.exe check script.ahk` (or `/Check script.ahk`) |
+| Test | `AutoHotkey64.exe test script.ahk` (or `/Test script.ahk`) |
+
 ---
 
 <div align="center">
