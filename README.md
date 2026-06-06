@@ -9,7 +9,7 @@
   <p>
     <a href="https://www.autohotkey.com/docs/v2/"><img src="https://img.shields.io/badge/AutoHotkey-v2-blue?style=flat-square&logo=autohotkey&logoColor=white" alt="AHK v2"></a>
     <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="MIT License"></a>
-    <a href="https://github.com/TrueCrimeAudit/ahk-mcp"><img src="https://img.shields.io/badge/MCP_Server-ahk--mcp-purple?style=flat-square" alt="MCP Server"></a>
+    <a href="https://github.com/TrueCrimeDev/ahk-mcp"><img src="https://img.shields.io/badge/MCP_Server-ahk--mcp-purple?style=flat-square" alt="MCP Server"></a>
   </p>
 
   <p>
@@ -93,7 +93,7 @@ Additional modules in `Modules/Supplemental/`.
   </tr>
   <tr>
     <td><img src="Assets/UltimateLogger.png" alt="Ultimate Logger" width="450"></td>
-    <td><img src="https://github.com/TrueCrimeAudit/DarkMode/raw/main/screenshot1.png" alt="List Editor" width="450"></td>
+    <td><img src="https://github.com/TrueCrimeDev/DarkMode/raw/main/screenshot1.png" alt="List Editor" width="450"></td>
   </tr>
 </table>
 
@@ -136,7 +136,7 @@ also published as a standalone template:
 
 <div align="center">
   <h2>Contributing</h2>
-  <p>Contributions welcome. Also check out the <a href="https://github.com/TrueCrimeAudit/ahk-mcp">AHK MCP Server</a>.</p>
+  <p>Contributions welcome. Also check out the <a href="https://github.com/TrueCrimeDev/ahk-mcp">AHK MCP Server</a>.</p>
 </div>
 
 ---
