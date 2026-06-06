@@ -1,14 +1,40 @@
-# ClautoHotkey
+<div align="center">
 
-AutoHotkey v2 context modules, agents, and helper scripts for AI-assisted development.
+  <h1>ClautoHotkey</h1>
 
-## What This Is
+  <p>
+    <strong>AutoHotkey v2 context modules, agents, and helper scripts for AI-assisted development</strong>
+  </p>
+
+  <p>
+    <a href="https://www.autohotkey.com/docs/v2/"><img src="https://img.shields.io/badge/AutoHotkey-v2-blue?style=flat-square&logo=autohotkey&logoColor=white" alt="AHK v2"></a>
+    <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="MIT License"></a>
+    <a href="https://github.com/TrueCrimeAudit/ahk-mcp"><img src="https://img.shields.io/badge/MCP_Server-ahk--mcp-purple?style=flat-square" alt="MCP Server"></a>
+  </p>
+
+  <p>
+    <a href="#modules"><img src="https://img.shields.io/badge/Modules-0078D4?style=for-the-badge" alt="Modules"></a>
+    <a href="#helper-scripts"><img src="https://img.shields.io/badge/Scripts-2EA043?style=for-the-badge" alt="Scripts"></a>
+    <a href="#claude-code-agents"><img src="https://img.shields.io/badge/Agents-8B5CF6?style=for-the-badge" alt="Agents"></a>
+    <a href="#screenshots"><img src="https://img.shields.io/badge/Screenshots-E05D44?style=for-the-badge" alt="Screenshots"></a>
+    <a href="#setup"><img src="https://img.shields.io/badge/Setup-F59E42?style=for-the-badge" alt="Setup"></a>
+  </p>
+
+</div>
+
+---
+
+> [!IMPORTANT]
+> This is only for AHK v2. No v1 support.
 
 A collection of structured reference modules that teach AI models how to write correct AHK v2 code. Each module includes V1-to-V2 breaking changes, API tables, constraints, and anti-patterns to prevent common mistakes.
 
-## Modules
+---
 
-All modules live in `Modules/`. Start with **Module_Instructions.md**, then reference others by keyword:
+<div align="center">
+  <h2>Modules</h2>
+  <p><em>All modules live in <code>Modules/</code>. Start with <strong>Module_Instructions.md</strong>, then reference others by keyword.</em></p>
+</div>
 
 | Keyword | Module | Covers |
 |---------|--------|--------|
@@ -25,7 +51,11 @@ All modules live in `Modules/`. Start with **Module_Instructions.md**, then refe
 
 Additional modules in `Modules/Supplemental/`.
 
-## Helper Scripts
+---
+
+<div align="center">
+  <h2>Helper Scripts</h2>
+</div>
 
 | Script | Purpose |
 |--------|---------|
@@ -35,17 +65,43 @@ Additional modules in `Modules/Supplemental/`.
 | `Scripts/ClipboardHistoryCombiner.ahk` | Batch clipboard errors for debugging |
 | `Scripts/Clip_SearchCode.ahk` | Apply LLM code changes to VS Code |
 
-## Claude Code Agents
+---
 
-See [agentreadme.md](.claude/agentreadme.md) for details.
+<div align="center">
+  <h2>Claude Code Agents</h2>
+  <p><em>See <a href=".claude/agentreadme.md">agentreadme.md</a> for details.</em></p>
+</div>
 
-- `ahk-version-detector` — Detects v1 vs v2 and triggers conversion
-- `ahk-converter-runner` — Automated v1-to-v2 conversion
-- `v1-to-v2-migrator` — Manual migration for edge cases
-- `gui-builder` — GUI creation with events and validation
-- `ahk-gui-layout-enforcer` — Mathematical overlap-free layouts
+| Agent | Purpose |
+|-------|---------|
+| `ahk-version-detector` | Detects v1 vs v2 and triggers conversion |
+| `ahk-converter-runner` | Automated v1-to-v2 conversion |
+| `v1-to-v2-migrator` | Manual migration for edge cases |
+| `gui-builder` | GUI creation with events and validation |
+| `ahk-gui-layout-enforcer` | Mathematical overlap-free layouts |
 
-## Setup
+---
+
+<div align="center">
+  <h2>Screenshots</h2>
+</div>
+
+<table>
+  <tr>
+    <td align="center"><strong>Ultimate Logger</strong></td>
+    <td align="center"><strong>List Editor</strong></td>
+  </tr>
+  <tr>
+    <td><img src="Assets/UltimateLogger.png" alt="Ultimate Logger" width="450"></td>
+    <td><img src="https://github.com/TrueCrimeAudit/DarkMode/raw/main/screenshot1.png" alt="List Editor" width="450"></td>
+  </tr>
+</table>
+
+---
+
+<div align="center">
+  <h2>Setup</h2>
+</div>
 
 ```bash
 git clone https://github.com/TrueCrimeDev/ClautoHotkey.git
@@ -53,15 +109,45 @@ git clone https://github.com/TrueCrimeDev/ClautoHotkey.git
 
 Requires AutoHotkey v2. Add `Modules/` to your AI assistant's context or knowledge base.
 
-## Screenshots
+---
 
-![Ultimate Logger](Assets/UltimateLogger.png)
-![List Editor](https://github.com/TrueCrimeAudit/DarkMode/raw/main/screenshot1.png)
+<div align="center">
+  <h2>Claude Code Harness</h2>
+  <p><em>Path-scoped rules, skills, agents, and hooks that validate every AHK v2 edit.</em></p>
+</div>
 
-## Contributing
+`.claude/` ships a full Claude Code harness: it auto-validates each `.ahk` edit,
+auto-loads the relevant rule when you touch a matching file, and routes work to
+AHK-specific skills (`/ahk-gui`, `/ahk-fix`, `/ahk-oop`, …) and investigation
+agents. Turn it on after cloning:
 
-Contributions welcome. Also check out the [AHK MCP Server](https://github.com/TrueCrimeAudit/ahk-mcp).
+```bash
+cp harness.env.example harness.env   # set AHK_BIN_WIN to your AutoHotkey64.exe path
+./setup.sh                            # renders settings.json, makes hooks executable
+```
 
-## Credits
+Then open this folder as the project in Claude Code. Set `AHK_DIAG_JSON=1` in
+`harness.env` if you run the v2.1-alpha.30+Console fork (richer diagnostics);
+leave `0` for stock AHK v2. Requires WSL or Git Bash and `jq`. The harness is
+also published as a standalone template:
+[ahk-claude-harness](https://github.com/TrueCrimeDev/ahk-claude-harness).
 
-[AHK v2 Docs](https://www.autohotkey.com/docs/v2/) | Thanks to [g.ahk](https://github.com/G33kDude), [Descolada](https://github.com/Descolada), [Panaku](https://github.com/The-CoDingman), [0w0Demonic](https://github.com/0w0Demonic/AquaHotkey.git)
+---
+
+<div align="center">
+  <h2>Contributing</h2>
+  <p>Contributions welcome. Also check out the <a href="https://github.com/TrueCrimeAudit/ahk-mcp">AHK MCP Server</a>.</p>
+</div>
+
+---
+
+<div align="center">
+  <h2>Credits</h2>
+  <p>
+    <a href="https://www.autohotkey.com/docs/v2/">AHK v2 Docs</a> &bull;
+    <a href="https://github.com/G33kDude">g.ahk</a> &bull;
+    <a href="https://github.com/Descolada">Descolada</a> &bull;
+    <a href="https://github.com/The-CoDingman">Panaku</a> &bull;
+    <a href="https://github.com/0w0Demonic/AquaHotkey.git">0w0Demonic</a>
+  </p>
+</div>
