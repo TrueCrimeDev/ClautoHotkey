@@ -112,6 +112,24 @@ Requires AutoHotkey v2. Add `Modules/` to your AI assistant's context or knowled
 ---
 
 <div align="center">
+  <h2>AutoHotkey Console Fork</h2>
+  <p><em>The recommended interpreter — console-enabled AHK v2 for AI workflows.</em></p>
+</div>
+
+This project is built around the **[AutoHotkey v2 +Console fork](https://github.com/TrueCrimeDev/AutoHotkey)**,
+a console-enabled build that makes AHK far more AI-friendly:
+
+- **Real stdout/stderr + `Print(fmt, vals*)`** — scripts emit output an AI reads directly, no GUI round-trip.
+- **`Eval(expr)`** — runtime expression evaluator for REPL-style testing (the `/ahk-eval` skill).
+- **JSON diagnostics** (`check /Diag=json`) — structured syntax errors the post-edit hook parses.
+- **Structured crash logs + exit codes** — `/CrashLog`, exit `130` on Ctrl+C, and more.
+
+Build it from source (branch `alpha`), point `AHK_BIN_WIN` at it, and set `AHK_DIAG_JSON=1`.
+Stock AutoHotkey v2 also works — the harness falls back to `/validate` — but without `Print`/`Eval` or JSON diagnostics.
+
+---
+
+<div align="center">
   <h2>Claude Code Harness</h2>
   <p><em>Path-scoped rules, skills, agents, and hooks that validate every AHK v2 edit.</em></p>
 </div>
