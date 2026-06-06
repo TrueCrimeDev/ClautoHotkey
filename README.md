@@ -3,7 +3,7 @@
   <h1>ClautoHotkey</h1>
 
   <p>
-    <strong>AutoHotkey v2 context modules, agents, and helper scripts for AI-assisted development</strong>
+    <strong>An AI-native AutoHotkey v2 development system — context modules, a Claude Code harness, a console-enabled engine, and an MCP docs server</strong>
   </p>
 
   <p>
@@ -13,6 +13,7 @@
   </p>
 
   <p>
+    <a href="#the-system"><img src="https://img.shields.io/badge/The_System-1F6FEB?style=for-the-badge" alt="The System"></a>
     <a href="#modules"><img src="https://img.shields.io/badge/Modules-0078D4?style=for-the-badge" alt="Modules"></a>
     <a href="#helper-scripts"><img src="https://img.shields.io/badge/Scripts-2EA043?style=for-the-badge" alt="Scripts"></a>
     <a href="#claude-code-agents"><img src="https://img.shields.io/badge/Agents-8B5CF6?style=for-the-badge" alt="Agents"></a>
@@ -28,6 +29,34 @@
 > This is only for AHK v2. No v1 support.
 
 A collection of structured reference modules that teach AI models how to write correct AHK v2 code. Each module includes V1-to-V2 breaking changes, API tables, constraints, and anti-patterns to prevent common mistakes.
+
+---
+
+<div align="center">
+  <h2>The System</h2>
+  <p><em>An AI-native AutoHotkey v2 development system — four parts that fit together.</em></p>
+</div>
+
+```text
+            ┌─────────────── ClautoHotkey (this repo) ───────────────┐
+            │  Knowledge: Modules/ — structured AHK v2 instruction set │
+            │  + the Claude Code harness, wired and ready             │
+            └───────────────────────┬─────────────────────────────────┘
+                                     │ Claude Code
+   Engine                  Tooling   │            Docs server
+   AutoHotkey +Console  ←  ahk-claude-harness  →  ahk-mcp
+   (Print/Eval/JSON        (hooks/rules/skills/     (docs, completion,
+    diagnostics)            agents validate edits)   diagnostics)
+```
+
+| Part | What it is |
+|------|-----------|
+| **Engine** — [AutoHotkey +Console fork](https://github.com/TrueCrimeDev/AutoHotkey) | Console-enabled AHK v2: real stdout, `Print`, `Eval`, JSON diagnostics, structured exit codes. |
+| **Tooling** — [ahk-claude-harness](https://github.com/TrueCrimeDev/ahk-claude-harness) | Claude Code hooks, rules, skills, and agents that validate every `.ahk` edit and route AHK work. |
+| **Knowledge** — this repo's `Modules/` | The structured AHK v2 instruction set the AI reads (start with `Module_Instructions.md`). |
+| **Docs server** — [ahk-mcp](https://github.com/TrueCrimeDev/ahk-mcp) | MCP server providing docs, code completion, and diagnostics. |
+
+**New here?** Follow **[GETTING-STARTED.md](GETTING-STARTED.md)** for the zero-to-coding path.
 
 ---
 
