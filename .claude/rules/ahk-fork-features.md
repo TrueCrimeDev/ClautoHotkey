@@ -5,13 +5,15 @@ paths:
 
 # AHK v2.1-alpha.30+Console — Fork Features Reference
 
-> **Applies only when `AHK_DIAG_JSON=1`** (you're running the +Console fork set in
-> `harness.env`). On stock AutoHotkey v2 these features — `Print`, `Eval`,
-> `/Diag=json`, `/CrashLog`, structured exit codes — are unavailable; ignore this file.
+> The **+Console fork** — <https://github.com/TrueCrimeDev/AutoHotkey> — is the
+> interpreter for this repo. These features (`Print`, `Eval`, `/Diag=json`,
+> `/CrashLog`, structured exit codes) are available with `AHK_DIAG_JSON=1` (the
+> default here). On stock AutoHotkey v2 they're unavailable and the harness falls
+> back to `/validate`.
 
-The interpreter set in `harness.env` (`AHK_BIN_WIN`), when it is the +Console fork,
-tracks upstream through the 2026-05-22 alpha.30 merge (commit `34b17011`) with extra
-runtime, diagnostic, and CLI features. `A_AhkVersion` reports `2.1-alpha.30+Console`.
+The +Console fork tracks upstream through the 2026-05-22 alpha.30 merge (commit
+`34b17011`) with extra runtime, diagnostic, and CLI features. `A_AhkVersion` reports
+`2.1-alpha.30+Console`.
 All upstream alpha.30 features still work; the additions below are fork-only.
 
 ## Features at a glance

@@ -12,14 +12,19 @@ or use the `AHK_BIN_WSL` value.
 - `check-ahk-binary.sh` blocks any other `AutoHotkey*.exe` in a Bash command, so
   interpreter drift is caught before it wastes a run.
 
-## Fork vs stock (`AHK_DIAG_JSON`)
+## Interpreter: the +Console fork
 
-This harness optionally targets a custom **v2.1-alpha.30+Console fork** with
-richer diagnostics. Set `AHK_DIAG_JSON=1` in `harness.env` if your build is that
-fork; leave `0` for stock AutoHotkey v2. The post-edit hook validates with
-`check /Diag=json` on the fork and `/validate` on stock.
+This repo targets the **AutoHotkey v2.1-alpha+Console fork** —
+<https://github.com/TrueCrimeDev/AutoHotkey> — a console-enabled build that adds
+real stdout/stderr, the `Print` and `Eval` BIFs, JSON diagnostics
+(`check /Diag=json`), structured crash logs, and structured exit codes. It is the
+recommended interpreter for AI-assisted AHK v2 work here.
 
-**Everything below is fork-only — it applies only when `AHK_DIAG_JSON=1`.**
+`AHK_DIAG_JSON=1` is the default in this repo; the post-edit hook validates with
+`check /Diag=json`. Stock AutoHotkey v2 also works (`AHK_DIAG_JSON=0`) but with
+reduced diagnostics and no `Print`/`Eval`.
+
+**The features below come from the +Console fork.**
 
 ### Fork features at a glance
 
