@@ -47,3 +47,10 @@ $RECYCLE.BIN/
 *.tmp
 *.temp
 ~*
+
+# Claude harness (machine-local config + runtime logs)
+harness.env
+.claude/error-log.jsonl
+.claude/session-events.jsonl
+.verify.*
+.test-tmp.*
