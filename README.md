@@ -100,14 +100,20 @@ Additional modules in `Modules/Supplemental/`.
 
 <div align="center">
   <h2>Claude Code Agents</h2>
-  <p><em>See <a href=".claude/agentreadme.md">agentreadme.md</a> for details.</em></p>
+  <p><em>Fresh-context investigators — launched when a task needs its own window.</em></p>
 </div>
 
 | Agent | Purpose |
 |-------|---------|
-| `ahk-version-detector` | Detects v1 vs v2 and triggers conversion |
-| `ahk-converter-runner` | Automated v1-to-v2 conversion |
-| `v1-to-v2-migrator` | Manual migration for edge cases |
+| `ahk-analysis` | Code-quality, performance, and pattern analysis with recommendations |
+| `ahk-context` | Project state, variable scope, and object-lifecycle tracking |
+| `ahk-dependency-graph` | Parse `#Include` chains into a dependency map ("what breaks if I edit X?") |
+| `ahk-profiler` | Instrument scripts with timing; report the slowest methods |
+| `ahk-test-generator` | Generate Yunit-style test suites for a class or script |
+| `ahk-com-explorer` | Introspect COM / WinAPI; generate typed wrappers and `DllCall` signatures |
+| `ahk-uia-explorer` | Dump a window's UI Automation tree and generate interaction code |
+| `ahk-orchestrator-v2` | Launch / stop / restart multiple scripts as one system |
+| `layout` | GUI layout enforcement — overlap-free, mathematically positioned controls |
 | `gui-builder` | GUI creation with events and validation |
 | `ahk-gui-layout-enforcer` | Mathematical overlap-free layouts |
 
@@ -138,7 +144,14 @@ Additional modules in `Modules/Supplemental/`.
 git clone https://github.com/TrueCrimeDev/ClautoHotkey.git
 ```
 
-Requires AutoHotkey v2. Add `Modules/` to your AI assistant's context or knowledge base.
+| Requirement | For |
+|-------------|-----|
+| AutoHotkey v2 (the [+Console fork](https://github.com/TrueCrimeDev/AutoHotkey) recommended) | Running and validating scripts |
+| [Claude Code](https://claude.com/claude-code) | The harness — hooks, skills, agents |
+| WSL or Git Bash + `jq` | The harness hooks (written in bash) |
+| Node.js | Optional — the [ahk-mcp](https://github.com/TrueCrimeDev/ahk-mcp) docs server |
+
+Add `Modules/` to your AI assistant's context, then follow **[GETTING-STARTED.md](GETTING-STARTED.md)**.
 
 ---
 
@@ -194,6 +207,24 @@ Then open this folder as the project in Claude Code. Set `AHK_DIAG_JSON=1` in
 leave `0` for stock AHK v2. Requires WSL or Git Bash and `jq`. The harness is
 also published as a standalone template:
 [ahk-claude-harness](https://github.com/TrueCrimeDev/ahk-claude-harness).
+
+**Skills** — invoke with `/<name>`:
+
+| Skill | Use it for | Skill | Use it for |
+|-------|-----------|-------|-----------|
+| `/ahk-gui` | GUIs, controls, dark mode | `/ahk-convert` | Convert v1 → v2 |
+| `/ahk-gui-gen` | Generate a GUI from a description | `/ahk-modernize` | Upgrade outdated v2 patterns |
+| `/ahk-oop` | Classes, objects, Map, properties | `/ahk-new-class` | Scaffold a new class |
+| `/ahk-text` | Strings, regex, escaping, parsing | `/ahk-docs` | Search the AHK v2 docs |
+| `/ahk-fix` | Diagnose errors, debug, fix | `/ahk-ref` | Broad multi-domain reference |
+| `/ahk-run` | Run headlessly, capture output | `/ahk-audit-errors` | Find silent failures / empty catches |
+| `/ahk-eval` | Live REPL via the fork's `Eval()` | `/ahk-mistakes` | Recurring mistakes from the log |
+| `/ahk-debug-dashboard` | Live debug state in a session | | |
+
+**Rules** (`.claude/rules/`) auto-load when you edit a matching file: `ahk-v2-syntax`
+(any `.ahk`), `gui-work` (GUI files), `lib-development` (`Lib/`), `main-script`,
+`test-scripts`, `demo-location`, `no-banner-comments`, `ahk-interpreter`, and
+`ahk-fork-features` (the +Console fork).
 
 ---
 
