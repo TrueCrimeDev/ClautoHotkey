@@ -226,6 +226,30 @@ also published as a standalone template:
 `test-scripts`, `demo-location`, `no-banner-comments`, `ahk-interpreter`, and
 `ahk-fork-features` (the +Console fork).
 
+**Hooks** — fire automatically across the Claude Code lifecycle:
+
+| Event | Hook | What it does |
+|-------|------|--------------|
+| SessionStart | `ahk-session-primer` | Loads AHK context + the skill/agent routing table |
+| UserPromptSubmit | `detect-v1-syntax` | Warns when your prompt contains AHK v1 syntax |
+| PreToolUse · edit | `inject-rules` | Auto-loads the rule matching the edited file (once per session) |
+| PreToolUse · Bash | `check-ahk-binary` | Blocks any AutoHotkey binary other than the configured one |
+| PreToolUse · Bash | `check-git-account` | Opt-in guard against pushing as a blocklisted identity |
+| PostToolUse · edit | `ahk-post-edit` | Syntax + runtime validation; **blocks** a broken edit |
+| PostToolUse · edit | `ahk-auto-reload` | Restarts a running script after you edit it |
+| PostToolUse | `error-logger` | Appends failures to `error-log.jsonl` (feeds `/ahk-mistakes`) |
+| PreCompact | `post-compact-state` | Snapshots running scripts before context compaction |
+| Stop / Notification | `session-event-logger` | Session-event logging |
+
+(`check-ahk-connection` and `post-capture-guidance` add hints for the optional debug MCP; `_harness-env.sh` is the shared config loader every hook sources.)
+
+**Commands** (`.claude/commands/`) — slash commands:
+
+| Command | What it does |
+|---------|--------------|
+| `/prime-ahk` | Prime AHK project context — recent work, running scripts, modified files, recent failures |
+| `/spec-create` → `/spec-status` | Spec-driven workflow: `spec-create`, `spec-requirements`, `spec-design`, `spec-tasks`, `spec-execute`, `spec-list`, `spec-status` |
+
 ---
 
 <div align="center">
