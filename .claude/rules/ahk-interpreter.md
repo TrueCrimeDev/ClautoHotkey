@@ -72,19 +72,34 @@ Full reference: `.claude/rules/ahk-fork-features.md`.
 `AHK_BIN_WSL` is the WSL interpreter path from `harness.env`.
 
 ```bash
-# Validate (stock AHK)
-"$AHK_BIN_WSL" /ErrorStdOut /validate "<script.ahk>"
+# Standard run
+"$AHK_BIN_WSL" "<script.ahk>"
 
-# Validate with JSON diagnostics (fork only)
-"$AHK_BIN_WSL" check /Diag=json /ErrorStdOut "<script.ahk>"
+# Debugger mode (DBGp)
+"$AHK_BIN_WSL" /Debug "<script.ahk>"
 
-# Run with stderr capture
+# Headless error output (errors to stderr, no dialogs)
 "$AHK_BIN_WSL" /ErrorStdOut "<script.ahk>"
 
-# Headless run with full diagnostics (fork only)
-"$AHK_BIN_WSL" /Headless /ErrorStdOut /CrashLog=<log-path> /StdErrFile=<err-path> "<script.ahk>"
+# Colored error output
+"$AHK_BIN_WSL" /ErrorStdOut:color "<script.ahk>"
 
-# Run with the Eval() BIF enabled (fork only)
+# Force error encoding
+"$AHK_BIN_WSL" /ErrorStdOut=UTF-8 "<script.ahk>"
+
+# Hard headless (no GUI subsystem)
+"$AHK_BIN_WSL" /Headless "<script.ahk>"
+
+# JSON diagnostics (fork)
+"$AHK_BIN_WSL" /Headless /Diag=json "<script.ahk>"
+
+# Check — syntax/load validation only (fork; or /Check)
+"$AHK_BIN_WSL" check "<script.ahk>"
+
+# Test (fork; or /Test)
+"$AHK_BIN_WSL" test "<script.ahk>"
+
+# Eval() BIF enabled (fork)
 "$AHK_BIN_WSL" /Eval /ErrorStdOut "<script.ahk>"
 ```
 
