@@ -37,16 +37,18 @@ A collection of structured reference modules that teach AI models how to write c
   <p><em>An AI-native AutoHotkey v2 development system — four parts that fit together.</em></p>
 </div>
 
-```text
-            ┌─────────────── ClautoHotkey (this repo) ───────────────┐
-            │  Knowledge: Modules/ — structured AHK v2 instruction set │
-            │  + the Claude Code harness, wired and ready             │
-            └───────────────────────┬─────────────────────────────────┘
-                                     │ Claude Code
-   Engine                  Tooling   │            Docs server
-   AutoHotkey +Console  ←  ahk-claude-harness  →  ahk-mcp
-   (Print/Eval/JSON        (hooks/rules/skills/     (docs, completion,
-    diagnostics)            agents validate edits)   diagnostics)
+```mermaid
+flowchart LR
+    E["Engine<br/>AutoHotkey +Console fork<br/>Print / Eval / JSON diagnostics"]
+    subgraph CC["Claude Code (open ClautoHotkey as the project)"]
+        direction TB
+        K["Knowledge<br/>ClautoHotkey Modules/"]
+        T["Tooling<br/>ahk-claude-harness<br/>hooks / rules / skills / agents"]
+    end
+    M["Docs server<br/>ahk-mcp<br/>docs / completion / diagnostics"]
+    K --> T
+    T -- "validates every .ahk edit" --> E
+    M -- "serves docs" --> T
 ```
 
 | Part | What it is |
