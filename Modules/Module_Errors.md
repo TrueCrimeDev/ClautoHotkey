@@ -6,21 +6,6 @@
 <!-- CROSS-REF: Module_Instructions.md, Module_Classes.md, Module_GUI.md, Module_Arrays.md, Module_DataStructures.md, Module_COM.md, Module_DllCall.md -->
 <!-- VERSION: AHK v2.0+ -->
 
-## V1 → V2 BREAKING CHANGES
-
-| v1 pattern (LLM commonly writes) | v2 correct form | Consequence |
-|----------------------------------|-----------------|-------------|
-| `x = 5 + 2` (assignment) | `x := 5 + 2` | In v2 expressions `=` is case-insensitive string comparison — silent logic error, not an assignment |
-| `MsgBox Hello, World!` / `Run notepad.exe` | `MsgBox("Hello, World!")` / `Run("notepad.exe")` | "Unknown command" parse error — every built-in is a function in v2 |
-| `%Var%` inside strings or expressions | `Var` directly; concatenate with `.` | `%Var%` is a literal six-character string in v2 expressions, not variable expansion |
-| `#If WinActive("Title")` | `#HotIf WinActive("Title")` | Context directive not recognized — context-sensitive hotkeys silently non-functional |
-| `if (ErrorLevel)` after any function call | `try { } catch as err { }` | `ErrorLevel` removed in v2; most functions never set it — condition always evaluates an unset variable |
-| `new MyClass()` | `MyClass()` | `new` is invalid in v2 — parse error, or `__New` constructor is bypassed entirely |
-| `Gui, Add, Edit, vMyEdit` / `Gui, Show` | `gui := Gui("", "Title")` → `gui.Add("Edit", "vMyEdit")` → `gui.Show()` | "Unknown command" — GUI is fully object-based in v2; command-style is not recognized |
-| `return, total` | `return total` | Parse error — comma after `return` is a v1-only holdover, invalid in v2 |
-| `SetTimer, MyFunc, 2000` | `SetTimer(MyFunc, 2000)` | "Unknown command" — `SetTimer` is a function call, not a command |
-| Passing method reference without `.Bind()` | `obj.Method.Bind(obj)` | "this has not been assigned a value" at runtime — method callbacks lose `this` context unless explicitly bound |
-
 ## API QUICK-REFERENCE
 
 ### Built-in Error Classes

@@ -6,18 +6,6 @@
 <!-- CROSS-REF: Module_Objects.md, Module_Errors.md, Module_GUI.md -->
 <!-- VERSION: AHK v2.0+ -->
 
-## V1 → V2 BREAKING CHANGES
-
-| v1 pattern (LLM commonly writes) | v2 correct form | Consequence |
-|----------------------------------|-----------------|-------------|
-| `array[0]` for first element | `array[1]` | Throws `IndexError` — 0 is not a valid Array index in v2 |
-| `array.Sort()` called directly | Custom `QuickSort(array, comparator?)` | `TypeError` — Array objects have no built-in `.Sort()` method in v2 |
-| `Array(10)` to pre-allocate 10 slots | `arr := [], arr.Capacity := 10` | Creates `[10]` — a one-element array containing the value `10`, not 10 empty slots |
-| `new Array()` constructor syntax | `Array()` or `[]` literal | `SyntaxError` — `new` keyword was dropped for built-in types in v2 |
-| `(x) => { return x * 2 }` fat-arrow block body | Named nested function inside the caller | `SyntaxError` in v2.0 — block bodies on fat-arrow functions are a v2.1 alpha feature only |
-| `for i, v in array` assuming `i` starts at 0 | `i` starts at `1` — first iteration yields `i = 1` | Off-by-one logic errors throughout loop body |
-| User-defined function named `Map` | Rename to `ArrayMap` | Shadows the built-in `Map` class — `Map()` calls in scope will fail with `TypeError` |
-
 ## API QUICK-REFERENCE
 
 ### Array (built-in)

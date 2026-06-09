@@ -6,17 +6,6 @@
 <!-- CROSS-REF: Module_Classes.md, Module_Errors.md, Module_Arrays.md, Module_Objects.md -->
 <!-- VERSION: AHK v2.0+ -->
 
-## V1 → V2 BREAKING CHANGES
-
-| v1 pattern (LLM commonly writes) | v2 correct form | Consequence |
-|----------------------------------|-----------------|-------------|
-| No `=>` syntax — full `{ return expr }` body written everywhere | `param => expr` for single-expression functions | Verbose but not broken; LLMs over-apply full bodies when fat arrow is available and cleaner |
-| `__Get(name)` two-parameter signature | `__Get(name, params)` three-parameter signature | `params` Array received by `name`; actual name argument is silently lost — every property read returns garbage |
-| `__Set(name, value)` two-parameter signature | `__Set(name, params, value)` three-parameter signature | `value` receives the `params` Array, not the assigned value — property writes silently store wrong data |
-| `ObjBindMethod(obj, "MethodName")` for method binding | `obj.MethodName.Bind(obj)` or pass method reference directly | `ObjBindMethod` is still available in v2 — no breaking change; direct method references or `Func.Bind` are the preferred v2 idioms but the v1 pattern remains valid |
-| `Func("FuncName")` to obtain a function reference | Bare name `FuncName` or `FuncName.Bind(args*)` | `Func()` lookup removed in v2; produces RuntimeError |
-| Assuming closures require an `upVar` or similar keyword | Lexical capture is automatic — no keyword needed | Extra keyword causes a parse error; variables in enclosing scope are captured by reference with no annotation |
-
 ## API QUICK-REFERENCE
 
 ### Fat Arrow Syntax Forms
