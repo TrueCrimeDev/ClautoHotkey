@@ -1,9 +1,9 @@
 ﻿# Module_Errors.md
 <!-- DOMAIN: Errors — syntax errors, runtime errors, v1→v2 migration, exception handling -->
-<!-- SCOPE: COM-specific error propagation, HRESULT codes, and deep GUI event-binding diagnostics are not covered — see Module_SystemAndCOM.md and Module_GUI.md. -->
+<!-- SCOPE: COM-specific error propagation, HRESULT codes, and deep GUI event-binding diagnostics are not covered — see Module_GUI.md and Module_COM.md. -->
 <!-- TRIGGERS: error, exception, try, catch, throw, OnError, debug, crash, "syntax error", "runtime error", "not working", "script won't run", "unknown command", "variable not assigned", ErrorLevel, UnsetError, "v1 to v2 migration", "old script broken", "unexpected behavior", "throws exception" -->
 <!-- CONSTRAINTS: Use `:=` for assignment — `=` alone in an expression is case-insensitive string comparison, not assignment; all built-in commands require function syntax with parentheses and quoted strings; `ErrorLevel` is removed in v2 — use `try/catch as err` instead; fat-arrow functions are single-expression only, never multi-line blocks; `new ClassName()` is invalid in v2 — call the class directly; register `OnError()` as the first executable statement so early throws are captured. -->
-<!-- CROSS-REF: Module_Instructions.md, Module_Classes.md, Module_GUI.md, Module_Arrays.md, Module_DataStructures.md, Module_SystemAndCOM.md, Module_FileSystem.md -->
+<!-- CROSS-REF: Module_Instructions.md, Module_Classes.md, Module_GUI.md, Module_Arrays.md, Module_DataStructures.md, Module_COM.md, Module_DllCall.md -->
 <!-- VERSION: AHK v2.0+ -->
 
 ## V1 → V2 BREAKING CHANGES
@@ -654,7 +654,7 @@ MsgBox("Hello")
 
 ## SEE ALSO
 
-> This module does NOT cover: COM-specific exception propagation and HRESULT error codes → see Module_SystemAndCOM.md
+> This module does NOT cover: COM-specific exception propagation and HRESULT error codes → see Module_COM.md and Module_DllCall.md
 > This module does NOT cover: GUI event-binding errors and GUI-specific diagnostic patterns in depth → see Module_GUI.md
 > This module does NOT cover: Array and Map iteration error patterns → see Module_Arrays.md and Module_DataStructures.md
 
@@ -663,8 +663,9 @@ MsgBox("Hello")
 - `Module_GUI.md` — GUI object creation, event binding, and control-specific error patterns that go beyond the quick reference in TIER 4.
 - `Module_Arrays.md` — Array indexing, iteration, and UnsetItemError patterns from incorrect index access.
 - `Module_DataStructures.md` — Map vs Object decision guide and `.Has()`/`.Get()` safe-access patterns referenced in TIER 6.
-- `Module_SystemAndCOM.md` — COM object lifecycle, `ComCall` error handling, and HRESULT propagation patterns.
-- `Module_FileSystem.md` — FileOpen/FileRead exception patterns, encoding errors, and file-handle lifecycle management.
+- `Module_COM.md` — COM object lifecycle, `ComCall`/HRESULT error handling, and exception propagation from automation objects.
+- `Module_DllCall.md` — `OSError`/`A_LastError` patterns for failed native calls.
+- FileOpen/FileRead exception patterns, encoding errors, and file-handle lifecycle — use built-in AHK v2 knowledge (no dedicated file-system module yet).
 
 ## ERROR DIAGNOSTIC CHECKLIST
 

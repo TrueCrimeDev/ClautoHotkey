@@ -1,9 +1,9 @@
 ﻿# Module_DynamicProperties.md
 <!-- DOMAIN: Dynamic Properties — Fat Arrow Functions, Lambdas, Closures, Meta-Functions -->
-<!-- SCOPE: Block-body arrow syntax (`=> { }`) and async/concurrent callback scheduling are not covered here — block bodies require AHK v2.1 alpha; scheduling patterns belong in Module_AsyncAndTimers.md. -->
+<!-- SCOPE: Block-body arrow syntax (`=> { }`) and async/concurrent callback scheduling are not covered here — block bodies require AHK v2.1 alpha; scheduling patterns use built-in AHK v2 knowledge (no dedicated async/timers module yet). -->
 <!-- TRIGGERS: =>, fat arrow, arrow function, lambda, closure, __Get, __Set, __Call, DefineProp, dynamic property, meta-function, functional programming, currying, composition, "short function syntax", "inline callback", "computed property", "property that calculates", "function remembers variables", "factory function" -->
 <!-- CONSTRAINTS: Fat arrow functions evaluate exactly one expression — block body `=> { }` is a v2.1 alpha feature; assign a named nested function for any multi-statement logic in v2.0. `__Get(name, params)` and `__Set(name, params, value)` must include the `params` Array parameter — omitting it silently shifts all subsequent arguments, corrupting property reads and writes. -->
-<!-- CROSS-REF: Module_Functions.md, Module_Classes.md, Module_Errors.md, Module_Arrays.md, Module_Objects.md, Module_AsyncAndTimers.md -->
+<!-- CROSS-REF: Module_Classes.md, Module_Errors.md, Module_Arrays.md, Module_Objects.md -->
 <!-- VERSION: AHK v2.0+ -->
 
 ## V1 → V2 BREAKING CHANGES
@@ -384,13 +384,13 @@ sum     := numbers.Reduce((a, b) => a + b)      ; 15
 
 ## SEE ALSO
 
-> This module does NOT cover: traditional function syntax, default parameters, variadic `args*` params, and the full `Func` object API → see Module_Functions.md
+> This module does NOT cover: traditional function syntax, default parameters, variadic `args*` params, and the full `Func` object API → use built-in AHK v2 knowledge (no dedicated functions module yet).
 > This module does NOT cover: full class property declaration, inheritance, prototype chain, and `__New` constructor → see Module_Classes.md
 > This module does NOT cover: `try/catch` wrapping for `PropertyError` and `ValueError` raised from `__Get`/`__Set` → see Module_Errors.md
 > This module does NOT cover: built-in Array methods (`Push`, `Pop`, `RemoveAt`, `Sort`) and standard iteration patterns → see Module_Arrays.md
-> This module does NOT cover: `SetTimer`/`OnMessage` async callback scheduling and timer closure patterns → see Module_AsyncAndTimers.md
+> This module does NOT cover: `SetTimer`/`OnMessage` async callback scheduling and timer closure patterns → use built-in AHK v2 knowledge (no dedicated async/timers module yet).
 
-- `Module_Functions.md` — traditional function definitions, default parameters, variadic `args*`, and the complete `Func` object API including `Bind()`, `Call()`, `MinParams`, and `MaxParams`.
+- Traditional function definitions, default parameters, variadic `args*`, and the `Func` object API (`Bind()`, `Call()`, `MinParams`, `MaxParams`) — use built-in AHK v2 knowledge (no dedicated functions module yet).
 - `Module_Classes.md` — class property declaration with `{get/set}` blocks, inheritance, `__New` constructor, and prototype-chain OOP patterns that pair with the fat arrow property forms in TIER 4.
 - `Module_Errors.md` — `try/catch` patterns for `PropertyError` and `ValueError` thrown from `__Get`/`__Set` validators; custom exception class definitions and error propagation.
 - `Module_Arrays.md` — built-in Array methods and iteration; the `FunctionalArray` subclass in TIER 6 extends these primitives rather than replacing them.

@@ -1,9 +1,9 @@
 ﻿# Module_TextProcessing.md
 <!-- DOMAIN: Text Processing -->
-<!-- SCOPE: File I/O text encoding, GUI control text content, hotstring trigger definitions, and clipboard operations are not covered here — see Module_FileSystem.md, Module_GUI.md, and Module_InputAndHotkeys.md -->
+<!-- SCOPE: File I/O text encoding, GUI control text content, hotstring trigger definitions, and clipboard operations are not covered here — see Module_GUI.md (control text); file I/O, hotstrings, and clipboard use built-in AHK v2 knowledge (no dedicated modules yet). -->
 <!-- TRIGGERS: StrReplace(), RegExMatch(), RegExReplace(), InStr(), SubStr(), StrSplit(), Format(), Trim(), "string", "text", "escape", "backtick", "regex", "pattern", "join array", "replace text", "validate input", "split string", "parse text", "special character" -->
 <!-- CONSTRAINTS: AHK v2 uses backtick (`) as the sole escape character — never backslash; `"\n"` is literally backslash-n, not a newline. Regex mode flags use `option)` prefix syntax (`i)pattern`), never suffix or inline flag syntax. RegExMatch() output var requires `&` ByRef prefix — omitting it silently prevents capture group population. Array objects have no `.Join()` method — use a ternary-separator loop or RTrim() pattern. -->
-<!-- CROSS-REF: Module_FileSystem.md, Module_GUI.md, Module_InputAndHotkeys.md, Module_Errors.md, Module_Arrays.md -->
+<!-- CROSS-REF: Module_GUI.md, Module_Errors.md, Module_Arrays.md, Module_Escapes.md -->
 <!-- VERSION: AHK v2.0+ -->
 
 ## V1 → V2 BREAKING CHANGES
@@ -300,7 +300,7 @@ class StringValidator {
 
 **StringBuilder pattern vs inline `.=` concatenation** — for building strings from fewer than ~20 parts, inline `.=` concatenation is fast enough; the `StringBuilder` class (TIER 6) amortises allocation cost by collecting parts in an Array and joining once, which matters when building strings from hundreds of fragments in a loop.
 
-**`StrSplit()` result size** — splitting a large text by a single character produces an Array with one element per separator occurrence; for very large inputs, process line-by-line with `FileOpen` + `.ReadLine()` (see Module_FileSystem.md) rather than splitting an entire file content string into memory at once.
+**`StrSplit()` result size** — splitting a large text by a single character produces an Array with one element per separator occurrence; for very large inputs, process line-by-line with `FileOpen` + `.ReadLine()` rather than splitting an entire file content string into memory at once.
 
 ## TIER 6 — StringBuilder and EscapeValidator: Advanced String Construction
 > METHODS COVERED: StringBuilder.Add · StringBuilder.AddLine · StringBuilder.AddFormattedLine · StringBuilder.Join · StringBuilder.ToString · EscapeValidator.ValidateString · EscapeValidator.SanitizeForDisplay · EscapeValidator.EscapeForCommand · StrReplace · InStr · RegExMatch · Format · InputBox · RTrim
@@ -425,13 +425,13 @@ try {
 
 ## SEE ALSO
 
-> This module does NOT cover: reading and writing text files with encoding flags → see Module_FileSystem.md
+> This module does NOT cover: reading and writing text files with encoding flags → use built-in AHK v2 knowledge (no dedicated file-system module yet).
 > This module does NOT cover: GUI Edit/Text control content manipulation and multi-line display → see Module_GUI.md
-> This module does NOT cover: hotstring trigger definitions, colon-colon syntax, and hotstring options → see Module_InputAndHotkeys.md
+> This module does NOT cover: hotstring trigger definitions, colon-colon syntax, and hotstring options → use built-in AHK v2 knowledge (no dedicated input/hotkeys module yet).
 > This module does NOT cover: try/catch patterns for regex errors, Error subclasses, and structured error propagation → see Module_Errors.md
 
-- `Module_FileSystem.md` — FileOpen/FileRead/FileAppend with explicit encoding flags; line-by-line text iteration that avoids loading entire file content into a string.
+- FileOpen/FileRead/FileAppend with explicit encoding flags and line-by-line text iteration — use built-in AHK v2 knowledge (no dedicated file-system module yet).
 - `Module_Arrays.md` — typed Array construction, Push/Pop/InsertAt, and iteration patterns used to store StrSplit results and StringValidator error collections.
 - `Module_Errors.md` — try/catch wrapping for user-supplied regex patterns, Error subclass selection, and structured error propagation from validation classes.
 - `Module_GUI.md` — GUI Edit control content, multi-line text display, and how `` `n `` interacts with Edit control line endings.
-- `Module_InputAndHotkeys.md` — hotstring definitions, colon escaping in `::trigger::replacement` syntax, and hotstring option flags.
+- Hotstring definitions, colon escaping in `::trigger::replacement` syntax, and hotstring option flags — use built-in AHK v2 knowledge (no dedicated input/hotkeys module yet).

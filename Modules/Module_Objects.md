@@ -52,7 +52,7 @@
 ### Supporting Functions (used in examples — defined in other modules)
 | Function | Primary Module | Role in examples |
 |----------|---------------|-----------------|
-| `SetTimer()` | Module_AsyncAndTimers.md | Registers BoundFunc callbacks |
+| `SetTimer()` | (built-in — no module yet) | Registers BoundFunc callbacks |
 | `Gui.OnEvent()` | Module_GUI.md | Wires GUI control events to bound methods |
 | `FormatTime()` | Module_TextProcessing.md | Used in computed property examples |
 | `RegExMatch()` | Module_TextProcessing.md | Used in validation helper examples |

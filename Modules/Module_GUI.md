@@ -1,9 +1,9 @@
 ﻿# Module_GUI.md
 <!-- DOMAIN: GUI -->
-<!-- SCOPE: Screen graphics operations (PixelSearch, ImageSearch, screen overlays) and WebView2/IE-based browser controls embedded in a Gui are not covered — see Module_GraphicsAndScreen.md -->
+<!-- SCOPE: Screen graphics operations (PixelSearch, ImageSearch, screen overlays) and WebView2/IE-based browser controls embedded in a Gui are not covered — use built-in AHK v2 knowledge (no dedicated graphics/screen module yet). -->
 <!-- TRIGGERS: Gui(), AddText(), AddEdit(), AddButton(), AddListView(), AddTreeView(), AddGroupBox(), Submit(), OnEvent(), .Bind(), GuiForm, "make a window", "add a button", "create a form", "gui layout", "position controls", "dialog", "listview rows", "treeview nodes", "resizable window", "modal dialog", "currentY", "padding" -->
 <!-- CONSTRAINTS: Use Gui() constructor inside a class; v1 command syntax (Gui, Add, Show, Destroy) does not exist in v2. Store all control references in Map() — never {}. Bind class-method event handlers with .Bind(this). gui.Close() does not exist — use gui.Hide() to keep the object alive or gui.Destroy() to fully remove it. Never place a width dimension on a Section option string. -->
-<!-- CROSS-REF: Module_GraphicsAndScreen.md, Module_InputAndHotkeys.md, Module_Classes.md, Module_Errors.md -->
+<!-- CROSS-REF: Module_Classes.md, Module_Errors.md -->
 <!-- VERSION: AHK v2.0+ -->
 
 ## V1 → V2 BREAKING CHANGES
@@ -1166,12 +1166,12 @@ CreateProductionGui()
 
 ## SEE ALSO
 
-> This module does NOT cover: PixelSearch, ImageSearch, screen overlays, and GDI drawing — see Module_GraphicsAndScreen.md
-> This module does NOT cover: Hotkey and HotIf rules outside the GUI context (global hotkeys, context-sensitivity beyond HotIfWinExist) — see Module_InputAndHotkeys.md
+> This module does NOT cover: PixelSearch, ImageSearch, screen overlays, and GDI drawing — use built-in AHK v2 knowledge (no dedicated graphics/screen module yet).
+> This module does NOT cover: Hotkey and HotIf rules outside the GUI context (global hotkeys, context-sensitivity beyond HotIfWinExist) — use built-in AHK v2 knowledge (no dedicated input/hotkeys module yet).
 > This module does NOT cover: Class inheritance patterns, meta-functions, and OOP design for GUI base classes beyond LayoutAwareGui — see Module_Classes.md
 > This module does NOT cover: try/catch wrapping for GUI creation failures and control-access errors — see Module_Errors.md
 
-- `Module_GraphicsAndScreen.md` — PixelSearch, ImageSearch, GDI+, screen coordinate systems, and overlay window techniques.
-- `Module_InputAndHotkeys.md` — Hotkey(), HotIf(), HotIfWinActive/Exist(), Send(), and global keyboard/mouse input handling outside the GUI event system.
+- PixelSearch, ImageSearch, GDI+, screen coordinate systems, and overlay windows — use built-in AHK v2 knowledge (no dedicated graphics/screen module yet).
+- Hotkey(), HotIf(), HotIfWinActive/Exist(), Send(), and global keyboard/mouse input outside the GUI event system — use built-in AHK v2 knowledge (no dedicated input/hotkeys module yet).
 - `Module_Classes.md` — Full OOP patterns for extending LayoutAwareGui, meta-function design (`__Get`/`__Set`/`__Call`), and class property declarations.
 - `Module_Errors.md` — try/catch patterns for FileOpen, Gui creation failure, and catching MethodError from invalid control access.
