@@ -14,8 +14,8 @@ Generate complete, production-quality GUIs from natural language descriptions.
 ## Before Generating
 
 1. **Invoke** `/ahk-gui` skill to load GUI module knowledge
-2. **Read** `ClautoHotkey/Modules/Module_GUI.md` for patterns
-3. **Read** `ClautoHotkey/Modules/Supplemental/Module_GUI_Layout.md` for positioning rules
+2. **Read** `Modules/Module_GUI.md` for patterns
+3. **Read** `Modules/Supplemental/Module_GUI_Layout.md` for positioning rules
 
 ## Generation Workflow
 

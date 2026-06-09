@@ -13,10 +13,10 @@ description: >
 
 When this skill is invoked, load the following module files:
 
-1. **Read** `ClautoHotkey/Modules/Module_TextProcessing.md` — String operations, concatenation, text manipulation
-2. **Read** `ClautoHotkey/Modules/Module_Escapes.md` — Escape sequences, quote handling, special characters
-3. **Read** `ClautoHotkey/Modules/Supplemental/Module_Regex.md` — PCRE regex patterns for AHK v2
-4. **Read** `ClautoHotkey/Modules/Supplemental/Module_Strings.md` — String method reference
+1. **Read** `Modules/Module_TextProcessing.md` — String operations, concatenation, text manipulation
+2. **Read** `Modules/Module_Escapes.md` — Escape sequences, quote handling, special characters
+3. **Read** `Modules/Supplemental/Module_Regex.md` — PCRE regex patterns for AHK v2
+4. **Read** `Modules/Supplemental/Module_Strings.md` — String method reference
 
 ## Critical Text Rules (Always Apply)
 

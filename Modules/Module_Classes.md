@@ -1,10 +1,14 @@
-# Module_Classes.md
-<!-- DOMAIN: Classes -->
-<!-- SCOPE: Prototype chain manipulation, raw ObjPtr arithmetic, and GUI control subclassing belong in Module_ClassPrototyping.md and Module_GUI.md — this module covers class definition, inheritance, meta-functions, factory patterns, resource lifecycle, and observer patterns only. -->
-<!-- TRIGGERS: class, extends, __New, __Delete, __Get, __Set, __Call, __Enum, super, static, inheritance, "create object", "object-oriented", "instantiate", "constructor", "destructor", "method chaining", "factory pattern", "observer pattern", "resource cleanup", "weak reference" -->
-<!-- CONSTRAINTS: Instantiate classes with ClassName() — never `new ClassName()` (TypeError in v2). Always call .Bind(this) on event/timer callbacks — raw method references lose `this` context. Use super.__New(args*) not super() in derived constructors. Never rely on __Delete() timing — always provide an explicit dispose() method for deterministic cleanup. -->
-<!-- CROSS-REF: Module_ClassPrototyping.md, Module_GUI.md, Module_Errors.md, Module_Arrays.md, Module_Objects.md -->
-<!-- VERSION: AHK v2.0+ -->
+---
+name: Module_Classes
+description: 'Prototype chain manipulation, raw ObjPtr arithmetic, and GUI control subclassing belong
+  in Module_ClassPrototyping.md and Module_GUI.md — this module covers class definition, inheritance,
+  meta-functions, factory patterns, resource lifecycle, and observer patterns only. TRIGGER when the request
+  involves: class, extends, __New, __Delete, __Get, __Set, __Call, __Enum, super, static, inheritance,
+  "create object", "object-oriented", "instantiate", "constructor", "destructor", "method chaining", "factory
+  pattern", "observer pattern", "resource cleanup", "weak reference"'
+---
+
+# Module_Classes
 
 ## API QUICK-REFERENCE
 

@@ -1,10 +1,16 @@
-# Module_DllCall.md
-<!-- DOMAIN: DllCall, Buffer, Struct, and raw memory -->
-<!-- SCOPE: COM/IDispatch automation and vtable ComCall belong in Module_COM.md; Windows messages, subclassing, and WinRT activation belong in Module_WinAPI.md. This module is the native-call and memory-marshalling foundation those two build on. -->
-<!-- TRIGGERS: DllCall, Buffer, NumPut, NumGet, StrPut, StrGet, CallbackCreate, CallbackFree, Struct, VarSetStrCapacity, A_LastError, "call a Windows API", "call a native function", "pointer", "struct", "marshal", "raw memory", "pass a struct", "output parameter", "winapi", "user32", "kernel32", "Ptr type" -->
-<!-- CONSTRAINTS: A Buffer owns its memory for the lifetime of the AHK variable holding it — never pass `.Ptr` to an API that retains it past that lifetime without keeping the Buffer alive. NumPut/NumGet take a class-agnostic type STRING ("Int","UInt","Ptr",...), while alpha.30 typed `Struct` fields take a class REFERENCE (Int32, UInt32, IntPtr) — never an `i32`/`u32`/`uptr` string and never a bare byte count. There is no UInt64 type class; use Int64 and handle the sign yourself. CallbackCreate returns a pointer that must be released with CallbackFree when no longer needed. -->
-<!-- CROSS-REF: Module_COM.md, Module_WinAPI.md, Module_Errors.md, Module_DataStructures.md -->
-<!-- VERSION: AHK v2.0+ (typed Struct requires the v2.1-alpha.30 +Console fork) -->
+---
+name: Module_DllCall
+description: 'COM/IDispatch automation and vtable ComCall belong in Module_COM.md; Windows messages, subclassing,
+  and WinRT activation belong in Module_WinAPI.md. This module is the native-call and memory-marshalling
+  foundation those two build on. TRIGGER when the request involves: DllCall, Buffer, NumPut, NumGet, StrPut,
+  StrGet, CallbackCreate, CallbackFree, Struct, VarSetStrCapacity, A_LastError, "call a Windows API",
+  "call a native function", "pointer", "struct", "marshal", "raw memory", "pass a struct", "output parameter",
+  "winapi", "user32", "kernel32", "Ptr type"'
+---
+
+# Module_DllCall
+
+_AHK v2.0+ (typed Struct requires the v2.1-alpha.30 +Console fork)_
 
 ## API QUICK-REFERENCE
 

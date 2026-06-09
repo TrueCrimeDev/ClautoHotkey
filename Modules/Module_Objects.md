@@ -1,10 +1,13 @@
-﻿# Module_Objects.md
-<!-- DOMAIN: Objects and OOP -->
-<!-- SCOPE: Advanced meta-functions (__Get/__Set/__Call/__Delete/__Enum), mixin patterns, and deep class hierarchies are not covered — see Module_Classes.md. -->
-<!-- TRIGGERS: object, class, property, method, inheritance, extends, descriptor, prototype, DefineProp, HasProp, HasMethod, HasBase, GetMethod, ObjBindMethod, BoundFunc, "create object", "property validation", "method binding", "computed property", "callback context", "check object type", "read-only property" -->
-<!-- CONSTRAINTS: Instantiate classes with ClassName() — never `new ClassName()`; the keyword was removed in v2 and throws TypeError. Arrow syntax (=>) is valid only for single-expression DefineProp descriptor bodies; multi-line descriptor bodies require named function references or AHK v2 throws a parse error. -->
-<!-- CROSS-REF: Module_Classes.md, Module_DataStructures.md, Module_GUI.md, Module_Errors.md, Module_Arrays.md -->
-<!-- VERSION: AHK v2.0+ -->
+---
+name: Module_Objects
+description: 'Advanced meta-functions (__Get/__Set/__Call/__Delete/__Enum), mixin patterns, and deep class
+  hierarchies are not covered — see Module_Classes.md. TRIGGER when the request involves: object, class,
+  property, method, inheritance, extends, descriptor, prototype, DefineProp, HasProp, HasMethod, HasBase,
+  GetMethod, ObjBindMethod, BoundFunc, "create object", "property validation", "method binding", "computed
+  property", "callback context", "check object type", "read-only property"'
+---
+
+# Module_Objects
 
 ## API QUICK-REFERENCE
 

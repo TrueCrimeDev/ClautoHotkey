@@ -1,10 +1,14 @@
-﻿# Module_TextProcessing.md
-<!-- DOMAIN: Text Processing -->
-<!-- SCOPE: File I/O text encoding, GUI control text content, hotstring trigger definitions, and clipboard operations are not covered here — see Module_GUI.md (control text); file I/O, hotstrings, and clipboard use built-in AHK v2 knowledge (no dedicated modules yet). -->
-<!-- TRIGGERS: StrReplace(), RegExMatch(), RegExReplace(), InStr(), SubStr(), StrSplit(), Format(), Trim(), "string", "text", "escape", "backtick", "regex", "pattern", "join array", "replace text", "validate input", "split string", "parse text", "special character" -->
-<!-- CONSTRAINTS: AHK v2 uses backtick (`) as the sole escape character — never backslash; `"\n"` is literally backslash-n, not a newline. Regex mode flags use `option)` prefix syntax (`i)pattern`), never suffix or inline flag syntax. RegExMatch() output var requires `&` ByRef prefix — omitting it silently prevents capture group population. Array objects have no `.Join()` method — use a ternary-separator loop or RTrim() pattern. -->
-<!-- CROSS-REF: Module_GUI.md, Module_Errors.md, Module_Arrays.md, Module_Escapes.md -->
-<!-- VERSION: AHK v2.0+ -->
+---
+name: Module_TextProcessing
+description: 'File I/O text encoding, GUI control text content, hotstring trigger definitions, and clipboard
+  operations are not covered here — see Module_GUI.md (control text); file I/O, hotstrings, and clipboard
+  use built-in AHK v2 knowledge (no dedicated modules yet). TRIGGER when the request involves: StrReplace(),
+  RegExMatch(), RegExReplace(), InStr(), SubStr(), StrSplit(), Format(), Trim(), "string", "text", "escape",
+  "backtick", "regex", "pattern", "join array", "replace text", "validate input", "split string", "parse
+  text", "special character"'
+---
+
+# Module_TextProcessing
 
 ## API QUICK-REFERENCE
 

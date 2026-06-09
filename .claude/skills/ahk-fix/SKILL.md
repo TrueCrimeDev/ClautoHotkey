@@ -13,10 +13,10 @@ description: >
 
 When this skill is invoked, load the following module files:
 
-1. **Read** `ClautoHotkey/Modules/Module_Errors.md` — V1→V2 breaking changes, error class hierarchy, API quick-reference, anti-patterns, diagnostic checklist
-2. **Read** `ClautoHotkey/Modules/Supplemental/Module_ErrorHandling.md` — Additional error types, try/catch patterns, prevention strategies
-3. **Read** `ClautoHotkey/Modules/Supplemental/Module_Debug.md` — Systematic debugging process, code inspection, resolution strategies
-4. **Read** `ClautoHotkey/Modules/Supplemental/Module_Components.md` — Common component patterns to validate against
+1. **Read** `Modules/Module_Errors.md` — V1→V2 breaking changes, error class hierarchy, API quick-reference, anti-patterns, diagnostic checklist
+2. **Read** `Modules/Supplemental/Module_ErrorHandling.md` — Additional error types, try/catch patterns, prevention strategies
+3. **Read** `Modules/Supplemental/Module_Debug.md` — Systematic debugging process, code inspection, resolution strategies
+4. **Read** `Modules/Supplemental/Module_Components.md` — Common component patterns to validate against
 
 ## Diagnosis Workflow
 

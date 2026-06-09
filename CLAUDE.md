@@ -112,18 +112,20 @@ routing table there maps keywords to the modules that exist:
 | version, fork, Print/Eval, portable, #Requires | `Module_Versions.md` |
 
 Domains without a dedicated module (files, hotkeys, timers, networking, screen) fall
-back to built-in AHK v2 knowledge. Per-LLM system prompts that mirror these
-rules for other models live in `System_Prompts/` (a shared `_Core.md` + thin wrappers).
+back to built-in AHK v2 knowledge. Each module carries YAML frontmatter (`name` +
+trigger-rich `description`) and is surfaced by a matching skill — the harness routes
+on those descriptions natively, so there is no manual routing table to maintain.
 
 ## Directory structure
 
 ```
-/Modules/      - Structured AHK v2 knowledge (start at Module_Instructions.md)
-/System_Prompts/ - Per-LLM prompts (_Core.md + thin wrappers)
+/Modules/      - Structured AHK v2 knowledge, one per domain (frontmatter + body)
+/.claude/      - The harness: rules, skills, agents, hooks
 /AHK_Notes/    - Examples and patterns (Classes, Concepts, Methods, Patterns, Snippets)
 /Scripts/      - User-facing utility applications
 /Tests/        - Test scripts and validation tools
 /Lib/          - Shared libraries (DarkModeModular.ahk, etc.)
+/legacy/       - Pre-harness prompts/scripts (System_Prompts, helper tools) — reference only
 /.claude/      - The harness: rules, skills, agents, hooks
 ```
 

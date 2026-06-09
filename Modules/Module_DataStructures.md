@@ -1,10 +1,14 @@
-﻿# Module_DataStructures.md
-<!-- DOMAIN: Data Structures -->
-<!-- SCOPE: Deep copy via DeepClone, functional Map/Filter/Reduce helpers, Sort algorithms, and set operations (Union/Intersection/Difference) are not covered here — see Module_Arrays.md. -->
-<!-- TRIGGERS: Array, Map, Push, Pop, InsertAt, RemoveAt, Delete, Has, Get, Set, Clear, Clone, Count, Length, Capacity, CaseSense, Default, __Enum, "key-value", "dictionary", "list", "collection", "store ordered items", "store named settings", "iterate all elements", "check key existence", "case-insensitive lookup", "nested data", "data storage" -->
-<!-- CONSTRAINTS: Never use {key: val} object literals for data — {} creates an Object lacking Map's method set (.Has, .Get, .Count, .CaseSense, .Delete, .Clear, for-loop enumeration); use Map() exclusively. Array indices are 1-based (arr[0] always throws IndexError); negative indices are valid (arr[-1] = last element). Set Map.CaseSense before inserting any keys — changing it on a non-empty Map throws. Clone() is always shallow. -->
-<!-- CROSS-REF: Module_Arrays.md, Module_Objects.md, Module_Classes.md, Module_Errors.md -->
-<!-- VERSION: AHK v2.0+ -->
+---
+name: Module_DataStructures
+description: 'Deep copy via DeepClone, functional Map/Filter/Reduce helpers, Sort algorithms, and set
+  operations (Union/Intersection/Difference) are not covered here — see Module_Arrays.md. TRIGGER when
+  the request involves: Array, Map, Push, Pop, InsertAt, RemoveAt, Delete, Has, Get, Set, Clear, Clone,
+  Count, Length, Capacity, CaseSense, Default, __Enum, "key-value", "dictionary", "list", "collection",
+  "store ordered items", "store named settings", "iterate all elements", "check key existence", "case-insensitive
+  lookup", "nested data", "data storage"'
+---
+
+# Module_DataStructures
 
 ## API QUICK-REFERENCE
 

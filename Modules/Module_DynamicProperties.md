@@ -1,10 +1,14 @@
-﻿# Module_DynamicProperties.md
-<!-- DOMAIN: Dynamic Properties — Fat Arrow Functions, Lambdas, Closures, Meta-Functions -->
-<!-- SCOPE: Block-body arrow syntax (`=> { }`) and async/concurrent callback scheduling are not covered here — block bodies require AHK v2.1 alpha; scheduling patterns use built-in AHK v2 knowledge (no dedicated async/timers module yet). -->
-<!-- TRIGGERS: =>, fat arrow, arrow function, lambda, closure, __Get, __Set, __Call, DefineProp, dynamic property, meta-function, functional programming, currying, composition, "short function syntax", "inline callback", "computed property", "property that calculates", "function remembers variables", "factory function" -->
-<!-- CONSTRAINTS: Fat arrow functions evaluate exactly one expression — block body `=> { }` is a v2.1 alpha feature; assign a named nested function for any multi-statement logic in v2.0. `__Get(name, params)` and `__Set(name, params, value)` must include the `params` Array parameter — omitting it silently shifts all subsequent arguments, corrupting property reads and writes. -->
-<!-- CROSS-REF: Module_Classes.md, Module_Errors.md, Module_Arrays.md, Module_Objects.md -->
-<!-- VERSION: AHK v2.0+ -->
+---
+name: Module_DynamicProperties
+description: 'Block-body arrow syntax (`=> { }`) and async/concurrent callback scheduling are not covered
+  here — block bodies require AHK v2.1 alpha; scheduling patterns use built-in AHK v2 knowledge (no dedicated
+  async/timers module yet). TRIGGER when the request involves: =>, fat arrow, arrow function, lambda,
+  closure, __Get, __Set, __Call, DefineProp, dynamic property, meta-function, functional programming,
+  currying, composition, "short function syntax", "inline callback", "computed property", "property that
+  calculates", "function remembers variables", "factory function"'
+---
+
+# Module_DynamicProperties
 
 ## API QUICK-REFERENCE
 

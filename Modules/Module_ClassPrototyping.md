@@ -1,10 +1,14 @@
-﻿# Module_ClassPrototyping.md
-<!-- DOMAIN: Class Prototyping -->
-<!-- SCOPE: Static class definitions using the `class` keyword, standard inheritance via `extends`, and __Item / __Enum meta-function patterns are not covered — see Module_Classes.md and Module_Objects.md. -->
-<!-- TRIGGERS: DefineProp, ObjSetBase, HasProp, HasMethod, "property descriptor", "descriptor object", "dynamic getter", "readonly property", "intercept property assignment", "change method at runtime", "add property to instance", "runtime class generation", "method decorator", "class generator", "prototyping" -->
-<!-- CONSTRAINTS: Prefer creating descriptor objects with Object() over {}; while both produce an Object instance of the same type and both are accepted by DefineProp, Object() is the explicit, unambiguous convention for descriptor containers in this module series. Every Get/Set/Call descriptor function must accept the object instance as its first parameter — omitting it causes the function to receive shifted arguments with no runtime error. -->
-<!-- CROSS-REF: Module_Classes.md, Module_Objects.md, Module_Errors.md -->
-<!-- VERSION: AHK v2.0+ -->
+---
+name: Module_ClassPrototyping
+description: 'Static class definitions using the `class` keyword, standard inheritance via `extends`,
+  and __Item / __Enum meta-function patterns are not covered — see Module_Classes.md and Module_Objects.md.
+  TRIGGER when the request involves: DefineProp, ObjSetBase, HasProp, HasMethod, "property descriptor",
+  "descriptor object", "dynamic getter", "readonly property", "intercept property assignment", "change
+  method at runtime", "add property to instance", "runtime class generation", "method decorator", "class
+  generator", "prototyping"'
+---
+
+# Module_ClassPrototyping
 
 ## API QUICK-REFERENCE
 

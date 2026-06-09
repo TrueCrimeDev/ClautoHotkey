@@ -1,10 +1,13 @@
-﻿# Module_Arrays.md
-<!-- DOMAIN: Arrays -->
-<!-- SCOPE: Key-value storage with Map(), deep-clone of circular-reference graphs, GUI control binding, and file-path batch operations are not covered — see Module_Objects.md (key-value storage) and Module_GUI.md (control binding); file/path batch work uses built-in AHK v2 knowledge (no dedicated module yet). -->
-<!-- TRIGGERS: array, list, collection, sort, filter, reduce, "store multiple values", "iterate collection", "remove duplicates", "deep copy", "transform elements", ArrayMap, QuickSort, Unique, IndexOf -->
-<!-- CONSTRAINTS: Arrays are 1-based — arr[0] is never the first element (it throws or returns unset). Array objects have NO built-in .Sort() method; use a custom QuickSort() with a comparator callback. Array(N) does NOT pre-allocate N slots — it creates [N] (an array containing the value N); use arr.Capacity := N instead. Fat-arrow functions with block bodies `(x) => { return x }` are invalid in AHK v2.0; use named nested functions for multi-statement callbacks. -->
-<!-- CROSS-REF: Module_Objects.md, Module_Errors.md, Module_GUI.md -->
-<!-- VERSION: AHK v2.0+ -->
+---
+name: Module_Arrays
+description: 'Key-value storage with Map(), deep-clone of circular-reference graphs, GUI control binding,
+  and file-path batch operations are not covered — see Module_Objects.md (key-value storage) and Module_GUI.md
+  (control binding); file/path batch work uses built-in AHK v2 knowledge (no dedicated module yet). TRIGGER
+  when the request involves: array, list, collection, sort, filter, reduce, "store multiple values", "iterate
+  collection", "remove duplicates", "deep copy", "transform elements", ArrayMap, QuickSort, Unique, IndexOf'
+---
+
+# Module_Arrays
 
 ## API QUICK-REFERENCE
 
