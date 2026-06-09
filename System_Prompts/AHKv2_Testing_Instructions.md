@@ -5,7 +5,7 @@ These instructions define how to handle AutoHotkey v2 code generation, file mana
 ## File Location Rules
 
 1. **All AutoHotkey v2 code files should be saved exclusively in the ClautoHotkey folder.**
-   - Base path: `c:/Users/uphol/Documents/Design/Coding/AHK/!Running/ClautoHotkey`
+   - Base path: the cloned `ClautoHotkey/` repo root (wherever you cloned it).
    - Any new AHK v2 scripts should be created in this folder or appropriate subfolders
    - Never create AHK v2 files outside this directory structure
    
@@ -17,21 +17,18 @@ These instructions define how to handle AutoHotkey v2 code generation, file mana
 
 ## Execution Command
 
-When executing AutoHotkey v2 scripts for testing, use the following command format:
+When executing AutoHotkey v2 scripts for testing, resolve the interpreter from
+`harness.env` (`AHK_BIN_WIN` → `AHK_BIN_WSL`) — never hardcode a path:
 
-```powershell
-& "c:\Program Files\AutoHotkey\v2\AutoHotkey64.exe" /ErrorStdOut=utf-8 "<script_path>"
-```
-
-Example:
-```powershell
-& "c:\Program Files\AutoHotkey\v2\AutoHotkey64.exe" /ErrorStdOut=utf-8 "c:\Users\uphol\Documents\Design\Coding\AHK\!Running\ClautoHotkey\TestScript.ahk"
+```bash
+source .claude/hooks/_harness-env.sh
+"$AHK_BIN_WSL" /ErrorStdOut=utf-8 "<script_path>"
 ```
 
 Key features of this command:
-1. Uses the official AutoHotkey v2 interpreter
+1. Uses the repo's configured AHK v2 interpreter (the +Console fork by default)
 2. Redirects error output to standard output with UTF-8 encoding
-3. Matches the command format used by the VS Code AutoHotkey extension
+3. Stays consistent with the harness hooks, which resolve the same binary
 
 ## Testing Workflow
 

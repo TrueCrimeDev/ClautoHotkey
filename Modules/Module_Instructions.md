@@ -287,68 +287,80 @@
   only the relevant module .md files for the current request. Do not load all files at once.
 
   <routing_table>
+    Targets shown as → Module_*.md are retrievable files. Targets marked
+    "(built-in — no module yet)" have no dedicated file: apply your built-in
+    AHK v2 knowledge for that domain and do not attempt to retrieve a file.
+
     Arrays           : "array", "list", "collection", "filter", "map", "reduce", "sort",
                        "unique", "flatten", "iterate", "batch"             → Module_Arrays.md
     Async & Timers   : "timer", "sleep", "wait", "loop", "interval",
-                       "background", "async", "SetTimer"                  → Module_AsyncAndTimers.md
+                       "background", "async", "SetTimer"                  → (built-in — no module yet)
     Classes          : "class", "inheritance", "extends", "super", "__New", "__Delete",
                        "static", "nested class", "factory"                 → Module_Classes.md
     Class Prototyping: "prototyping", "class generator", "runtime class",
                        "property descriptor", "CreateClass"               → Module_ClassPrototyping.md
     Data Structures  : "map", "key-value", "dictionary", "storage", "settings",
                        "configuration", "cache"                           → Module_DataStructures.md
+    COM              : "com", "comobject", "comcall", "comvalue", "idispatch",
+                       "excel", "word", "wmi", "safearray", "event sink"  → Module_COM.md
     DllCall & Memory : "dllcall", "buffer", "numput", "numget", "struct",
-                       "pointer", "memory", "c++", "winapi"               → Module_DllCallAndMemory.md
+                       "callbackcreate", "strput", "pointer", "memory"   → Module_DllCall.md
     Dyn. Properties  : "=>", "fat arrow", "lambda", "closure", "dynamic property",
                        "__Get", "__Set", "__Call"                          → Module_DynamicProperties.md
     Errors           : "error", "wrong", "broken", "fail", "syntax error", "runtime error",
                        "undefined", "not working", "v1 to v2"             → Module_Errors.md
+    Escapes          : "escape", "backtick", "quote escaping", "literal quote",
+                       "path escaping", "`n", "`t"                         → Module_Escapes.md
     File System      : "file", "folder", "directory", "read", "write",
-                       "save", "load", "path", "txt", "ini"               → Module_FileSystem.md
+                       "save", "load", "path", "txt", "ini"               → (built-in — no module yet)
     Formatting       : "format", "indent", "style", "comment", "brace",
-                       "crlf", "convention", "lint"                       → ahk_formatting_spec.md
+                       "crlf", "convention", "lint"                       → (built-in — no module yet)
     Functions        : "function", "return", "parameter", "optional", "byref",
-                       "scope", "global", "local", "static var"           → Module_Functions.md
+                       "scope", "global", "local", "static var"           → (built-in — no module yet)
     Graphics & Screen: "imagesearch", "pixelsearch", "pixelgetcolor", "screen",
-                       "monitor", "dpi", "coordinates"                    → Module_GraphicsAndScreen.md
+                       "monitor", "dpi", "coordinates"                    → (built-in — no module yet)
     GUI              : "gui", "window", "form", "dialog", "button", "control", "layout",
                        "position", "xm", "section", "OnEvent"             → Module_GUI.md
     Input & Hotkeys  : "hotkey", "send", "click", "mouse", "keyboard",
-                       "bind key", "hotstring", "#HotIf"                  → Module_InputAndHotkeys.md
+                       "bind key", "hotstring", "#HotIf"                  → (built-in — no module yet)
     Network & HTTP   : "http", "download", "request", "api", "json",
-                       "rest", "winhttp", "post", "get"                   → Module_NetworkAndHTTP.md
+                       "rest", "winhttp", "post", "get"                   → (built-in — no module yet)
     Objects          : "object", "property", "descriptor", "DefineProp", "HasProp",
                        "HasMethod", "bound", "bind", "callback"            → Module_Objects.md
     Script Env       : "#requires", "#singleinstance", "#include", "admin",
-                       "uac", "tray", "compile", "ahk2exe"                → Module_ScriptEnvironment.md
-    System & COM     : "run", "cmd", "clipboard", "registry", "com", "excel",
-                       "wmi", "system", "process", "WinActivate"          → Module_SystemAndCOM.md
-    Text & Strings   : "string", "text", "escape", "quote", "regex", "pattern",
-                       "match", "replace", "split", "join", "`n"          → Module_TextProcessing.md
+                       "uac", "tray", "compile", "ahk2exe"                → (built-in — no module yet)
+    System & Process : "run", "cmd", "clipboard", "registry",
+                       "system", "process", "WinActivate"                → (built-in — no module yet)
+    Text & Strings   : "string", "text", "regex", "pattern",
+                       "match", "replace", "split", "join"                → Module_TextProcessing.md
     Validation       : "validate", "type check", "isset", "typeerror",
-                       "duck typing", "assert", "defensive", "??"         → Module_Validation.md
+                       "duck typing", "assert", "defensive", "??"         → (built-in — no module yet)
+    WinAPI & WinRT   : "onmessage", "sendmessage", "postmessage", "wm_", "subclass",
+                       "owner-draw", "winapi", "winrt", "iinspectable"   → Module_WinAPI.md
     Window & Control : "winexist", "winactivate", "controlclick", "controlsend",
-                       "hwnd", "groupadd", "hook", "focus"                → Module_WindowAndControl.md
+                       "hwnd", "groupadd", "hook", "focus"                → (built-in — no module yet)
   </routing_table>
 
   <implicit_patterns>
     "for each item"                      → Module_Arrays.md
     "store multiple values"              → Module_Arrays.md or Module_DataStructures.md
-    "validate input"                     → Module_TextProcessing.md or Module_Validation.md
+    "validate input"                     → Module_TextProcessing.md (validation: built-in)
     "window with controls"               → Module_GUI.md
     "handle events"                      → Module_GUI.md or Module_Objects.md
-    "automate tasks" / "simulate input"  → Module_InputAndHotkeys.md
-    "run periodically"                   → Module_AsyncAndTimers.md
-    "interact with windows API"          → Module_DllCallAndMemory.md
-    "make web requests" / "parse json"   → Module_NetworkAndHTTP.md
-    "read or write files"                → Module_FileSystem.md
-    "search on screen" / "get color"     → Module_GraphicsAndScreen.md
-    "manage script lifecycle"            → Module_ScriptEnvironment.md
-    "interact with other apps via COM"   → Module_SystemAndCOM.md
-    "format code" / "check syntax"       → ahk_formatting_spec.md
-    "automate background windows"        → Module_WindowAndControl.md
+    "automate tasks" / "simulate input"  → (built-in — input & hotkeys)
+    "run periodically"                   → (built-in — timers)
+    "call a native / Windows API"        → Module_DllCall.md
+    "intercept a window message"         → Module_WinAPI.md
+    "use a modern Windows Runtime API"   → Module_WinAPI.md
+    "make web requests" / "parse json"   → (built-in — network & HTTP)
+    "read or write files"                → (built-in — file system)
+    "search on screen" / "get color"     → (built-in — graphics & screen)
+    "manage script lifecycle"            → (built-in — script environment)
+    "interact with other apps via COM"   → Module_COM.md
+    "format code" / "check syntax"       → (built-in — formatting)
+    "automate background windows"        → (built-in — window & control)
     "custom object behaviors"            → Module_ClassPrototyping.md or Module_DynamicProperties.md
-    "reusable logic blocks"              → Module_Functions.md
+    "reusable logic blocks"              → (built-in — functions)
     GUI context + any other keyword      → prioritize Module_GUI.md
     Code not working                     → prioritize Module_Errors.md
   </implicit_patterns>

@@ -50,8 +50,8 @@ Reference specific module documentation based on keywords in the user's request:
 
 - "class" → `Module_Classes.md`
 - "gui", gui, gui classes, data storage, window/dialog → `Module_GUI.md`
-- "string", quotes, regex → `Module_Strings.md`
-- "tooltip", notify → `Module_Tooltip.md`
+- "string", quotes, regex → `Module_TextProcessing.md`
+- "tooltip", notify → built-in AHK v2 knowledge (ToolTip/TrayTip; no dedicated module)
 - "map", objects, storage, settings → `Module_Objects.md`
 - "backtick", escape, quote → `Module_Escapes.md`
 - "data", map, data-structures, examples → `Module_DataStructures.md`
@@ -134,8 +134,8 @@ Reference specific module documentation based on keywords in the user's request:
 
 - "class" → `Module_Classes.md`
 - "gui", gui, gui classes, data storage, window/dialog → `Module_GUI.md`
-- "string", quotes, regex → `Module_Strings.md`
-- "tooltip", notify → `Module_Tooltip.md`
+- "string", quotes, regex → `Module_TextProcessing.md`
+- "tooltip", notify → built-in AHK v2 knowledge (ToolTip/TrayTip; no dedicated module)
 - "map", objects, storage, settings → `Module_Objects.md`
 - "backtick", escape, quote → `Module_Escapes.md`
 - "data", map, data-structures, examples → `Module_DataStructures.md`
@@ -188,7 +188,7 @@ Before submitting my response, I will verify:
 - Error messages are user-friendly and actionable
 - Resources are properly cleaned up after errors
 - Critical operations use appropriate error boundaries
-- Error handling follows module standards from Module_ErrorHandling.md
+- Error handling follows module standards from Module_Errors.md
   </diagnostic_checklist>
 
 <code_review>

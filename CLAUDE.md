@@ -1,151 +1,139 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code (claude.ai/code) when working in this repository.
 
 ## Project Overview
 
-ClautoHotkey is a comprehensive AutoHotkey v2 (AHK v2) development environment with structured prompts, modules, and scripts for AI-assisted AutoHotkey development. This repository contains hundreds of scripts demonstrating AHK v2 features including GUI applications, automation tools, and system utilities.
+ClautoHotkey is an **AI-native AutoHotkey v2 development system**. The centerpiece is
+a Claude Code harness (`.claude/`) that validates every `.ahk` edit, auto-loads the
+right rules, and routes work to AHK-specific skills and agents — backed by a
+console-enabled engine, structured knowledge modules, and an optional MCP docs server.
 
-## Core Architecture
+**AHK v2 only. No v1 support.**
 
-**Language**: AutoHotkey v2 only (no v1 support)
-**Primary Focus**: Object-oriented GUI applications and system automation
-**Structure**: Modular design with extensive library support and structured instruction system
+## Interpreter
 
-## Common Commands
+All AutoHotkey execution resolves the binary from `harness.env`
+(`AHK_BIN_WIN` → `AHK_BIN_WSL`) — never hardcode a path. The `check-ahk-binary` hook
+blocks any other `AutoHotkey*.exe` in a Bash command.
 
-### Running AutoHotkey Scripts
 ```bash
-# Preferred execution method with UTF-8 error output
-& "C:\Users\uphol\Documents\Design\Coding\AutoHotkey\bin\AutoHotkey64.exe" /ErrorStdOut=utf-8 "<script_path>"
-
-# Quick test targets
-& "C:\Users\uphol\Documents\Design\Coding\AutoHotkey\bin\AutoHotkey64.exe" /ErrorStdOut=utf-8 "Tests\Test_Basic.ahk"
-& "C:\Users\uphol\Documents\Design\Coding\AutoHotkey\bin\AutoHotkey64.exe" /ErrorStdOut=utf-8 "Tests\Other_TestingSystem.ahk"
+source .claude/hooks/_harness-env.sh
+"$AHK_BIN_WSL" /ErrorStdOut=utf-8 "<script_path>"
 ```
 
-### User-facing Tools
-- `_UltiLog.ahk` - Ultimate Logger for AI interaction logs and testing
-- `_Lists.ahk` - JSON List Editor with dark theme
-- `Scripts\Clip_SearchCode.ahk` - Code search and replacement tool
-- `Scripts\ClipboardHistoryCombiner.ahk` - Clipboard history management
-- `_Context_Creator.ahk` - Module combination tool for LLM context
+This repo targets the **v2.1-alpha.30 +Console fork**
+(<https://github.com/TrueCrimeDev/AutoHotkey>): real stdout/stderr, `Print(fmt, vals*)`,
+`Eval(expr)`, JSON diagnostics (`check /Diag=json`), and structured exit codes. Stock
+AutoHotkey v2 also works (set `AHK_DIAG_JSON=0`) but without `Print`/`Eval` or JSON
+diagnostics. Fork details: `.claude/rules/ahk-interpreter.md` and `ahk-fork-features.md`.
 
-## High-Level Architecture
+## How work is routed
 
-### Module System
-The project uses a sophisticated structured instruction system organized in `/Modules/`:
+The harness has three layers — use them in priority order. The full tables live in
+`README.md`; the essentials:
 
-**PRIMARY MODULE**:
-- `Module_Instructions.md` - **ALWAYS START HERE** - Contains the foundational AHK v2 instruction framework, cognitive tier system, and structured development methodology
+1. **Auto-loading rules** (`.claude/rules/`) activate by file path — no invocation
+   needed. Editing any `.ahk` pulls in `ahk-v2-syntax`; editing under `Lib/` pulls in
+   `lib-development`; editing a GUI file pulls in `gui-work`. Also: `main-script`,
+   `test-scripts`, `demo-location`, `no-banner-comments`, `ahk-interpreter`,
+   `ahk-fork-features`.
 
-**KEYWORD-TRIGGERED MODULES** (reference only when specific keywords appear in requests):
-- `Module_Classes.md` - Class design, inheritance, meta-functions, factory patterns, resource lifecycle, observer patterns
-- `Module_Objects.md` - Object hierarchy, property descriptors, method binding, type introspection
-- `Module_Arrays.md` - 1-based indexing, Array mutation, functional patterns (Map/Filter/Reduce), sorting
-- `Module_GUI.md` - GUI construction, ListView/TreeView CRUD, responsive resize, mathematical positioning
-- `Module_Errors.md` - Error class hierarchy, try/catch patterns, custom exceptions, diagnostic checklist
-- `Module_DataStructures.md` - Array vs Map selection, iteration patterns, nested structures, safe access
-- `Module_TextProcessing.md` - String operations, regex, escape sequences, continuation sections
-- `Module_DynamicProperties.md` - DefineProp descriptors, closures, computed properties, meta-functions
-- `Module_ClassPrototyping.md` - Runtime class creation, prototype extension, decorator patterns
-- `Module_Escapes.md` - Escaping rules for quotes, regex, paths
+2. **Skills** (`.claude/skills/`) handle most routine work — invoke with `/<name>`:
+   `/ahk-gui`, `/ahk-gui-gen`, `/ahk-oop`, `/ahk-text`, `/ahk-fix`, `/ahk-run`,
+   `/ahk-eval`, `/ahk-convert`, `/ahk-modernize`, `/ahk-new-class`, `/ahk-docs`,
+   `/ahk-ref`, `/ahk-audit-errors`, `/ahk-mistakes`, `/ahk-debug-dashboard`. Cheap,
+   in-context. **Skills are the default entry point for AHK work.**
 
-Each module includes: V1→V2 breaking changes table, API quick-reference, AHK v2 constraints, anti-patterns table, and cross-module SEE ALSO references.
+3. **Agents** (`.claude/agents/`) run in a fresh context window when a task warrants it:
+   `ahk-analysis`, `ahk-context`, `ahk-dependency-graph`, `ahk-profiler`,
+   `ahk-test-generator`, `ahk-com-explorer`, `ahk-uia-explorer`, `ahk-orchestrator-v2`,
+   `layout`. Launch one only when the investigation justifies the boot cost.
 
-### Cursor/IDE Integration
-- **Rules**: Modern project rules in `.cursor/rules/` as MDC files
-- **Core Rules**: 
-  - `00-always-linter.mdc` - Always-on linter enforcement
-  - `10-core-ahk-system.mdc` - Core AHK v2 system constraints
-  - Additional rules for objects, GUI layout, text processing
-- **Legacy**: `.cursorrules.md` references modern rule locations
+Hooks fire automatically across the session: a session primer, v1-syntax detection,
+rule injection, the post-edit validator (which **blocks** a broken edit), auto-reload
+of running scripts, and an error logger that feeds `/ahk-mistakes`.
 
-### Directory Structure
+Skills and rules pull the relevant knowledge module for you. Read
+`Modules/Module_Instructions.md` directly only when working **outside** a skill.
+
+## AHK v2 coding standards
+
+### Core requirements
+- **Pure AHK v2 OOP** — instantiate classes by calling them; never `new ClassName()`.
+- **Data storage** — `Map()` for runtime key-value data. Object literal `{}` is correct
+  and expected for property descriptors (`DefineProp`, `{get, set, call}`) and meta-API
+  calls; on the fork, a typed `Struct` fits fixed numeric records. The rule is "no `{}`
+  as a data dictionary," not "no `{}` ever."
+- **Event binding** — bind every callback with `.Bind(this)`.
+- **Resource cleanup** — release timers/handles in `__Delete()`.
+- **Variable scope** — explicit declarations; no shadowing of a global or a built-in
+  class name (don't name a local `Gui`, `Menu`, `Array`).
+- **Fat arrows** — single-expression bodies only; multi-line logic uses a named method.
+- **Errors** — throw typed errors (`TypeError`/`ValueError`/custom) and handle them in
+  `try/catch`. Never an empty catch; never swallow a failure.
+
+### GUI standards
+- Class-based construction with deterministic, mathematically positioned layout.
+- Events via `OnEvent()`; input validation; clean close/escape behaviour.
+- **Dark mode** — use `Lib/DarkModeModular.ahk` (`#Include ..\Lib\DarkModeModular.ahk`),
+  `DarkGui()` in place of `Gui()`, controls via `DarkGui.Add("Type", ...)`, `+Accent`
+  for blue buttons.
+
+### Data handling
+- Arrays are 1-based. PCRE flags `i/m/s/x` only. Backtick escaping for quotes/specials.
+- alpha.30 forms: `(a?)()` not `a?.()`; class-ref typed properties (`Int32`/`UInt32`/
+  `IntPtr`) not type strings (`u32`/`uptr`); parenthesize `!(a ?? b)`.
+
+### Comments
+- No banner dividers (`; ====`, `; ----`) — see the `no-banner-comments` rule.
+- Plain prose section comments are fine; JSDoc/doc-comments when the user asks.
+
+## Knowledge modules
+
+Structured AHK v2 knowledge lives in `Modules/` (start: `Module_Instructions.md`). The
+routing table there maps keywords to the modules that exist:
+
+| Keyword | Module |
+|---------|--------|
+| class, inheritance, extends | `Module_Classes.md` |
+| object, property, descriptor, bind | `Module_Objects.md` |
+| array, list, collection | `Module_Arrays.md` |
+| map, storage, settings, cache | `Module_DataStructures.md` |
+| gui, window, dialog, control | `Module_GUI.md` |
+| error, try, catch, debug | `Module_Errors.md` |
+| string, regex, text, parse | `Module_TextProcessing.md` |
+| escape, backtick, quote | `Module_Escapes.md` |
+| property, DefineProp, closure, fat arrow | `Module_DynamicProperties.md` |
+| prototype, runtime class, decorator | `Module_ClassPrototyping.md` |
+| dllcall, buffer, struct, callbackcreate | `Module_DllCall.md` |
+| com, comobject, excel, wmi, idispatch | `Module_COM.md` |
+| onmessage, sendmessage, subclass, winapi, winrt | `Module_WinAPI.md` |
+
+Domains without a dedicated module (files, hotkeys, timers, networking, screen) fall
+back to built-in AHK v2 knowledge. Per-LLM system prompts that mirror these
+rules for other models live in `System_Prompts/` (a shared `_Core.md` + thin wrappers).
+
+## Directory structure
 
 ```
-/Modules/           - Core instruction modules for AI agents
-/AHK_Notes/         - Extensive documentation and examples
-  /Classes/         - Class-specific examples and patterns
-  /Concepts/        - Advanced programming concepts
-  /Methods/         - Method implementations and techniques
-  /Patterns/        - Design patterns in AHK v2
-  /Snippets/        - Code snippets and examples
-/Scripts/           - User-facing utility applications
-/Tests/             - Test scripts and validation tools
-/Lib/               - Shared libraries and utility functions
+/Modules/      - Structured AHK v2 knowledge (start at Module_Instructions.md)
+/System_Prompts/ - Per-LLM prompts (_Core.md + thin wrappers)
+/AHK_Notes/    - Examples and patterns (Classes, Concepts, Methods, Patterns, Snippets)
+/Scripts/      - User-facing utility applications
+/Tests/        - Test scripts and validation tools
+/Lib/          - Shared libraries (DarkModeModular.ahk, etc.)
+/.claude/      - The harness: rules, skills, agents, hooks
 ```
 
-## AHK v2 Coding Standards
+## Important notes
 
-This project enforces strict AutoHotkey v2 coding standards:
-
-### Core Requirements
-- **Pure AHK v2 OOP**: Instantiate classes without `new` keyword
-- **Data Storage**: Use `Map()` for all key-value storage (no object literals)
-- **Event Binding**: All callbacks must use `.Bind(this)`
-- **Resource Cleanup**: Implement `__Delete()` methods for proper cleanup
-- **Variable Scoping**: Explicit variable declarations required
-- **Fat Arrow Functions**: Single-line expressions only (no `{}` blocks)
-
-### GUI Standards
-- Class-based GUI construction only
-- Deterministic layout with mathematical positioning
-- Proper event handling with `OnEvent()`
-- Input validation and error reporting
-- Clean close/escape behaviors
-- **Dark Mode**: Always use `Lib/DarkModeModular.ahk` for dark-themed GUIs. Include via relative path (e.g. `#Include ..\Lib\DarkModeModular.ahk`). Use `DarkGui()` instead of `Gui()` — all controls added via `DarkGui.Add("Type", ...)` are automatically dark-styled. Use `+Accent` on buttons for blue accent color.
-
-### Data Handling
-- Arrays are 1-based in AHK v2
-- PCRE regex flags: `i/m/s/x` only
-- Backtick escaping for quotes and special characters
-- Strict comma/colon syntax adherence
-
-## Development Workflow
-
-### For AutoHotkey Development - Structured Instruction System
-
-**PRIMARY REFERENCE**: Always start with `Module_Instructions.md` for foundational AHK v2 coding standards and structured approach.
-
-**KEYWORD-TRIGGERED MODULE REFERENCES**: After consulting Module_Instructions.md, reference additional modules only when specific keywords appear in requests:
-
-- **"class", "inheritance", "extends"** → `Module_Classes.md` - OOP patterns, meta-functions, factory/observer patterns
-- **"gui", "window", "dialog", "ListView"** → `Module_GUI.md` - GUI construction, resize, ListView/TreeView CRUD
-- **"dark", "dark mode", "theme"** → Use `Lib/DarkModeModular.ahk` — `#Include ..\Lib\DarkModeModular.ahk`, `DarkGui()` replaces `Gui()`, controls via `.Add("Type", ...)`
-- **"error", "try", "catch", "debug"** → `Module_Errors.md` - Error hierarchy, diagnostics, custom exceptions
-- **"map", "object", "HasProp"** → `Module_Objects.md` - Object hierarchy, descriptors, method binding
-- **"array", "list", "collection"** → `Module_Arrays.md` - Array mutation, functional patterns, sorting
-- **"string", "regex", "text"** → `Module_TextProcessing.md` - String operations, regex, escapes
-- **"data", "Map", "storage"** → `Module_DataStructures.md` - Array vs Map, nested structures, safe access
-- **"backtick", "escape", "quote"** → `Module_Escapes.md` - Escaping rules for quotes, regex, paths
-- **"property", "DefineProp", "getter"** → `Module_DynamicProperties.md` - Descriptors, closures, computed properties
-- **"prototype", "ObjSetBase"** → `Module_ClassPrototyping.md` - Runtime class creation, decorators
-
-**STRUCTURED APPROACH**:
-1. Parse and understand the user's request using Module_Instructions.md framework
-2. Identify relevant AHK v2 concepts and reference appropriate modules by keyword
-3. Check the module's V1→V2 breaking changes table and constraints before writing code
-4. Design solution using pure AHK v2 OOP principles
-5. Implement with proper validation and edge case consideration
-6. Validate against the module's anti-patterns table
-7. Test with scripts in `/Tests/` directory
-
-### Key Design Principles
-- **No Comments**: Code should be self-documenting through clear naming
-- **Error Handling**: Never use empty catch blocks; implement specific error strategies  
-- **Performance**: Consider object lifetime and garbage collection
-- **Maintainability**: Design for easy modification and extension
-- **User Safety**: Validate all inputs and provide meaningful error messages
-
-## Important Notes
-
-- **AHK v2 Only**: No AutoHotkey v1 code or compatibility
-- **No Node.js/MCP**: This is a pure AHK environment; do not search for or start web services
-- **Targeted Reading**: Avoid broad discovery scans; read files relevant to specific requests
-- **Module-First**: Always start with Module_Instructions.md, then reference additional modules based on keyword triggers
-- **Check Breaking Changes**: Each module has a V1→V2 table and anti-patterns table — consult before writing code
-- **Clean Architecture**: Follow established patterns and maintain consistency with existing code
-
-This repository represents a mature AutoHotkey v2 development environment optimized for AI-assisted development with comprehensive documentation and strict quality standards.
-
+- **AHK v2 only** — no v1 code or compatibility.
+- **MCP is optional** — the `ahk-mcp` docs/diagnostics server is a first-class but
+  optional component (see README). Don't spin up servers unprompted; fall back to the
+  modules and built-in knowledge when it isn't connected.
+- **Targeted reading** — read files relevant to the request; avoid broad discovery scans.
+- **Skills first** — let skills/rules pull modules; don't run a multi-agent pipeline
+  unless the user asks.
+- **IDE configs** — `.cursor/` and `.clinerules` hold configs for other editors; they
+  are not part of the Claude harness.

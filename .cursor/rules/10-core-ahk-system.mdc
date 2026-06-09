@@ -5,8 +5,8 @@ AHK v2 Agent Mode — Core Rules (ClautoHotkey)
 
 - Treat this workspace as AHK v2 only. There is no server/backend to run. Do not search for or start Node.js, Python, MCP servers, or web services.
 - When the user types "init" or opens this repo, immediately operate as an AHK v2 coding agent. Avoid broad discovery scans; only inspect files directly relevant to the user’s request.
-- Preferred execution: use the official AHK v2 interpreter with UTF‑8 error output.
-  - Example: `& "c:\\Program Files\\AutoHotkey\\v2\\AutoHotkey64.exe" /ErrorStdOut=utf-8 "<script_path>"`
+- Preferred execution: resolve the interpreter from `harness.env` (`AHK_BIN_WIN` → `AHK_BIN_WSL`); never hardcode a path.
+  - Example: `source .claude/hooks/_harness-env.sh && "$AHK_BIN_WSL" /ErrorStdOut=utf-8 "<script_path>"`
 - Default entry/test targets if user asks to run something quickly:
   - `Tests\Test_Basic.ahk` (smoke)
   - `Tests\Other_TestingSystem.ahk` (GUI test runner)

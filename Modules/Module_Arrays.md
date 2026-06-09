@@ -1,9 +1,9 @@
 ﻿# Module_Arrays.md
 <!-- DOMAIN: Arrays -->
-<!-- SCOPE: Key-value storage with Map(), deep-clone of circular-reference graphs, GUI control binding, and file-path batch operations are not covered — see Module_Objects.md, Module_GUI.md, and Module_FileSystem.md respectively. -->
+<!-- SCOPE: Key-value storage with Map(), deep-clone of circular-reference graphs, GUI control binding, and file-path batch operations are not covered — see Module_Objects.md (key-value storage) and Module_GUI.md (control binding); file/path batch work uses built-in AHK v2 knowledge (no dedicated module yet). -->
 <!-- TRIGGERS: array, list, collection, sort, filter, reduce, "store multiple values", "iterate collection", "remove duplicates", "deep copy", "transform elements", ArrayMap, QuickSort, Unique, IndexOf -->
 <!-- CONSTRAINTS: Arrays are 1-based — arr[0] is never the first element (it throws or returns unset). Array objects have NO built-in .Sort() method; use a custom QuickSort() with a comparator callback. Array(N) does NOT pre-allocate N slots — it creates [N] (an array containing the value N); use arr.Capacity := N instead. Fat-arrow functions with block bodies `(x) => { return x }` are invalid in AHK v2.0; use named nested functions for multi-statement callbacks. -->
-<!-- CROSS-REF: Module_Objects.md, Module_Errors.md, Module_GUI.md, Module_Functions.md -->
+<!-- CROSS-REF: Module_Objects.md, Module_Errors.md, Module_GUI.md -->
 <!-- VERSION: AHK v2.0+ -->
 
 ## V1 → V2 BREAKING CHANGES
@@ -558,9 +558,9 @@ filtered := Without(arr1, 2, 4)         ; [1, 3]
 > This module does NOT cover: key-value storage, object property bags, and Map() API — see Module_Objects.md
 > This module does NOT cover: try/catch patterns for out-of-bounds access and type errors — see Module_Errors.md
 > This module does NOT cover: GUI control binding (ListView, ComboBox population from arrays) — see Module_GUI.md
-> This module does NOT cover: file-path batch operations and directory listing into arrays — see Module_FileSystem.md
+> This module does NOT cover: file-path batch operations and directory listing into arrays — use built-in AHK v2 knowledge (no dedicated file-system module yet).
 
 - `Module_Objects.md` — Map() as an O(1) key-value store; plain Object property bags; when to choose Map over Array.
 - `Module_Errors.md` — try/catch patterns for `IndexError`, `UnsetItemError`, and `TypeError` thrown by Array methods.
-- `Module_Functions.md` — closures, variadic functions, and `.Bind()` patterns used when passing callbacks to ArrayMap/Filter/Reduce.
+- Closures, variadic functions, and `.Bind()` callback patterns used with ArrayMap/Filter/Reduce — see Module_DynamicProperties.md and Module_Objects.md (no dedicated functions module yet).
 - `Module_GUI.md` — populating ListViews, ComboBoxes, and DropDownLists from Array data sources.
