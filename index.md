@@ -23,6 +23,10 @@ Advanced interop:
 - [Module_COM.md](Modules/Module_COM.md) — COM automation: IDispatch, events, ComValue, SafeArrays, and direct vtable `ComCall`.
 - [Module_WinAPI.md](Modules/Module_WinAPI.md) — Windows messages, subclassing, owner-draw, and the WinRT (Windows Runtime) ABI.
 
+Portability:
+
+- [Module_Versions.md](Modules/Module_Versions.md) — v2.0 vs v2.1-alpha vs the +Console fork: capability matrix and portable fallbacks for `Print`/`Eval`/typed `Struct`.
+
 Additional modules in [Modules/Supplemental/](Modules/Supplemental/).
 
 ## Claude Agents (`.claude/agents/`)

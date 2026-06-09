@@ -106,6 +106,7 @@ The structured knowledge lives in `Modules/`. Start every task from
 - dllcall, buffer, struct, numput/numget, callbackcreate → `Module_DllCall.md`
 - com, comobject, comcall, idispatch, excel, wmi, safearray → `Module_COM.md`
 - onmessage, sendmessage, subclass, owner-draw, winapi, winrt → `Module_WinAPI.md`
+- version, A_AhkVersion, fork, Print/Eval, portable, #Requires → `Module_Versions.md`
 
 Domains without a dedicated module yet — file I/O, hotkeys/input, timers/async,
 networking, screen/graphics — are not in `Modules/`. Use your built-in AHK v2 knowledge

@@ -109,6 +109,7 @@ routing table there maps keywords to the modules that exist:
 | dllcall, buffer, struct, callbackcreate | `Module_DllCall.md` |
 | com, comobject, excel, wmi, idispatch | `Module_COM.md` |
 | onmessage, sendmessage, subclass, winapi, winrt | `Module_WinAPI.md` |
+| version, fork, Print/Eval, portable, #Requires | `Module_Versions.md` |
 
 Domains without a dedicated module (files, hotkeys, timers, networking, screen) fall
 back to built-in AHK v2 knowledge. Per-LLM system prompts that mirror these
