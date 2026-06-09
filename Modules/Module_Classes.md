@@ -6,18 +6,6 @@
 <!-- CROSS-REF: Module_ClassPrototyping.md, Module_GUI.md, Module_Errors.md, Module_Arrays.md, Module_Objects.md -->
 <!-- VERSION: AHK v2.0+ -->
 
-## V1 → V2 BREAKING CHANGES
-
-| v1 pattern (LLM commonly writes) | v2 correct form | Consequence |
-|----------------------------------|-----------------|-------------|
-| `new ClassName()` | `ClassName()` | TypeError — `new` is not a keyword in AHK v2; bare instantiation is the only form |
-| `super()` in derived `__New` | `super.__New(args*)` | Parent constructor never runs; instance fields from base class are uninitialised |
-| Raw method reference as callback: `SetTimer(this.Update, 1000)` | `SetTimer(this.Update.Bind(this), 1000)` | `this` inside the callback resolves to the wrong object or throws |
-| `__Get(name)` / `__Set(name, val)` (two-param v1 signatures) | `__Get(name, params)` / `__Set(name, params, value)` (three-param v2) | Meta-function never fires — wrong arity silently skips the intercept |
-| `{key: val}` object literal as data container | `Map("key", val)` | Object literals lack `.Has()`, `.Delete()`, `.Clear()` — silent data loss on key checks |
-| Static member access via instance: `this.StaticProp` | `ClassName.StaticProp` | Reads or shadows the instance, not the shared class-level value |
-| Multi-line fat-arrow callback: `(x) => { return x*2 }` | Named function or traditional closure | AHK v2 fat arrows accept a single expression only — block bodies are a syntax error |
-
 ## API QUICK-REFERENCE
 
 ### Class Meta-Functions

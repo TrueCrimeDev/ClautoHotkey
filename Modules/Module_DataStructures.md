@@ -6,18 +6,6 @@
 <!-- CROSS-REF: Module_Arrays.md, Module_Objects.md, Module_Classes.md, Module_Errors.md -->
 <!-- VERSION: AHK v2.0+ -->
 
-## V1 → V2 BREAKING CHANGES
-
-| v1 pattern (LLM commonly writes) | v2 correct form | Consequence |
-|----------------------------------|-----------------|-------------|
-| `{key: val}` as data container | `Map("key", val)` | Object lacks `.Has()`, `.Get()`, `.Count`, `.CaseSense`, `.Delete()`, `.Clear()`, and direct for-loop enumeration — silent data loss and runtime errors |
-| `arr[0]` zero-based first element | `arr[1]` or `arr[-1]` for last | `IndexError` always thrown — AHK v2 arrays are strictly 1-based with no zero slot |
-| `new Map()` / `new Array()` constructor | `Map()` / `Array()` / `[]` | `new` keyword is not used for built-in types in v2 — `TypeError` at runtime |
-| `val := m["key"]` without existence guard | `val := m.Get("key", default)` | `UnsetItemError` when key absent — v1 returned blank string; v2 throws |
-| `m.CaseSense := "Off"` after inserting keys | Set `CaseSense` on a freshly constructed empty Map before any key insertion | Exception thrown — the internal sorted array is built at insertion time; post-hoc reconfiguration is invalid |
-| Calling `m.Keys()` directly as built-in | `for k in m` or `Map.Prototype.DefineProp("Keys", ...)` | `Map` has no built-in `.Keys()` method — `MethodError` at runtime |
-| Assuming Map enumerates in insertion order | Enumerate via an auxiliary Array of keys to preserve order | Map enumeration follows sorted alphanumeric key order, not insertion order |
-
 ## API QUICK-REFERENCE
 
 ### Array

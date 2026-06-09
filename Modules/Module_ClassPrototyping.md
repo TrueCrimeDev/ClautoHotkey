@@ -6,17 +6,6 @@
 <!-- CROSS-REF: Module_Classes.md, Module_Objects.md, Module_Errors.md -->
 <!-- VERSION: AHK v2.0+ -->
 
-## V1 → V2 BREAKING CHANGES
-
-| v1 pattern (LLM commonly writes) | v2 correct form | Consequence |
-|----------------------------------|-----------------|-------------|
-| `new ClassName()` | `ClassName()` | `new` keyword does not exist in AHK v2 — immediate parse error |
-| `{Get: MyFunc}` as descriptor literal | `d := Object()` then `d.Get := MyFunc` | Object literal descriptors are technically accepted by DefineProp, but Object() is the explicit convention in this module for descriptor construction |
-| `Class(BaseObj)` (v2.1-alpha) | Manual prototype chain via `ObjSetBase()` | v2.0 `Class()` produces an incomplete object with no `Call` method and is not a subclass of Object — unusable as a class factory in stable releases |
-| Getter/Setter function with no leading parameter | `GetterFunc(Obj)` / `SetterFunc(Obj, Val)` | AHK v2 always injects the object instance as the first argument — omitting it silently shifts all arguments, causing wrong values or property-not-found errors |
-| `(this) => { x := 1 \| return x }` multi-line fat-arrow | Named function block `MyFunc(this) { ... }` | AHK v2 fat-arrow functions are single-expression only — multi-line body is a syntax error |
-| Modifying `Array.Prototype` or `String.Prototype` directly | Wrapper object or subclass with `extends` | Pollutes the global namespace; affects every Array/String in the script silently |
-
 ## API QUICK-REFERENCE
 
 ### Object — Descriptor Construction and Prototype Manipulation

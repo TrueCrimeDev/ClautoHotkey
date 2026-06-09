@@ -6,21 +6,6 @@
 <!-- CROSS-REF: Module_Classes.md, Module_Errors.md -->
 <!-- VERSION: AHK v2.0+ -->
 
-## V1 → V2 BREAKING CHANGES
-
-| v1 pattern (LLM commonly writes) | v2 correct form | Consequence |
-|----------------------------------|-----------------|-------------|
-| `Gui, Add, Text,, Hello World!` | `gui.AddText(, "Hello World!")` | MethodError — v1 commands do not exist as callable methods in v2 |
-| `Gui, Show` / `Gui, Hide` | `gui.Show()` / `gui.Hide()` | v1 command syntax throws a load-time error in v2; no fallback |
-| `GuiControl, Disable, ctrlHwnd` | `ctrl.Opt("+Disabled")` or `ctrl.Enabled := false` | GuiControl command does not exist in v2; control objects expose properties instead |
-| `GuiControl, , ctrlHwnd, newText` | `ctrl.Value := newText` | Setting control text via GuiControl command does not exist; use `.Value` property |
-| `Gui, Submit, NoHide` | `gui.Submit(false)` | v1 used sub-command string "NoHide"; v2 uses boolean parameter — omitting false hides the window |
-| `Gui, +Owner%hwnd%` | `gui.Opt("+Owner" . hwnd)` | v1 used `%var%` expansion inside option strings; v2 requires explicit concatenation |
-| `new MyGui()` | `MyGui()` | Load-time error — `new` keyword does not exist in v2; class instantiation always uses `ClassName()` |
-| `this.ctrls := {btn: ctrlRef}` | `this.controls := Map(); this.controls["btn"] := ctrlRef` | Object literals lack `.Has()`, `.Delete()`, and safe-access semantics; dynamic key lookup is unsafe on plain objects |
-| `gui.Close()` | `gui.Hide()` or `gui.Destroy()` | MethodError — `Close` is not a Gui method in v2; the window stays open and the error is silent in some contexts |
-| `Gui, Destroy` | `gui.Destroy()` | v1 command syntax; also note that Destroy is irreversible — use Hide to keep the object alive |
-
 ## API QUICK-REFERENCE
 
 ### Gui Constructor and Window Methods

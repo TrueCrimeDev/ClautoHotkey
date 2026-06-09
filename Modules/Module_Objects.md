@@ -6,18 +6,6 @@
 <!-- CROSS-REF: Module_Classes.md, Module_DataStructures.md, Module_GUI.md, Module_Errors.md, Module_Arrays.md -->
 <!-- VERSION: AHK v2.0+ -->
 
-## V1 → V2 BREAKING CHANGES
-
-| v1 pattern (LLM commonly writes) | v2 correct form | Consequence |
-|----------------------------------|-----------------|-------------|
-| `new ClassName()` | `ClassName()` | TypeError at runtime — `new` keyword removed entirely in AHK v2 |
-| `{key: val}` as a data container | `Map("key", val)` | Object literals lack `.Has()`, `.Get()`, `.Delete()` — missing keys throw UnsetError with no safe fallback |
-| `IsObject(x)` for type checking | `x is Object` or `Type(x)` | `IsObject()` still exists in v2 and returns non-zero for any object; `is Object` and `Type()` are preferred alternatives when finer-grained type discrimination is needed |
-| `SetTimer, % this.Method, 1000` | `SetTimer(this.Method.Bind(this), 1000)` | v1 percent-expression syntax gone; unbound method loses `this` context at callback time — UnsetError in the callback body |
-| `obj.__Set := func` (v1 meta-function assignment) | `obj.DefineProp("prop", {set: func})` | Meta-function assignment removed — `DefineProp()` is the only v2 hook for intercepting property behavior |
-| `(this, value) => { ... multiline ... }` in DefineProp | Named function reference passed to descriptor key | Parse error at the opening brace — arrow syntax cannot open a multi-line block body in AHK v2 |
-| `Object().DefineProp(SomeProto, "x", d)` | `SomeProto.DefineProp("x", d)` | `DefineProp()` is an instance method; calling it on an anonymous `Object()` with a prototype as argument has no effect on that prototype |
-
 ## API QUICK-REFERENCE
 
 ### Any Class (root — every AHK v2 value inherits these)

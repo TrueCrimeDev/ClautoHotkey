@@ -6,18 +6,6 @@
 <!-- CROSS-REF: Module_GUI.md, Module_Errors.md, Module_Arrays.md, Module_Escapes.md -->
 <!-- VERSION: AHK v2.0+ -->
 
-## V1 → V2 BREAKING CHANGES
-
-| v1 pattern (LLM commonly writes) | v2 correct form | Consequence |
-|----------------------------------|-----------------|-------------|
-| `"\n"` or `"\t"` as newline/tab | `` "`n" `` or `` "`t" `` | Backslash has no special meaning in AHK strings — `"\n"` is the 2-char string `\n`, not a newline |
-| `StringReplace, out, str, old, new` | `StrReplace(str, old, new)` | v1 command syntax throws a parse error in v2 |
-| `RegExMatch(str, pat, match)` (bare output var) | `RegExMatch(str, pat, &match)` | v1 used bare variable name; v2 requires `&` ByRef prefix — match object is never populated without it, `match[1]` throws UnsetError |
-| `StringLower, out, in` / `StringUpper, out, in` | `StrLower(str)` / `StrUpper(str)` | v1 command syntax — throws parse error in v2 |
-| `IfInString, var, needle` | `if InStr(var, needle)` | v1 control-flow command — not valid AHK v2 syntax |
-| `StringTrimLeft, out, in, n` | `LTrim(str)` or `SubStr(str, n+1)` | v1 command removed in v2; `LTrim()` strips all leading whitespace, not a fixed count |
-| `"hello/i"` or `"(?i)hello"` for case-insensitive regex | `"i)hello"` | AHK v2 regex options must prefix the pattern as `option)` — any other placement is silently ignored |
-
 ## API QUICK-REFERENCE
 
 ### String Functions
