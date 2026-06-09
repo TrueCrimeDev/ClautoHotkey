@@ -6,18 +6,6 @@
 <!-- CROSS-REF: Module_DllCall.md, Module_COM.md, Module_GUI.md, Module_Errors.md -->
 <!-- VERSION: AHK v2.0+ (typed Struct in WinRT helpers requires the v2.1-alpha.30 +Console fork) -->
 
-## V1 → V2 BREAKING CHANGES
-
-| v1 pattern (LLM commonly writes) | v2 correct form | Consequence |
-|----------------------------------|-----------------|-------------|
-| `OnMessage(0x200, "WM_MOUSEMOVE")` (name string) | `OnMessage(0x200, WM_MouseMove)` | v2 takes a function object, not a name string |
-| `SendMessage, Msg, w, l, Control, Title` (command) | `res := SendMessage(Msg, w, l, Control, Title)` | Now an expression function that returns the result |
-| `PostMessage, Msg, w, l, ...` (command) | `PostMessage(Msg, w, l, ...)` | Function-call syntax; returns success 0/1 |
-| `RegisterCallback("Proc", ...)` for a WNDPROC | `CallbackCreate(Proc, ...)` | Renamed; pair with `CallbackFree` |
-| `DllCall("SetWindowLong", ...)` to swap WNDPROC | `DllCall("comctl32\SetWindowSubclass", ...)` | Subclassing is the safe, composable v2 approach |
-| `DetectHiddenWindows, On` | `DetectHiddenWindows(true)` | Function-call form |
-| `&var` as a message-buffer address | `buf := Buffer(...)` then `buf.Ptr` | `Buffer` owns the memory a message struct points into |
-
 ## API QUICK-REFERENCE
 
 ### Message functions

@@ -6,18 +6,6 @@
 <!-- CROSS-REF: Module_COM.md, Module_WinAPI.md, Module_Errors.md, Module_DataStructures.md -->
 <!-- VERSION: AHK v2.0+ (typed Struct requires the v2.1-alpha.30 +Console fork) -->
 
-## V1 → V2 BREAKING CHANGES
-
-| v1 pattern (LLM commonly writes) | v2 correct form | Consequence |
-|----------------------------------|-----------------|-------------|
-| `VarSetCapacity(buf, 16, 0)` | `buf := Buffer(16, 0)` | `VarSetCapacity` removed — `Buffer` is the v2 memory object; `.Ptr`/`.Size` replace `&buf`/capacity |
-| `&buf` to get an address | `buf.Ptr` | A `Buffer`'s address is its `.Ptr` property; `&var` now produces a VarRef, not an address |
-| `NumPut(val, buf, off, "UInt")` (value-first) | `NumPut("UInt", val, buf, off)` | v2 reordered to type-first; old arg order writes garbage or throws |
-| `NumGet(buf, off, "UInt")` | `NumGet(buf, off, "UInt")` | Signature unchanged, but `buf` must be a `Buffer`/pointer, not a plain var |
-| `DllCall("...", "UInt", &out)` for output | `DllCall("...", "UInt*", &out)` | Output scalars need the `*` (by-address) type plus a `&var` reference |
-| `RegisterCallback(Fn)` | `CallbackCreate(Fn)` | `RegisterCallback` renamed; pair every `CallbackCreate` with `CallbackFree` |
-| `t : u32` / `ptr : uptr` typed-property strings | `t : UInt32` / `ptr : IntPtr` | alpha.30 removed type strings; fields take class refs (see CONSTRAINTS) |
-
 ## API QUICK-REFERENCE
 
 ### DllCall
@@ -41,7 +29,7 @@
 ### Memory objects and marshalling
 | Function | Signature | Notes |
 |----------|-----------|-------|
-| `Buffer()` | `Buffer(ByteCount, FillByte := unset)` | `.Ptr` = address, `.Size` = bytes; the v2 replacement for `VarSetCapacity` |
+| `Buffer()` | `Buffer(ByteCount, FillByte := unset)` | `.Ptr` = address, `.Size` = bytes; pass `FillByte` (e.g. `0`) to zero-init |
 | `NumPut()` | `NumPut(Type, Num [, Type2, Num2, ...], Target, Offset := 0)` | Type-first; chainable; returns the address after the last write |
 | `NumGet()` | `NumGet(Source, Offset := 0, Type)` | Reads one value of `Type` at `Source+Offset` |
 | `StrPut()` | `StrPut(Str, Target?, Length?, Encoding := "UTF-16")` | Writes an encoded string into a Buffer; returns chars/bytes written |
@@ -65,11 +53,11 @@
 
 ✗ / ✓ pairs:
 
-- ✗ `VarSetCapacity(buf, 8)` then `&buf` — both removed in v2
-- ✓ `buf := Buffer(8, 0)` then `buf.Ptr`
+- ✗ `Buffer(8)` left uninitialized, then read — contains garbage
+- ✓ `Buffer(8, 0)` — zero-filled; pass `buf` for a `Ptr` arg, `buf.Ptr` for an address
 
-- ✗ `NumPut(123, buf, 0, "UInt")` — v1 value-first order writes garbage
-- ✓ `NumPut("UInt", 123, buf, 0)` — v2 type-first
+- ✗ `NumPut(123, buf, 0, "UInt")` — value-first order writes garbage
+- ✓ `NumPut("UInt", 123, buf, 0)` — type-first
 
 - ✗ `Struct PT { x: i32, y: i32 }` — alpha.30 rejects type strings
 - ✓ `Struct PT { x: Int32, y: Int32 }` — class-ref fields
