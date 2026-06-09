@@ -2,21 +2,9 @@
 <!-- DOMAIN: COM automation and interop -->
 <!-- SCOPE: Raw DllCall, Buffer, and Struct marshalling belong in Module_DllCall.md; WinRT activation and the IInspectable ABI belong in Module_WinAPI.md (WinRT section). This module covers classic COM: IDispatch automation, events, SafeArrays, and direct vtable ComCall. -->
 <!-- TRIGGERS: COM, ComObject, ComObjGet, ComCall, ComValue, ComObjArray, ComObjConnect, ComObjQuery, ComObjFromPtr, IDispatch, IUnknown, vtable, "Excel automation", "Word automation", "WMI", "Internet Explorer", "Shell.Application", "COM event", "SafeArray", "VARIANT", "automation object", "CLSID", "ProgID", "QueryInterface" -->
-<!-- CONSTRAINTS: Create objects with ComObject("ProgID") — never the v1 ComObjCreate. COM objects are reference-counted by AHK and Release automatically when the wrapping variable is freed; a raw interface pointer you obtain yourself (ComCall output, ComObjQuery on a Ptr) is NOT auto-managed — release it. COM calls run on AHK's single thread; a modal call into another app (a MsgBox in Excel) blocks your script. COM errors throw as exceptions in v2 — wrap fallible automation in try/catch. -->
+<!-- CONSTRAINTS: Create objects with ComObject("ProgID") — never `ComObjCreate`. COM objects are reference-counted by AHK and Release automatically when the wrapping variable is freed; a raw interface pointer you obtain yourself (ComCall output, ComObjQuery on a Ptr) is NOT auto-managed — release it. COM calls run on AHK's single thread; a modal call into another app (a MsgBox in Excel) blocks your script. COM errors throw as exceptions — wrap fallible automation in try/catch. -->
 <!-- CROSS-REF: Module_DllCall.md, Module_WinAPI.md, Module_Errors.md, Module_Objects.md -->
 <!-- VERSION: AHK v2.0+ -->
-
-## V1 → V2 BREAKING CHANGES
-
-| v1 pattern (LLM commonly writes) | v2 correct form | Consequence |
-|----------------------------------|-----------------|-------------|
-| `ComObjCreate("Excel.Application")` | `ComObject("Excel.Application")` | `ComObjCreate` removed — `ComObject` is the v2 constructor |
-| `ComObjCreate(CLSID, IID)` | `ComObject(CLSID, IID)` | Same rename for the two-arg CLSID/IID form |
-| `ComObject(9, dispPtr)` (wrap a pointer) | `ComObjFromPtr(dispPtr)` | Wrapping an existing `IDispatch*` is now its own function |
-| `ComObjParameter(VT_I4, n)` / `ComObject(0x4000, ...)` | `ComValue(VarType, value [, flags])` | `ComValue` is the single v2 typed-value/ByRef wrapper |
-| `ComObjError(false)` | `try { ... } catch as e { ... }` | COM errors throw in v2; control them with try/catch, not a global toggle |
-| `obj := ComObjActive("X")` | `ComObjGet(Name)` / hold the original reference | Get a running object by moniker, or keep the reference you created |
-| `% obj.Method(arg)` in a command | `obj.Method(arg)` | Expression syntax is default in v2; no forced-expression `%` |
 
 ## API QUICK-REFERENCE
 
@@ -63,7 +51,7 @@
 
 ✗ / ✓ pairs:
 
-- ✗ `xl := ComObjCreate("Excel.Application")` — v1 function removed
+- ✗ `xl := ComObjCreate("Excel.Application")` — no such function; use `ComObject`
 - ✓ `xl := ComObject("Excel.Application")`
 
 - ✗ ignoring a `"Ptr*"` ComCall output reference — leaks a COM ref
