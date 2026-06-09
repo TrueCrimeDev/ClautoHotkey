@@ -1,3 +1,12 @@
+---
+name: Module_Escapes
+description: 'AHK v2 escape sequences — the backtick escape character and every sequence (`n `t `r `"
+  `'' `; `: `{ etc.). Reference when a string, regex, hotstring, or key remap needs an escaped character,
+  or when backslash-style escapes (\n) are wrongly used. TRIGGER when the request involves: escape, backtick,
+  literal quote, newline in a string, escaping quotes in a string or regex, hotstring colon escaping,
+  key remap braces.'
+---
+
 ### Escape Sequences
 The escape character ` (back-tick or grave accent) is used to indicate that the character immediately following it should be interpreted differently than it normally would. This character is at the upper left corner of most English keyboards.
 

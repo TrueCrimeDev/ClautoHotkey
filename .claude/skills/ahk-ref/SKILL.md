@@ -14,11 +14,11 @@ description: >
 
 When this skill is invoked, load the following module files:
 
-1. **Read** `ClautoHotkey/Modules/Supplemental/Module_All.md` — Unified reference covering ALL AHK v2 domains
-2. **Read** `ClautoHotkey/Modules/Module_Instructions.md` — Core instruction framework, cognitive tiers, module routing
-3. **Read** `ClautoHotkey/Modules/Module_DataStructures.md` — Map usage, structured data, code organization
-4. **Read** `ClautoHotkey/Modules/Supplemental/Module_Keywords.md` — Keyword reference and language constructs
-5. **Read** `ClautoHotkey/Modules/Supplemental/Module_JSDOC.md` — JSDoc documentation conventions for AHK v2 (load when documenting code)
+1. **Read** `Modules/Supplemental/Module_All.md` — Unified reference covering ALL AHK v2 domains
+2. **Read** `Modules/Module_Instructions.md` — Core instruction framework, cognitive tiers, module routing
+3. **Read** `Modules/Module_DataStructures.md` — Map usage, structured data, code organization
+4. **Read** `Modules/Supplemental/Module_Keywords.md` — Keyword reference and language constructs
+5. **Read** `Modules/Supplemental/Module_JSDOC.md` — JSDoc documentation conventions for AHK v2 (load when documenting code)
 
 ## Module Routing Table
 

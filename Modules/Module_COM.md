@@ -1,10 +1,14 @@
-# Module_COM.md
-<!-- DOMAIN: COM automation and interop -->
-<!-- SCOPE: Raw DllCall, Buffer, and Struct marshalling belong in Module_DllCall.md; WinRT activation and the IInspectable ABI belong in Module_WinAPI.md (WinRT section). This module covers classic COM: IDispatch automation, events, SafeArrays, and direct vtable ComCall. -->
-<!-- TRIGGERS: COM, ComObject, ComObjGet, ComCall, ComValue, ComObjArray, ComObjConnect, ComObjQuery, ComObjFromPtr, IDispatch, IUnknown, vtable, "Excel automation", "Word automation", "WMI", "Internet Explorer", "Shell.Application", "COM event", "SafeArray", "VARIANT", "automation object", "CLSID", "ProgID", "QueryInterface" -->
-<!-- CONSTRAINTS: Create objects with ComObject("ProgID") — never `ComObjCreate`. COM objects are reference-counted by AHK and Release automatically when the wrapping variable is freed; a raw interface pointer you obtain yourself (ComCall output, ComObjQuery on a Ptr) is NOT auto-managed — release it. COM calls run on AHK's single thread; a modal call into another app (a MsgBox in Excel) blocks your script. COM errors throw as exceptions — wrap fallible automation in try/catch. -->
-<!-- CROSS-REF: Module_DllCall.md, Module_WinAPI.md, Module_Errors.md, Module_Objects.md -->
-<!-- VERSION: AHK v2.0+ -->
+---
+name: Module_COM
+description: 'Raw DllCall, Buffer, and Struct marshalling belong in Module_DllCall.md; WinRT activation
+  and the IInspectable ABI belong in Module_WinAPI.md (WinRT section). This module covers classic COM:
+  IDispatch automation, events, SafeArrays, and direct vtable ComCall. TRIGGER when the request involves:
+  COM, ComObject, ComObjGet, ComCall, ComValue, ComObjArray, ComObjConnect, ComObjQuery, ComObjFromPtr,
+  IDispatch, IUnknown, vtable, "Excel automation", "Word automation", "WMI", "Internet Explorer", "Shell.Application",
+  "COM event", "SafeArray", "VARIANT", "automation object", "CLSID", "ProgID", "QueryInterface"'
+---
+
+# Module_COM
 
 ## API QUICK-REFERENCE
 

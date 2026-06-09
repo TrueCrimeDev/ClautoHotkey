@@ -1,10 +1,18 @@
-# Module_WinAPI.md
-<!-- DOMAIN: Windows messages, subclassing, owner-draw, and WinRT -->
-<!-- SCOPE: Raw DllCall/Buffer/Struct mechanics belong in Module_DllCall.md; classic IDispatch/automation COM belongs in Module_COM.md. This module applies those primitives to the Windows message system, window subclassing, custom drawing, and the WinRT (Windows Runtime) ABI. -->
-<!-- TRIGGERS: OnMessage, SendMessage, PostMessage, PostThreadMessage, WM_, subclass, SetWindowSubclass, DefSubclassProc, WNDPROC, owner-draw, WM_PAINT, WM_DRAWITEM, NM_CUSTOMDRAW, WinRT, "Windows Runtime", IInspectable, RoActivateInstance, RoGetActivationFactory, HSTRING, "clipboard history", "modern Windows API", "intercept a message", "custom paint", "dark control", DWM, DwmSetWindowAttribute, Mica, Acrylic, "rounded corners", "title bar color", "dark title bar", "immersive dark mode", backdrop -->
-<!-- CONSTRAINTS: An OnMessage callback runs as an interrupting pseudo-thread — keep it short and re-entrancy-safe. A subclass proc and any WinRT/async delegate is invoked from native code through a CallbackCreate pointer; that pointer (and any Buffer it reads) must outlive every call, so store it on a long-lived object, not a local. WinRT is COM: interfaces are reference-counted (Release what you obtain) and methods are called by vtable index via ComCall, where 0-2 are IUnknown and 3-5 are IInspectable. HSTRINGs created with WindowsCreateString must be freed with WindowsDeleteString. -->
-<!-- CROSS-REF: Module_DllCall.md, Module_COM.md, Module_GUI.md, Module_Errors.md -->
-<!-- VERSION: AHK v2.0+ (typed Struct in WinRT helpers requires the v2.1-alpha.30 +Console fork) -->
+---
+name: Module_WinAPI
+description: 'Raw DllCall/Buffer/Struct mechanics belong in Module_DllCall.md; classic IDispatch/automation
+  COM belongs in Module_COM.md. This module applies those primitives to the Windows message system, window
+  subclassing, custom drawing, and the WinRT (Windows Runtime) ABI. TRIGGER when the request involves:
+  OnMessage, SendMessage, PostMessage, PostThreadMessage, WM_, subclass, SetWindowSubclass, DefSubclassProc,
+  WNDPROC, owner-draw, WM_PAINT, WM_DRAWITEM, NM_CUSTOMDRAW, WinRT, "Windows Runtime", IInspectable, RoActivateInstance,
+  RoGetActivationFactory, HSTRING, "clipboard history", "modern Windows API", "intercept a message", "custom
+  paint", "dark control", DWM, DwmSetWindowAttribute, Mica, Acrylic, "rounded corners", "title bar color",
+  "dark title bar", "immersive dark mode", backdrop'
+---
+
+# Module_WinAPI
+
+_AHK v2.0+ (typed Struct in WinRT helpers requires the v2.1-alpha.30 +Console fork)_
 
 ## API QUICK-REFERENCE
 

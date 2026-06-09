@@ -17,13 +17,13 @@ Search the AutoHotkey v2 documentation and return relevant information.
 
 ## Search Strategy
 
-1. **Check local modules first** — search `ClautoHotkey/Modules/` for the term
+1. **Check local modules first** — search `Modules/` for the term
 2. **Search online docs** — fetch from `https://www.autohotkey.com/docs/v2/`
 3. **Return** the most relevant excerpt with syntax and examples
 
 ## Local Module Search Order
 
-Search these files in `ClautoHotkey/Modules/` for the term:
+Search these files in `Modules/` for the term:
 
 | Term Category | Module File |
 |--------------|-------------|

@@ -225,16 +225,13 @@ Additional modules in `Modules/Supplemental/`.
 ---
 
 <div align="center">
-  <h2>Helper Scripts</h2>
+  <h2>Legacy</h2>
 </div>
 
-| Script | Purpose |
-|--------|---------|
-| `_UltiLog.ahk` | AI interaction logger with grading system |
-| `_Lists.ahk` | Dark-themed JSON list editor |
-| `_Context_Creator.ahk` | Combine modules for LLM context windows |
-| `Scripts/ClipboardHistoryCombiner.ahk` | Batch clipboard errors for debugging |
-| `Scripts/Clip_SearchCode.ahk` | Apply LLM code changes to VS Code |
+Pre-harness prompts and helper scripts live in [`legacy/`](legacy/) — the per-LLM
+`System_Prompts/` (a shared `_Core.md` + per-model wrappers for pasting AHK v2 knowledge
+into other models), `_Context_Creator.ahk`, the Ultimate Logger, the list editor, and the
+clipboard tools. They predate the harness and aren't part of it; kept for reference.
 
 ---
 

@@ -1,10 +1,13 @@
-﻿# Module_Errors.md
-<!-- DOMAIN: Errors — syntax errors, runtime errors, v1→v2 migration, exception handling -->
-<!-- SCOPE: COM-specific error propagation, HRESULT codes, and deep GUI event-binding diagnostics are not covered — see Module_GUI.md and Module_COM.md. -->
-<!-- TRIGGERS: error, exception, try, catch, throw, OnError, debug, crash, "syntax error", "runtime error", "not working", "script won't run", "unknown command", "variable not assigned", ErrorLevel, UnsetError, "v1 to v2 migration", "old script broken", "unexpected behavior", "throws exception" -->
-<!-- CONSTRAINTS: Use `:=` for assignment — `=` alone in an expression is case-insensitive string comparison, not assignment; all built-in commands require function syntax with parentheses and quoted strings; `ErrorLevel` is removed in v2 — use `try/catch as err` instead; fat-arrow functions are single-expression only, never multi-line blocks; `new ClassName()` is invalid in v2 — call the class directly; register `OnError()` as the first executable statement so early throws are captured. -->
-<!-- CROSS-REF: Module_Instructions.md, Module_Classes.md, Module_GUI.md, Module_Arrays.md, Module_DataStructures.md, Module_COM.md, Module_DllCall.md -->
-<!-- VERSION: AHK v2.0+ -->
+---
+name: Module_Errors
+description: 'COM-specific error propagation, HRESULT codes, and deep GUI event-binding diagnostics are
+  not covered — see Module_GUI.md and Module_COM.md. TRIGGER when the request involves: error, exception,
+  try, catch, throw, OnError, debug, crash, "syntax error", "runtime error", "not working", "script won''t
+  run", "unknown command", "variable not assigned", ErrorLevel, UnsetError, "v1 to v2 migration", "old
+  script broken", "unexpected behavior", "throws exception"'
+---
+
+# Module_Errors
 
 ## API QUICK-REFERENCE
 

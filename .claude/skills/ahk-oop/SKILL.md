@@ -12,11 +12,11 @@ description: >
 
 When this skill is invoked, load the following module files for comprehensive OOP reference:
 
-1. **Read** `ClautoHotkey/Modules/Module_Classes.md` — Class design, inheritance, constructors, destructors, static members
-2. **Read** `ClautoHotkey/Modules/Module_Objects.md` — Object hierarchy, property descriptors, method binding
-3. **Read** `ClautoHotkey/Modules/Module_Arrays.md` — 1-based indexing, Array.ahk library (Join/Filter/Map/Reduce/Sort)
-4. **Read** `ClautoHotkey/Modules/Module_DynamicProperties.md` — Dynamic properties via __Get/__Set, closures, computed properties
-5. **Read** `ClautoHotkey/Modules/Module_ClassPrototyping.md` — Prototyping workflows, runtime class creation
+1. **Read** `Modules/Module_Classes.md` — Class design, inheritance, constructors, destructors, static members
+2. **Read** `Modules/Module_Objects.md` — Object hierarchy, property descriptors, method binding
+3. **Read** `Modules/Module_Arrays.md` — 1-based indexing, Array.ahk library (Join/Filter/Map/Reduce/Sort)
+4. **Read** `Modules/Module_DynamicProperties.md` — Dynamic properties via __Get/__Set, closures, computed properties
+5. **Read** `Modules/Module_ClassPrototyping.md` — Prototyping workflows, runtime class creation
 
 ## Critical OOP Rules (Always Apply)
 

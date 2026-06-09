@@ -1,10 +1,19 @@
-# Module_Versions.md
-<!-- DOMAIN: Versions, portability, and the +Console fork -->
-<!-- SCOPE: Which features exist on stock v2.0, on upstream v2.1-alpha, and on the +Console fork — and the portable fallback for every fork-only or alpha-only feature. General syntax/OOP belongs in the other modules; this one answers "will this run on the build my user has?" -->
-<!-- TRIGGERS: #Requires, A_AhkVersion, VerCompare, version, "which version", v2.0, v2.1, alpha, fork, "+Console", Print, Eval, "#EnableEval", portable, portability, fallback, "works everywhere", "stock v2", diagnostics, "Diag=json", SyntaxError, typed Struct, "maybe operator", "(a?)()" -->
-<!-- CONSTRAINTS: A script only loads on a build that supports every construct it uses. Pick the lowest build that runs your code and declare it with #Requires — bump it only when you actually use an alpha- or fork-only feature. Print/Eval and JSON diagnostics are +Console fork extras; never call them in code meant to run on stock AHK without a guard or a fallback. typed Struct, (a?)(), block-body fat arrows, and the maybe operator are v2.1-alpha features absent from v2.0. Detect the build at runtime from A_AhkVersion, never assume the extras exist. -->
-<!-- CROSS-REF: Module_DllCall.md, Module_Errors.md, Module_Instructions.md, Module_GUI.md -->
-<!-- VERSION: spans AHK v2.0 → v2.1-alpha.30 +Console -->
+---
+name: Module_Versions
+description: >
+  AHK v2 version & portability reference — which features exist on stock v2.0, on upstream
+  v2.1-alpha, and on the +Console fork, with a portable fallback for every fork-only or
+  alpha-only construct. Answers "will this run on the build my user has?"
+  TRIGGER when: the request mentions a version (v2.0 / v2.1 / alpha), the +Console fork,
+  #Requires, A_AhkVersion / VerCompare, Print / Eval / #EnableEval availability, typed
+  Struct or (a?)() support, or making a script portable / "work on stock AHK".
+---
+
+# Module_Versions
+
+Spans AHK v2.0 → v2.1-alpha.30 +Console. The rules live in **AHK V2 CONSTRAINTS** below;
+cross-references in **SEE ALSO**. (The old `<!-- CONSTRAINTS -->` / `<!-- CROSS-REF -->`
+header comments duplicated those body sections, so the YAML frontmatter drops them.)
 
 ## CAPABILITY MATRIX
 

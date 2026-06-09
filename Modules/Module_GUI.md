@@ -1,10 +1,14 @@
-﻿# Module_GUI.md
-<!-- DOMAIN: GUI -->
-<!-- SCOPE: Screen graphics operations (PixelSearch, ImageSearch, screen overlays) and WebView2/IE-based browser controls embedded in a Gui are not covered — use built-in AHK v2 knowledge (no dedicated graphics/screen module yet). -->
-<!-- TRIGGERS: Gui(), AddText(), AddEdit(), AddButton(), AddListView(), AddTreeView(), AddGroupBox(), Submit(), OnEvent(), .Bind(), GuiForm, "make a window", "add a button", "create a form", "gui layout", "position controls", "dialog", "listview rows", "treeview nodes", "resizable window", "modal dialog", "currentY", "padding" -->
-<!-- CONSTRAINTS: Use Gui() constructor inside a class; v1 command syntax (Gui, Add, Show, Destroy) does not exist in v2. Store all control references in Map() — never {}. Bind class-method event handlers with .Bind(this). gui.Close() does not exist — use gui.Hide() to keep the object alive or gui.Destroy() to fully remove it. Never place a width dimension on a Section option string. -->
-<!-- CROSS-REF: Module_Classes.md, Module_Errors.md -->
-<!-- VERSION: AHK v2.0+ -->
+---
+name: Module_GUI
+description: 'Screen graphics operations (PixelSearch, ImageSearch, screen overlays) and WebView2/IE-based
+  browser controls embedded in a Gui are not covered — use built-in AHK v2 knowledge (no dedicated graphics/screen
+  module yet). TRIGGER when the request involves: Gui(), AddText(), AddEdit(), AddButton(), AddListView(),
+  AddTreeView(), AddGroupBox(), Submit(), OnEvent(), .Bind(), GuiForm, "make a window", "add a button",
+  "create a form", "gui layout", "position controls", "dialog", "listview rows", "treeview nodes", "resizable
+  window", "modal dialog", "currentY", "padding"'
+---
+
+# Module_GUI
 
 ## API QUICK-REFERENCE
 

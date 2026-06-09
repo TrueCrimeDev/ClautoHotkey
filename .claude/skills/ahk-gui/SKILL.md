@@ -13,9 +13,9 @@ description: >
 
 When this skill is invoked, load the following module files:
 
-1. **Read** `ClautoHotkey/Modules/Module_GUI.md` — GUI construction, Gui() constructor, control types, event binding, color handling
-2. **Read** `ClautoHotkey/Modules/Supplemental/Module_GUI_Layout.md` — Mathematical positioning system, sequential Y-tracking
-3. **Read** `ClautoHotkey/Modules/Supplemental/Module_GUI_Extensive.md` — Advanced GUI patterns, complex layouts
+1. **Read** `Modules/Module_GUI.md` — GUI construction, Gui() constructor, control types, event binding, color handling
+2. **Read** `Modules/Supplemental/Module_GUI_Layout.md` — Mathematical positioning system, sequential Y-tracking
+3. **Read** `Modules/Supplemental/Module_GUI_Extensive.md` — Advanced GUI patterns, complex layouts
 
 ## Critical GUI Rules (Always Apply)
 
