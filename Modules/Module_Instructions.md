@@ -335,6 +335,8 @@
                        "match", "replace", "split", "join"                → Module_TextProcessing.md
     Validation       : "validate", "type check", "isset", "typeerror",
                        "duck typing", "assert", "defensive", "??"         → (built-in — no module yet)
+    Versions & Fork  : "version", "A_AhkVersion", "VerCompare", "alpha", "fork",
+                       "+Console", "Print", "Eval", "portable"           → Module_Versions.md
     WinAPI & WinRT   : "onmessage", "sendmessage", "postmessage", "wm_", "subclass",
                        "owner-draw", "winapi", "winrt", "iinspectable"   → Module_WinAPI.md
     Window & Control : "winexist", "winactivate", "controlclick", "controlsend",
@@ -356,6 +358,8 @@
     "read or write files"                → (built-in — file system)
     "search on screen" / "get color"     → (built-in — graphics & screen)
     "manage script lifecycle"            → (built-in — script environment)
+    "target multiple AHK builds / portable"  → Module_Versions.md
+    "use Print or Eval / which version"  → Module_Versions.md
     "interact with other apps via COM"   → Module_COM.md
     "format code" / "check syntax"       → (built-in — formatting)
     "automate background windows"        → (built-in — window & control)
