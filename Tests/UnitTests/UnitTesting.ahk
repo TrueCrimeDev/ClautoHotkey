@@ -5,7 +5,7 @@ TestSuiteExtractor()
 
 class TestSuiteExtractor {
     __New() {
-        this.baseDir := "C:\Users\user\Documents\Design\Coding\AHK\!Running\ClautoHotkey\Tests\UnitTests"
+        this.baseDir := A_ScriptDir
         this.markdownFile := this.baseDir . "\Tests.md"
         this.ProcessMarkdown()
     }
