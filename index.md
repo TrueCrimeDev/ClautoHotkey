@@ -45,7 +45,7 @@ See [agentreadme.md](.claude/agentreadme.md) for descriptions.
 ## Legacy (`legacy/`)
 
 Pre-harness artifacts kept for reference, not used by the harness: the per-LLM
-`System_Prompts/`, `_Context_Creator.ahk`, and the older helper scripts. See
+`System_Prompts/` and the older helper scripts. See
 [legacy/README.md](legacy/README.md).
 
 ## How it routes
