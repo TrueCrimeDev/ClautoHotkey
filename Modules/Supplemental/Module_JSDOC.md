@@ -296,6 +296,7 @@ line (` * @`). This is an AHK-community convention that does not exist in standa
  * }
  *
  * c := Container.CbDate(CallbackValue)
+ * ; object literals here are intentional ad-hoc demo payloads (property access), not a data-storage pattern
  * c.InsertList([
  *     { timestamp: "20250312122930" }
  *     , { timestamp: "20250411122900" }
@@ -329,7 +330,7 @@ For showing expected output, use `<pre>` tags inside the description (before `@p
  * </pre>
  *
  * @example
- * obj := { Name: "value", Count: 3 }
+ * obj := { Name: "value", Count: 3 }  ; intentional ad-hoc demo payload (property access), not a data-storage pattern
  * strfy := QuickStringify()
  * strfy(obj, &str)
  * OutputDebug(str "`n")
@@ -646,6 +647,8 @@ The following is a complete, standalone AHK v2 class with JSDoc applied accordin
 to every pattern described in this guide.
 
 ```ahk
+#Requires AutoHotkey v2.1-alpha.30
+
 /*
 Github: https://github.com/you/MyLib
 Author: Your Name
@@ -674,6 +677,7 @@ class RecordSet extends Array {
      *
      * @example
      * rs := RecordSet.ByKey("Score")
+     * ; object literals below are intentional ad-hoc demo payloads (property access), not a data-storage pattern
      * rs.Insert({ Name: "Alice", Score: 92 })
      * rs.Insert({ Name: "Bob",   Score: 78 })
      * @

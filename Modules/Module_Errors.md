@@ -3,8 +3,8 @@ name: Module_Errors
 description: 'COM-specific error propagation, HRESULT codes, and deep GUI event-binding diagnostics are
   not covered — see Module_GUI.md and Module_COM.md. TRIGGER when the request involves: error, exception,
   try, catch, throw, OnError, debug, crash, "syntax error", "runtime error", "not working", "script won''t
-  run", "unknown command", "variable not assigned", ErrorLevel, UnsetError, "v1 to v2 migration", "old
-  script broken", "unexpected behavior", "throws exception"'
+  run", "unknown command", "variable not assigned", ErrorLevel, UnsetError, "old script broken",
+  "unexpected behavior", "throws exception"'
 ---
 
 # Module_Errors
@@ -20,11 +20,15 @@ description: 'COM-specific error propagation, HRESULT codes, and deep GUI event-
 | `OSError` | `OSError(code?)` | OS-level I/O failure; `code` is a numeric Windows error code (defaults to `A_LastError`); sets `.Number` and `.Message` automatically |
 | `MemoryError` | `MemoryError(message?)` | Memory allocation failure |
 | `UnsetError` | `UnsetError(message, what?)` | Uninitialized variable or unset function parameter |
-| `UnsetItemError` | `UnsetItemError(message, what?)` | Array index or Map key not found |
+| `UnsetItemError` | `UnsetItemError(message, what?)` | Array index or Map key not found — thrown by direct `m[k]` access on an absent key |
 | `MemberError` | `MemberError(message, what?)` | Property or method does not exist on an object |
+| `PropertyError` | `PropertyError(message, what?)` | Subclass of MemberError — property missing or not readable/writable |
+| `MethodError` | `MethodError(message, what?)` | Subclass of MemberError — method missing or not callable |
 | `IndexError` | `IndexError(message, what?)` | Array index out of bounds |
-| `KeyError` | `KeyError(message, what?)` | Map key absent when direct access `m[k]` is used |
 | `TargetError` | `TargetError(message, what?)` | Target window or control not found |
+| `TimeoutError` | `TimeoutError(message, what?)` | Operation timed out — e.g. `SendMessage` exceeding its timeout |
+| `ZeroDivisionError` | `ZeroDivisionError(message, what?)` | Divisor was zero in `/`, `//`, or `Mod()` |
+| `SyntaxError` | `SyntaxError(message, what?)` | +Console fork only — thrown by `Eval(expr)` on parse failure |
 
 ### Error Object Properties
 | Property | Type | Notes |
@@ -55,7 +59,7 @@ description: 'COM-specific error propagation, HRESULT codes, and deep GUI event-
 | `ProcessExist()` | `ProcessExist(pidOrName?)` | Returns PID if running, 0 if not — use in completion-check timers |
 | `Run()` | `Run(target, workingDir?, options?, &pidVarName?)` | Non-blocking process launch; capture PID via `&pidVarName` |
 | `RunWait()` | `RunWait(target, workingDir?, options?, &pidVarName?)` | Blocking launch — freezes GUI; prefer `Run()` + timer for GUI scripts |
-| `StrSplit()` | `StrSplit(string, delimiters?, omitChars?, maxParts?)` | Returns Array; replaces v1 `Loop, Parse` |
+| `StrSplit()` | `StrSplit(string, delimiters?, omitChars?, maxParts?)` | Returns Array of substrings — the idiomatic way to split a delimited string |
 | `WinActivate()` | `WinActivate(winTitle?, ...)` | Bring target window to foreground before sending input |
 | `WinWaitActive()` | `WinWaitActive(winTitle?, ..., timeout?)` | Block until window is active — pair with `WinActivate()` |
 | `ControlSend()` | `ControlSend(keys, control?, winTitle?, ...)` | Send keystrokes to a specific control without activating the window |
@@ -63,8 +67,8 @@ description: 'COM-specific error propagation, HRESULT codes, and deep GUI event-
 ## AHK V2 CONSTRAINTS
 
 - `:=` is always assignment; `=` in an expression is always case-insensitive string comparison; never use `=` to assign — the script runs without error but produces wrong values silently.
-- All AHK built-in commands require function syntax: parentheses, quoted string arguments. `MsgBox text` is a parse error; `MsgBox("text")` is correct.
-- `%Var%` inside quoted strings or expressions is never variable expansion in v2 — it resolves to a literal string. Use `Var` directly in expressions or concatenate with `.`.
+- All built-ins are functions in v2 taking expression arguments — strings must be quoted: `MsgBox("text")` (or the statement form `MsgBox "text"`). Unquoted text is read as a variable name, not a literal.
+- `%Var%` inside a quoted string is never variable expansion in v2 — it stays literal text. In expressions, `%name%` is a dynamic (double-deref) variable reference, not interpolation. Use `Var` directly in expressions or concatenate with `.`.
 - All functions and hotkeys have **local scope by default** — global variables referenced inside them must be declared with `global varName`; omitting this causes UnsetError at runtime.
 - `ErrorLevel` is removed in v2 — it is never set by built-in functions. Checking it produces UnsetError or always-false logic. Use `try/catch as err` exclusively.
 - Fat-arrow functions `=>` accept exactly one expression, never a brace-enclosed block of statements — using `() => { multiple; lines }` is a parse error.
@@ -72,7 +76,7 @@ description: 'COM-specific error propagation, HRESULT codes, and deep GUI event-
 - `catch` clauses must be ordered **most-specific subclass first** — a broad `catch Error` placed before `catch NetworkError` swallows all typed exceptions, preventing targeted recovery.
 - `OnError()` must be registered **before** any throwable code — exceptions thrown during initialization are not captured by a handler registered afterward.
 - `return` and its value must appear on the **same physical line** — a line break between them is parsed as a bare `return` followed by a stray expression (parse error or dead code).
-- `#HotIf` replaces `#If` — using the old directive causes the context block to be silently ignored; hotkeys fire unconditionally.
+- `#HotIf` replaces `#If` — the old directive fails at load time ("This line does not contain a recognized action", exit code 12); the script never starts.
 
 Safe-access priority order for exception handling:
 1. `??` null-coalescing — one-line resolution for unset variables, never throws
@@ -93,38 +97,35 @@ Pair every prohibition with its positive alternative:
 ## TIER 1 — Syntax, Built-in Variable and Escaping Errors
 > METHODS COVERED: `MsgBox()` · `Run()` · `A_Clipboard` · `A_ScreenWidth` · `A_Index`
 
-The most common first-contact errors when writing or migrating AHK v2 code are purely syntactic: wrong assignment operator, command-style function calls without parentheses, percent-sign variable expansion, and missing `A_` prefixes on built-ins. These errors are CRITICAL severity — the script refuses to run or produces immediately wrong output. Every item in this tier is a direct v1 habit that must be unlearned.
+The most common first-contact errors when writing AHK v2 code are purely syntactic: wrong assignment operator, unquoted string arguments, percent-sign interpolation habits, and missing `A_` prefixes on built-ins. These errors are CRITICAL severity — the script refuses to run or produces immediately wrong output. Most are habits imported from other languages or stale training data.
 ```ahk
-; ── ASSIGNMENT OPERATOR ──────────────────────────────────────────────────────
-
+; ASSIGNMENT OPERATOR
 ; ✓ := is the only assignment operator in v2 expressions
 x := 5 + 2
 
 ; ✗ = alone is case-insensitive string comparison, never assignment
 ; x = 5 + 2   ; → silent logic error — condition result discarded
 
-; ── FUNCTION CALL SYNTAX ─────────────────────────────────────────────────────
-
-; ✓ All built-ins are functions in v2: parentheses + quoted strings required
+; FUNCTION CALL SYNTAX
+; ✓ All built-ins are functions in v2 — string arguments are quoted expressions
 MsgBox("Hello, World!")
 Run('notepad.exe "C:\file.txt"')
 
-; ✗ v1 command-style — parse error in v2
-; MsgBox Hello, World!   ; → "Unknown command"
-; Run notepad.exe        ; → "Unknown command"
+; ✗ legacy command syntax (comma-separated arguments, unquoted strings) does not exist
+;   in v2 — unquoted text is read as a variable name, never as a literal string
 
-; ── SPACE BEFORE PARENTHESIS ─────────────────────────────────────────────────
-
-; ✓ Function name and opening parenthesis must be adjacent — no space
+; SPACE BEFORE PARENTHESIS
+; ✓ Keep the function name and the opening parenthesis adjacent
 MyFunc(param)
 MsgBox("Hello World")
 
-; ✗ Space before parenthesis — parse error
-; MyFunc (param)          ; → "Missing operator"
-; MsgBox ("Hello World")  ; → parse error
+; ✓ At statement level a space still parses as a function-call statement —
+;   MyFunc (param) and MsgBox ("Hello World") run fine
+; ✗ In expression context the space breaks the call: the name is evaluated as a
+;   value and concatenated with the parenthesised expression instead of called
+; result := MyFunc ("abc")   ; → TypeError: "Expected a String but got a Func" — MyFunc is never called
 
-; ── PERCENT SIGNS ────────────────────────────────────────────────────────────
-
+; PERCENT SIGNS
 ; ✓ Variables are used directly in expressions — no percent signs
 MsgBox("Value is " . Var)
 result := Var + 1
@@ -132,15 +133,15 @@ result := Var + 1
 ; ✓ % inside a quoted string is always a literal percent — no escape needed
 MsgBox("Progress: 50%")
 
-; ✗ v1 percent expansion — Var is treated as literal text
+; ✗ Percent signs inside a quoted string never interpolate
 ; MsgBox("Value is %Var%")   ; → displays "%Var%" literally
-; result := %Var% + 1        ; → syntax error
+;   (in an expression, %name% is a dynamic variable reference — a double-deref —
+;    not interpolation; it is almost never what an interpolation habit intended)
 
 ; ✗ Unnecessary comma escape inside expression strings
 ; MsgBox("Hello`, World")    ; → commas never need escaping in v2 strings
 
-; ── A_ PREFIX ON BUILT-IN VARIABLES ─────────────────────────────────────────
-
+; A_ PREFIX ON BUILT-IN VARIABLES
 ; ✓ All built-in variables require the A_ prefix in v2
 A_Clipboard := "Hello"
 width  := A_ScreenWidth
@@ -154,10 +155,9 @@ index  := A_Index
 ## TIER 2 — Scope, Control Flow and Return Statement Errors
 > METHODS COVERED: `global` declaration · `??` null-coalescing operator
 
-Errors in this tier arise once the script starts executing: uninitialized variables, incorrect variable scope inside hotkeys and functions, missing braces around multi-line blocks, and v1-style return syntax. These are HIGH severity — the script runs but produces wrong results or throws UnsetError at the point of first use.
+Errors in this tier arise once the script starts executing: uninitialized variables, incorrect variable scope inside hotkeys and functions, missing braces around multi-line blocks, and legacy return syntax. These are HIGH severity — the script runs but produces wrong results or throws UnsetError at the point of first use.
 ```ahk
-; ── UNINITIALIZED VARIABLES ──────────────────────────────────────────────────
-
+; UNINITIALIZED VARIABLES
 ; ✓ Initialize before use; ?? coalesces unset to a default in one expression
 count  := 0
 result := count ?? 0   ; Safe: returns 0 if count is unset
@@ -165,8 +165,7 @@ result := count ?? 0   ; Safe: returns 0 if count is unset
 ; ✗ Reading before assignment — UnsetError at the if condition
 ; if (count > 0)   ; → "Variable 'count' has not been assigned a value"
 
-; ── VARIABLE SCOPE IN HOTKEYS / FUNCTIONS ────────────────────────────────────
-
+; VARIABLE SCOPE IN HOTKEYS / FUNCTIONS
 ; ✓ Declare global inside the function/hotkey body that needs access
 globalCounter := 0
 
@@ -180,8 +179,7 @@ F1:: {
 ;     globalCounter += 1   ; → UnsetError: globalCounter not in local scope
 ; }
 
-; ── MISSING CURLY BRACES ─────────────────────────────────────────────────────
-
+; MISSING CURLY BRACES
 ; ✓ Braces required for multi-line blocks — all statements execute conditionally
 if (x > 10) {
     MsgBox("High")
@@ -193,8 +191,7 @@ if (x > 10) {
 ;     MsgBox("High")
 ;     MsgBox("Done")   ; → always executes regardless of condition
 
-; ── RETURN STATEMENT SYNTAX ──────────────────────────────────────────────────
-
+; RETURN STATEMENT SYNTAX
 ; ✓ return and its value must be on the same physical line
 return total
 
@@ -202,15 +199,14 @@ return total
 finalResult := BuildResult()
 return finalResult
 
-; ✗ v1 comma after return — parse error in v2
+; ✗ legacy comma after return — parse error in v2
 ; return, total   ; → parse error
 
 ; ✗ Line break between return and value — bare return executes, value is dead code
 ; return
 ; result          ; → never reached; function returns empty
 
-; ── FAT-ARROW FUNCTIONS ──────────────────────────────────────────────────────
-
+; FAT-ARROW FUNCTIONS
 ; ✓ Fat-arrow is valid for a single expression only
 onClick := () => MsgBox("Hi")
 double  := (x) => x * 2
@@ -228,10 +224,9 @@ HandleClick() {
 ## TIER 3 — Logic, Operator, Event and Callback Errors
 > METHODS COVERED: `StrSplit()` · `Loop Read` · `.Bind()` · `WinActivate()` · `WinWaitActive()` · `ControlSend()` · `Send()` · `SendInput()`
 
-These are HIGH-severity logic errors that arise from operator confusion, v1 loop syntax, and missing callback binding — the script compiles and runs but produces wrong results or fires in the wrong window. The operator distinction (`=` vs `==` vs `:=`) is a frequent source of subtle bugs because all three forms are syntactically legal in v2.
+These are HIGH-severity logic errors that arise from operator confusion, legacy loop syntax, and missing callback binding — the script compiles and runs but produces wrong results or fires in the wrong window. The operator distinction (`=` vs `==` vs `:=`) is a frequent source of subtle bugs because all three forms are syntactically legal in v2.
 ```ahk
-; ── COMPARISON OPERATORS ─────────────────────────────────────────────────────
-
+; COMPARISON OPERATORS
 ; ✓ == is case-sensitive string comparison — use when case matters
 if (x == "hello")       ; matches only exact lowercase "hello"
     MsgBox("Exact match")
@@ -243,8 +238,7 @@ if (x = "HELLO")        ; matches "hello", "Hello", "HELLO", etc.
 ; ✗ Confusing = with := — = never assigns; using it here creates a comparison, not a store
 ; x = 5   ; → evaluates "does x equal 5?", discards the result; x is still unset
 
-; ── LOOP SYNTAX ──────────────────────────────────────────────────────────────
-
+; LOOP SYNTAX
 ; ✓ v2 string splitting — StrSplit returns an Array, iterate with for...in
 for index, part in StrSplit(Str, ",") {
     MsgBox(part)
@@ -255,16 +249,14 @@ Loop Read, "myfile.txt" {
     MsgBox(A_LoopReadLine)
 }
 
-; ✗ v1 Loop Parse command syntax — "Unknown command" in v2
-; Loop, Parse, Str, ,
-;     MsgBox(A_LoopField)   ; → parse error
+; ✗ The legacy comma-command form of parsing loops does not exist in v2 — use
+;   StrSplit() as above, or v2's expression form: Loop Parse, Str, ","
 
 ; ✗ FileOpen does not support for-in line iteration
 ; for lineNum, lineText in FileOpen("myfile.txt")
 ;     MsgBox(lineText)   ; → MemberError: no __Enum on file object
 
-; ── CALLBACK BINDING ─────────────────────────────────────────────────────────
-
+; CALLBACK BINDING
 ; ✓ .Bind(this) propagates the instance reference into the callback context
 button.OnEvent("Click", MyGui.ButtonHandler.Bind(MyGui))
 SetTimer(MyClass.TimerMethod.Bind(MyClass), 1000)
@@ -276,8 +268,7 @@ button.OnEvent("Click", this.ButtonHandler.Bind(this))
 ; button.OnEvent("Click", MyGui.ButtonHandler)       ; → UnsetError: "this has not been assigned"
 ; SetTimer(MyClass.TimerMethod, 1000)                ; → same UnsetError on first fire
 
-; ── SEND MODE AND WINDOW TARGETING ───────────────────────────────────────────
-
+; SEND MODE AND WINDOW TARGETING
 ; ✓ Choose Send variant based on target application requirements
 SendInput("Hello World")    ; Most modern apps
 SendPlay("Hello World")     ; Games and stubborn apps
@@ -300,8 +291,7 @@ ControlSend("Hello", "Edit1", "MyApp")
 
 MEDIUM-severity errors that prevent entire feature areas from working: wrong hotkey context directive, legacy GUI command syntax, missing string quotes around Send arguments, blocking calls that freeze the GUI, and hard-coded paths that break on any machine other than the developer's. These errors are typically silent at parse time but immediately visible at runtime.
 ```ahk
-; ── HOTKEY CONTEXT DIRECTIVE ─────────────────────────────────────────────────
-
+; HOTKEY CONTEXT DIRECTIVE
 ; ✓ v2 context-sensitive hotkey — #HotIf with braces around multi-line body
 #HotIf WinActive("MyWindow")
 F1:: {
@@ -309,31 +299,28 @@ F1:: {
 }
 #HotIf   ; reset context
 
-; ✗ v1 directive — silently ignored in v2; hotkey fires unconditionally
-; #If WinActive("MyWindow")   ; → directive not recognized in v2
-; F1::MsgBox("Context hotkey")
+; ✗ The old #If directive does not exist in v2 — the line fails at load time
+;   ("This line does not contain a recognized action", exit code 12); the
+;   script never starts. Use #HotIf.
 
-; ── GUI CREATION ─────────────────────────────────────────────────────────────
-
+; GUI CREATION
 ; ✓ v2 object-based GUI — constructor at creation, methods for controls and display
-gui := Gui("", "Title")
-gui.Add("Edit", "vMyEdit")
-gui.Show()
+;   (never name the variable "gui" — it shadows the Gui class and throws UnsetError)
+myGui := Gui("", "Title")
+myGui.Add("Edit", "vMyEdit")
+myGui.Show()
 
-; ✗ v1 command-style GUI — "Unknown command" or "This class does not support" in v2
-; Gui, Add, Edit, vMyEdit   ; → parse error
-; Gui, Show, , Title        ; → parse error
+; ✗ legacy command-style GUI syntax (comma-separated arguments) does not exist in v2 —
+;   every GUI operation is a method call on a Gui object
 
-; ── STRING QUOTING IN SEND ───────────────────────────────────────────────────
-
+; STRING QUOTING IN SEND
 ; ✓ Keys must be quoted strings — bare braces are object literal syntax
 Send("{Media_Play_Pause}")
 
 ; ✗ Missing quotes — AHK v2 parses {Media_Play_Pause} as an object literal
 ; Send({Media_Play_Pause})   ; → "Missing propertyname" parse error
 
-; ── HARD-CODED ABSOLUTE PATHS ────────────────────────────────────────────────
-
+; HARD-CODED ABSOLUTE PATHS
 ; ✓ Build paths from built-in path variables — works on any machine
 FileRead(A_MyDocuments . "\config.txt")
 FileRead(A_ScriptDir    . "\settings.ini")
@@ -346,8 +333,7 @@ if (configPath)
 ; ✗ Hard-coded absolute path — file not found on any machine except the author's
 ; FileRead("C:\Users\Alice\Documents\config.txt")   ; → OSError on all other machines
 
-; ── BLOCKING vs NON-BLOCKING CALLS ───────────────────────────────────────────
-
+; BLOCKING vs NON-BLOCKING CALLS
 ; ✓ Non-blocking: Run() returns immediately; named function checks completion via timer
 Run("longprocess.exe",,, &pid)
 
@@ -370,28 +356,24 @@ MsgBox("Process started", "Info", "T3")   ; Auto-closes after 3 seconds
 
 HIGH-severity errors in exception architecture: omitting `&` on output parameters, leaving operations unwrapped in try/catch, swallowing errors with empty catch blocks, throwing generic `Error` instead of typed subclasses, and failing to register a global safety net. This tier also covers the full custom exception hierarchy pattern and the `OnError` crash-log idiom.
 ```ahk
-; ── BYREF OUTPUT PARAMETERS ──────────────────────────────────────────────────
-
+; BYREF OUTPUT PARAMETERS
 ; ✓ Output parameters require & prefix — all four vars are populated by the function
 MouseGetPos(&x, &y, &win, &ctrl)
 
 ; ✗ Missing & — output variables are never written; x and y remain unset
 ; MouseGetPos(x, y)   ; → no error thrown, but x/y are silently empty
 
-; ── SETTIMER SYNTAX ──────────────────────────────────────────────────────────
-
-; ✓ SetTimer takes a function reference or string name
+; SETTIMER SYNTAX
+; ✓ SetTimer takes a function object
 SetTimer(MyFunc, 2000)
-SetTimer("MyFunc", 2000)
 
 ; ✓ Object methods require .Bind() so the correct instance is captured
 SetTimer(ObjRef.Method.Bind(ObjRef), 1000)
 
-; ✗ v1 command syntax — "Unknown command" in v2
-; SetTimer, MyFunc, 2000   ; → parse error
+; ✗ A quoted name string is not callable in v2
+; SetTimer("MyFunc", 2000)   ; → TypeError — pass the function object, not its name
 
-; ── TRY / CATCH / FINALLY ────────────────────────────────────────────────────
-
+; TRY / CATCH / FINALLY
 ; ✓ Wrap risky calls; finally guarantees cleanup even when an exception fires
 try {
     content := FileRead("config.txt")
@@ -418,8 +400,7 @@ try {
 ;     RiskyOperation()
 ; } catch { }   ; → error is hidden; root cause is lost forever
 
-; ── CUSTOM EXCEPTION HIERARCHY ───────────────────────────────────────────────
-
+; CUSTOM EXCEPTION HIERARCHY
 ; ✓ Define domain-specific exception classes extending the built-in Error base
 class AppError extends Error {
     __New(message, code := 0) {
@@ -469,8 +450,7 @@ try {
 ; ✗ Generic throw loses all context — caller cannot distinguish failure categories
 ; throw Error("something went wrong")   ; → caller can't branch on network vs validation
 
-; ── GLOBAL ERROR HANDLER (OnError) ───────────────────────────────────────────
-
+; GLOBAL ERROR HANDLER (OnError)
 ; ✓ Register as the very first executable statement — captures initialization throws
 OnError(GlobalCrashHandler)
 
@@ -514,20 +494,18 @@ GlobalCrashHandler(err, mode) {
 ## TIER 6 — Version, Compatibility and Diagnostic Patterns
 > METHODS COVERED: `#Requires` · `Map()` · `FileOpen()` · `.Read()` · `.Close()` · `ProcessExist()`
 
-<!-- merged: TIER 6+7, reason: TIER_7 "Advanced Diagnostic Patterns" (object literals, comma errors, infinite loops) are peer severity to TIER_6 version/compatibility patterns; merging keeps tier count at exactly 6 -->
+<!-- merged: TIER 6+7, reason: TIER_7 "Advanced Diagnostic Patterns" (object literals, comma errors, infinite loops) are peer severity to TIER_6 version/compatibility patterns; the former TIER 8 (Library and Method Errors) is renumbered TIER 7 -->
 
-LOW-to-MEDIUM severity errors relating to version pinning, removed globals (`ErrorLevel`), the `new` keyword, object literal misuse, comma placement, and infinite-loop patterns. These errors are especially common in scripts ported from AHK v1 or generated by AI tools trained on mixed-version data.
+LOW-to-MEDIUM severity errors relating to version pinning, removed globals (`ErrorLevel`), the `new` keyword, object literal misuse, comma placement, and infinite-loop patterns. These errors are especially common in scripts ported from legacy AutoHotkey or generated by AI tools trained on mixed-version data.
 ```ahk
-; ── #REQUIRES DIRECTIVE ───────────────────────────────────────────────────────
-
+; #REQUIRES DIRECTIVE
 ; ✓ First line of every v2 script declares the minimum interpreter version
-#Requires AutoHotkey v2.0
+#Requires AutoHotkey v2.1-alpha.30
 
-; ✗ No directive — script may run under v1 and produce cascading parse errors
-; (no directive)   ; → "This line does not contain a recognized action" under v1
+; ✗ No directive — an older interpreter may pick the script up and fail with
+;   confusing parse errors instead of a clear version-requirement message
 
-; ── ERRORLEVEL (REMOVED IN v2) ───────────────────────────────────────────────
-
+; ERRORLEVEL (REMOVED IN v2)
 ; ✓ Use try/catch — the only exception mechanism in v2
 try {
     content := FileRead("nonexistent.txt")
@@ -539,33 +517,33 @@ try {
 ; FileRead("nonexistent.txt")
 ; if (ErrorLevel) { }   ; → ErrorLevel is unset; condition is always false or throws
 
-; ── INSTANTIATION WITHOUT new ────────────────────────────────────────────────
-
+; INSTANTIATION WITHOUT new
 ; ✓ Class instantiation is a direct function call in v2 — no new keyword
 obj := MyClass()
 
-; ✗ new keyword — invalid in AHK v2; parse error or bypasses __New
-; obj := new MyClass()   ; → parse error
+; ✗ "new" is not a keyword in v2 — it parses as a variable read (load-time warning)
+;   and throws UnsetError at runtime; it never reaches __New
+; obj := new MyClass()   ; → UnsetError on the variable "new"
 
-; ── OBJECT LITERALS vs MAP ───────────────────────────────────────────────────
-
+; OBJECT LITERALS vs MAP
 ; ✓ Map() for dynamic key-value storage — supports .Has(), .Get(), .Delete()
-settings := Map("theme", "dark", "volume", 80)
+appSettings := Map("theme", "dark", "volume", 80)
 
 ; ✓ Dedicated class for structured data with fixed, named properties
+;   The variable must not be named "settings" — assigning to a variable that
+;   matches a script-defined class name is a load-time error
 class Settings {
     __New() {
         this.theme  := "dark"
         this.volume := 80
     }
 }
-settings := Settings()
+appSettings := Settings()
 
 ; ✗ Object literal as a general-purpose data container
-; settings := {theme: "dark", volume: 80}   ; → no .Has()/.Get()/.Delete() support
+; appSettings := {theme: "dark", volume: 80}   ; → no .Has()/.Get()/.Delete() support
 
-; ── RESOURCE MANAGEMENT (OOP UNFAMILIARITY) ──────────────────────────────────
-
+; RESOURCE MANAGEMENT (OOP UNFAMILIARITY)
 ; ✓ Explicit try/finally guarantees file handle is closed even on exception
 file := FileOpen("data.txt", "r", "UTF-8")
 try {
@@ -578,19 +556,20 @@ try {
 ; ✗ Chaining .Read() on a bare FileOpen result — handle is never closed
 ; content := FileOpen("data.txt").Read()   ; → handle leaks; __Delete timing not guaranteed
 
-; ── OBJECT LITERAL SYNTAX ────────────────────────────────────────────────────
+; OBJECT LITERAL SYNTAX
+; ✓ The legitimate {} role: property descriptors and option bags — never data storage
+holder := Object()
+holder.DefineProp("answer", {value: 42})
 
-; ✓ Object literals require proper key: value pairs
-obj := {key: "value", setting: true}
-
-; ✓ Map() for dynamic or string-keyed data
-obj := Map("key", "value", "setting", true)
+; ✓ Map() with individual assignment for dynamic or string-keyed data
+data := Map()
+data["key"]     := "value"
+data["setting"] := true
 
 ; ✗ Malformed object literal — missing property name
-; obj := { , value}   ; → "Missing propertyname" parse error
+; desc := { , value}   ; → "Missing propertyname" parse error
 
-; ── COMMA AND ARGUMENT LIST ERRORS ───────────────────────────────────────────
-
+; COMMA AND ARGUMENT LIST ERRORS
 ; ✓ Separate arguments with exactly one comma each
 MsgBox("Hello", "World")
 
@@ -600,8 +579,7 @@ MsgBox("Hello",, 64)   ; Text="Hello", Title=default, Options=64
 ; ✗ Missing comma between string arguments — concatenation, not two args
 ; MsgBox("Hello" "World")   ; → parse error or unintended concatenation
 
-; ── INFINITE LOOPS ───────────────────────────────────────────────────────────
-
+; INFINITE LOOPS
 ; ✓ Include an exit condition and Sleep() to yield execution
 counter := 0
 while (counter < 100) {
@@ -613,32 +591,30 @@ while (counter < 100) {
 ; ✗ Busy-wait with no exit condition or sleep — 100% CPU, script never responds
 ; while (true) { }   ; → hangs entire thread; GUI becomes unresponsive
 
-; ── AI-GENERATED CODE VALIDATION ─────────────────────────────────────────────
-
+; AI-GENERATED CODE VALIDATION
 ; ✓ Validated v2 syntax — every statement uses v2 function form
 Send(var)
 MsgBox("Hello")
 
-; ✗ AI mixing v1 commands and v2 functions in the same script
-; Send, %var%     ; → v1 syntax; "Unknown command" in v2
-; MsgBox("Hello") ; → v2 syntax; correct
-; (mixing causes cascade of parse errors)
+; ✗ AI-generated scripts sometimes mix legacy command syntax (comma-separated
+;   arguments, percent-sign dereferences) into v2 code — any such line fails at
+;   load time; validate generated code with the interpreter before trusting it
 ```
 
 ## ANTI-PATTERNS
 
 | Pattern | Wrong | Correct | LLM Common Cause |
 |---------|-------|---------|------------------|
-| Assignment with `=` | `x = 5 + 2` | `x := 5 + 2` | AHK v1 training data: `=` was the assignment operator in v1 expressions |
-| Percent-sign variable expansion | `MsgBox("Value: %Var%")` | `MsgBox("Value: " . Var)` | AHK v1 training data: `%Var%` was standard variable interpolation |
-| ErrorLevel check after function call | `Run("x.exe")` then `if ErrorLevel` | `try { Run("x.exe") } catch as err { }` | AHK v1 training data: ErrorLevel was the universal return-status mechanism |
+| Assignment with `=` | `x = 5 + 2` | `x := 5 + 2` | legacy training data: `=` was the legacy assignment operator |
+| Percent-sign variable expansion | `MsgBox("Value: %Var%")` | `MsgBox("Value: " . Var)` | legacy training data: `%Var%` was standard variable interpolation |
+| ErrorLevel check after function call | `Run("x.exe")` then `if ErrorLevel` | `try { Run("x.exe") } catch as err { }` | legacy training data: ErrorLevel was the universal return-status mechanism |
 | Unbound method callback | `button.OnEvent("Click", MyGui.Handler)` | `button.OnEvent("Click", MyGui.Handler.Bind(MyGui))` | Cross-language habit: Python/JS closures capture `self`/`this` automatically |
 | Empty catch block | `try { } catch { }` | `try { } catch as err { MsgBox(err.Message) }` | Copy-paste habit from other languages; silences errors instead of handling them |
 | Multi-line fat-arrow callback | `fn := (x) => { doA(x); return doB(x) }` | Named function with `{ }` braces for multi-statement logic | Cross-language lambda habit: JS/Python allow multi-statement arrow/lambda bodies |
 | `new` keyword for instantiation | `obj := new MyClass()` | `obj := MyClass()` | Cross-language habit: Java, C#, JS, Python all use `new` or a constructor call |
 | Generic throw without typed class | `throw Error("connection failed")` | `throw NetworkError("connection failed", url, 503)` | Missing AHK v2 exception hierarchy knowledge; only `Error` is known from training data |
-| Object literal for key-value storage | `data := {name: "Alice", age: 30}` | `data := Map("name", "Alice", "age", 30)` | AHK v1 training data: object literals were the standard key-value container |
-| `#If` context directive | `#If WinActive("Title")` | `#HotIf WinActive("Title")` | AHK v1 training data: `#If` was the v1 context directive; renamed in v2 |
+| Object literal for key-value storage | `data := {name: "Alice", age: 30}` | `data := Map()` then `data["name"] := "Alice"` per key | legacy training data: object literals were the standard key-value container |
+| `#If` context directive | Using the old `#If` directive (load-time failure in v2) | `#HotIf WinActive("Title")` | legacy training data: `#If` is the old directive name — v2 uses `#HotIf` |
 
 ## SEE ALSO
 
@@ -681,14 +657,14 @@ MsgBox("Hello")
 4. Check for variable name typos
 
 **Syntax checks** for syntax errors:
-1. Verify v2 function syntax (not v1 commands)
+1. Verify v2 function syntax (not legacy command syntax)
 2. Check proper string quoting
 3. Confirm proper loop syntax
 4. Verify hotkey context syntax (`#HotIf` not `#If`)
 5. Check GUI object syntax (not legacy commands)
 
-## TIER 8 — Library and Method Errors
-> METHODS COVERED: `#Include <Array>` · `#Include <JSON>` · `.Join()` · `.Filter()` · `.Map()` · `JSON.Load()` · `JSON.Dump()` · `Map.Keys()`
+## TIER 7 — Library and Method Errors
+> METHODS COVERED: `#Include <Array>` · `#Include <JSON>` · `.Join()` · `.Filter()` · `.Map()` · `JSON.Load()` · `JSON.Dump()` · `Map.Prototype.DefineProp()`
 
 Library-dependent methods are among the most common sources of LLM-generated errors. AHK v2 arrays have no built-in `.Join()`, `.Filter()`, or `.Map()` — these require `#Include <Array>`. JSON methods use `JSON.Load()` / `JSON.Dump()`, not JavaScript's `.parse()` / `.stringify()`. Map objects have no `.Keys()` method — use a `for` loop instead.
 
@@ -702,17 +678,9 @@ result := arr.Join(",")  ; → MethodError: no method named 'Join'
 arr := [1, 2, 3]
 result := arr.Join(",")  ; Works with Array.ahk loaded
 
-; ✗ JavaScript-style method names — wrong casing
-arr.join(",")       ; → should be .Join()
-arr.filter(fn)      ; → should be .Filter()
-arr.map(fn)         ; → should be .Map()
-json.parse(str)     ; → should be JSON.Load()
-
-; ✓ AHK v2 method names use PascalCase
-arr.Join(",")
-arr.Filter(fn)
-arr.Map(fn)
-JSON.Load(str)
+; ✓ Method names are case-insensitive in AHK v2 — arr.join(",") and arr.Join(",")
+;   call the same method; PascalCase is a style convention, not a correctness rule.
+;   The real hazard is a wrong NAME, e.g. JSON.parse() instead of JSON.Load().
 
 ; ✗ Map.Keys() does not exist
 myMap := Map("a", 1, "b", 2)
@@ -723,8 +691,9 @@ keys := []
 for key in myMap
     keys.Push(key)
 
-; ✓ Or extend prototype if needed frequently
-Map.Prototype.DefineProp("Keys", {
+; ✓ Or extend the prototype under a distinct name — naming it "Keys" would
+;   contradict the rule above; requires v2.1 (function-definition expression)
+Map.Prototype.DefineProp("KeysArray", {
     Call: (this) {
         arr := []
         for k in this
@@ -732,6 +701,7 @@ Map.Prototype.DefineProp("Keys", {
         return arr
     }
 })
+keys := myMap.KeysArray()
 
 ; ✗ JavaScript JSON method names
 data := JSON.parse(jsonString)     ; → wrong method name

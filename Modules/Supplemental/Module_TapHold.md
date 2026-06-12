@@ -99,7 +99,7 @@ This library is particularly useful for **power users, gamers, and automation wo
 This is my TapHoldManager Library script:
 
 ```cpp
-#Requires AutoHotkey v2.1-alpha.16
+#Requires AutoHotkey v2.1-alpha.30
 
 class TapHoldManager {
 	Bindings := Map()
@@ -325,5 +325,3 @@ class TapHoldManager {
 	}
 }
 ```
-
-Here's my curre

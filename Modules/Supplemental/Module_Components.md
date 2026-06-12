@@ -16,7 +16,6 @@ class GuiClassName {
     }
 
     SetupHotkeys() {
-        Hotkey("Escape", (*) => this.gui.Hide())
         Hotkey("!w", this.Toggle.Bind(this))
     }
 

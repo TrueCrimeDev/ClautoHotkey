@@ -25,7 +25,8 @@ What runs where. "alpha" = upstream `v2.1-alpha` from autohotkey.com; "fork" = t
 | `??` null-coalescing, `?:` ternary | ✓ | ✓ | ✓ |
 | Maybe operator `var?` (suppress unset) | ✗ | ✓ | ✓ |
 | Maybe-call / index `(a?)()` `(a?)[]` | ✗ | ✓ | ✓ |
-| Block-body fat arrow `=> { ... }` | ✗ | ✓ | ✓ |
+| Arrowless function expression `(params) { ... }` (multi-statement) | ✗ | ✓ | ✓ |
+| Block-body fat arrow `=> { ... }` | ✗ (syntax error on **every** v2 build) | ✗ | ✗ |
 | Typed properties / `Struct` (class-ref fields) | ✗ | ✓ | ✓ |
 | `"Void"` return for DllCall/ComCall | ✗ | ✓ | ✓ |
 | Void call yields `unset` (not a fake number) | ✗ | ✓ | ✓ |
@@ -54,11 +55,16 @@ above it is upstream and reaches anyone on the matching build.
 
 - Pick the **floor build** — the lowest one your code runs on — and declare it. Use
   `#Requires AutoHotkey v2.0` for maximum reach; bump to `v2.1-alpha.30` only when the
-  script actually uses a v2.1 construct (typed `Struct`, `(a?)()`, block-body arrows).
+  script actually uses a v2.1 construct (typed `Struct`, `(a?)()`, arrowless `(params) { }`
+  function expressions). Block-body fat arrows `=> { }` exist on **no** v2 build — the
+  arrowless form is v2.1's multi-statement function expression.
 - `#Requires` is a hard gate: requiring `v2.0` and then writing `(a?)()` fails to load on
   the very build you required. Match the directive to the syntax you use.
-- `Print`/`Eval` are fork-only. In code that may run on stock AHK, either guard them behind
-  a runtime fork check or use the portable fallback (`FileAppend(..., "*")`).
+- `Print`/`Eval` are fork-only, and a literal `Print(...)` call is a **load-time**
+  "Call to nonexistent function" error on stock v2 — a runtime `if InStr(A_AhkVersion,
+  "Console")` guard cannot save a literal call. Portable code uses the dynamic call
+  `%"Print"%(...)` inside the guarded branch, or the portable fallback
+  (`FileAppend(..., "*")`).
 - Detect the build at runtime, do not assume it:
   `isFork := InStr(A_AhkVersion, "Console") > 0`, `isAlpha := InStr(A_AhkVersion, "alpha") > 0`.
 - The fork's CLI/diagnostic features (`/Diag=json`, `/CrashLog`, exit `130`) are invoked by
@@ -68,14 +74,16 @@ above it is upstream and reaches anyone on the matching build.
 
 ✗ / ✓ pairs:
 
-- ✗ `Print("done")` in a script you hand to a stock-v2.0 user — `Print` is undefined there
+- ✗ `Print("done")` in a script you hand to a stock-v2.0 user — load-time "Call to
+  nonexistent function" error there, even if the call sits behind a runtime guard
 - ✓ `FileAppend("done`n", "*")` — writes to stdout on any v2 build
 
 - ✗ `#Requires AutoHotkey v2.0` then using `Struct` or `(a?)()` — load error on that build
 - ✓ bump to `#Requires AutoHotkey v2.1-alpha.30` when you use an alpha-only construct
 
 - ✗ assuming a maybe-call works everywhere: `result := (cb?)()`
-- ✓ guard it for v2.0: `result := cb ? cb() : unset`
+- ✓ guard it for v2.0: `result := cb ? cb() : ""` — a bare `unset` ternary branch is itself
+  v2.1-only and fails to load on v2.0; use `: ""` or a plain if/else
 
 ## TIER 1 — Know your build
 > COVERED: A_AhkVersion · VerCompare · #Requires · runtime detection
@@ -90,7 +98,7 @@ isFork  := InStr(A_AhkVersion, "Console") > 0        ; Print/Eval/diagnostics av
 
 ; ✓ Finer comparison when a specific alpha matters
 if VerCompare(A_AhkVersion, "2.1-alpha.30") >= 0
-    ; typed Struct, (a?)(), Void return are all present
+    hasAlpha30 := true    ; typed Struct, (a?)(), Void return are all present
 ```
 
 ## TIER 2 — Portable output and debugging
@@ -118,12 +126,16 @@ Print("x = {}, y = {}", x, y)
 
 ; ✓ Fork-native REPL-style evaluation (needs the directive or the /Eval flag)
 #EnableEval
-total := Eval("[1,2,3].Map(n => n*n).Reduce((a,b) => a+b, 0)")   ; 14
+total := Eval("StrSplit('1,2,3', ',').Length")   ; 3
 
-; ✓ Guarded so the same source still loads (and degrades) on stock AHK
+; ✓ Guarded so the same source still loads (and degrades) on stock AHK.
+;   A literal Print(...) anywhere in the file is a LOAD-TIME "Call to nonexistent
+;   function" error on stock v2 — function names resolve at load, so a runtime
+;   guard alone cannot save it. The dynamic call %"Print"%() defers name
+;   resolution to runtime, inside the guarded branch.
 Out(fmt, vals*) {
     if InStr(A_AhkVersion, "Console")
-        Print(fmt, vals*)
+        %"Print"%(fmt, vals*)
     else
         FileAppend(Format(fmt, vals*) "`n", "*")
 }
@@ -159,18 +171,23 @@ Behavior shifts to know on alpha (they bite silently — not load errors):
 - `GuiCtrlFromHwnd`/`GuiFromHwnd` return **no value** (not `""`) on no match — assigning the
   result throws; use `?? 0` or `IsSet`.
 
-v2.0 fallbacks: replace `(a?)()` with `a ? a() : unset`; replace typed `Struct` with `Buffer`
-+ `NumPut`/`NumGet` (Module_DllCall.md); drop the `"Void"` return type and ignore the result.
+v2.0 fallbacks: replace `(a?)()` with `a ? a() : ""` or a plain if/else (`if a` →
+`result := a()`; `else` → `result := ""`) — a bare `unset` ternary branch is v2.1-only and
+does not load on v2.0; replace typed `Struct` with `Buffer` + `NumPut`/`NumGet`
+(Module_DllCall.md); drop the `"Void"` return type and ignore the result.
 
 ## TIER 5 — Shipping build-portable code
 > COVERED: choosing the floor · feature-gating · the decision rule
+
+The same load-time rule applies here: `Print` must be a dynamic call (`%"Print"%`) or
+the file refuses to load on stock v2 before the guard ever runs.
 
 ```ahk
 ; ✓ A helper that uses the fork's speed when present, stays correct everywhere
 class Logger {
     static Write(line) {
         if InStr(A_AhkVersion, "Console")
-            Print("{}", line)
+            %"Print"%("{}", line)
         else
             FileAppend(line "`n", "*")
     }

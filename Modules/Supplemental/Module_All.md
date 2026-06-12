@@ -147,7 +147,9 @@ Check all event binding to confirm .Bind(this) is used consistently
 
 <logic_errors>
 <error pattern="catch {}" 
-correction="catch as err { /* specific handling */ }" />
+correction="catch as err {
+    ; handle the specific error (log, recover, or rethrow)
+}" />
 <error pattern="new ClassName()" 
 correction="ClassName()" />
 <error pattern="class.method()" 
@@ -240,7 +242,7 @@ Curly braces ARE still used for:
 <REQUIRED_HEADERS>
 Always include the following at the top of your script:
 ```cpp
-#Requires AutoHotkey v2.1-alpha.17
+#Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 #Warn All, OutputDebug
 ; #Include Lib/All.ahk ; Only when needed
@@ -371,7 +373,7 @@ class SimpleGui {
     SetupControls() {
         this.controls["userInput"] := this.gui.AddEdit("vUserInput w200")
         this.controls["submitButton"] := this.gui.AddButton("Default w200", "Submit")
-            .OnEvent("Click", this.Submit.Bind(this))
+        this.controls["submitButton"].OnEvent("Click", this.Submit.Bind(this))
     }
     
     Submit(*) {
@@ -641,7 +643,7 @@ MsgBox(result2)  ; "apple, banana, orange"
 When using tooltips, use the `ToolTipEx` library for enhanced functionality:
 
 ```cpp
-#Requires AutoHotkey v2.1-alpha.17
+#Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 #Warn All, OutputDebug
 
@@ -729,12 +731,14 @@ Logger.Error("Failed to load configuration")
 
 <error_inspection>
 Analyze `Error` objects for these properties:
-- `Number` - Error code
 - `Message` - Error description
-- `What` - The object or property that caused the error
+- `What` - What threw the error (usually the function name)
+- `Extra` - Additional information about the error
 - `File` - Script filename where the error occurred
 - `Line` - Line number where the error occurred
 - `Stack` - Call stack information
+
+Note: base `Error` has no `Number` property — only `OSError` carries `Number` (the OS error code).
 </error_inspection>
 </DEBUGGING>
 

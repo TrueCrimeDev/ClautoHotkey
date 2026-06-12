@@ -1,7 +1,7 @@
 If a user asks for code that includes a Tooltip, use the TooltipEx library. Your response should include this header where the library is referenced:
 
 ```cpp
-#Requires AutoHotkey v2.1-alpha.16
+#Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 #Warn All, OutputDebug
 
@@ -31,11 +31,11 @@ Library code:
 
 ```cpp
 class RECT {
-    L: i32, T: i32, R: i32, B: i32
+    L: Int32, T: Int32, R: Int32, B: Int32
 }
 
 class POINT {
-    x: i32, y: i32
+    x: Int32, y: Int32
 }
 
 /**
@@ -65,7 +65,7 @@ class POINT {
  */
 ToolTipEx(Text := "", TimeOut := 5, WhichToolTip?, Darkmode?, ClickMode := false)
 {
-    static EnumCursorPos(hwnd) => (&p) => (DllCall("GetCursorPos", "ptr", p := POINT()), WinExist(hwnd))
+    static EnumCursorPos(hwnd) => (&p) => (DllCall("GetCursorPos", "ptr", ObjGetDataPtr(p := POINT())), WinExist(hwnd))
     static flags          := (VerCompare(A_OSVersion, "6.2") < 0 ? 0 : 0x10000)
          , isDarkMode     := !RegRead("HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize", "AppsUseLightTheme", 1)
          , WM_LBUTTONDOWN := 0x0201, WM_NCLBUTTONDOWN := 0x00A1, WM_LBUTTONDBLCLK := 0x0203
@@ -94,9 +94,9 @@ ToolTipEx(Text := "", TimeOut := 5, WhichToolTip?, Darkmode?, ClickMode := false
         for pt in EnumCursorPos(ttw) {
             eRec.L := pt.x-3, eRec.T := pt.y-3, eRec.R := pt.x+3, eRec.B := pt.y+3,
             pt.x   += 16,     pt.y   += 16
-            DllCall("GetClientRect", "ptr", ttw, "ptr", wRec)
-            DllCall("CalculatePopupWindowPosition", "ptr", pt, "ptr", wSize, "uint", flags, "ptr", eRec, "ptr", oRec)
-            try WinMove(oRec.L, oRec.T)
+            DllCall("GetClientRect", "ptr", ttw, "ptr", ObjGetDataPtr(wRec))
+            DllCall("CalculatePopupWindowPosition", "ptr", ObjGetDataPtr(pt), "ptr", wSize, "uint", flags, "ptr", ObjGetDataPtr(eRec), "ptr", ObjGetDataPtr(oRec))
+            try WinMove(oRec.L, oRec.T)  ; intentional: tooltip window may be gone mid-poll
         }
     }, -10)
 

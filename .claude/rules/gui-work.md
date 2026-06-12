@@ -12,7 +12,7 @@ paths:
 
 # GUI Rules
 
-- Use `DarkGui()` from `DarkModeModular.ahk` for dark-themed windows.
+- Use `_Dark` from `Lib/_Dark.ahk` for dark-themed windows: wrap the window with `dm := _Dark(myGui)`, then add controls via `dm.AddDarkButton()` / `dm.AddDarkEdit()` / other `AddDark*` methods.
 - Mathematical positioning: explicit x, y, w, h on every control. No implicit stacking.
 - `OnSize` must reposition ALL controls with absolute coordinates derived from width/height params.
 - Clamp minimum dimensions so controls never collapse to zero.

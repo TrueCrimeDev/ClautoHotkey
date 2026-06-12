@@ -29,7 +29,7 @@ description: 'Deep copy via DeepClone, functional Map/Filter/Reduce helpers, Sor
 ### Map
 | Method/Property | Signature | Notes |
 |----------------|-----------|-------|
-| `.Set()` | `.Set(key1, val1, ...)` | Batch-assign multiple key-value pairs; more efficient than repeated `m[k] := v` |
+| `.Set()` | `.Set(key, val)` | Method form of assignment — `m.Set(k, v)` is equivalent to `m[k] := v`; project style is one assignment per key, no multi-pair batches |
 | `.Get()` | `.Get(key, default)` | Return default if key absent; never throws — primary safe-access pattern |
 | `.Has()` | `.Has(key)` | True if key exists in the Map — use for branching logic that differs on presence vs absence |
 | `.Delete()` | `.Delete(key)` | Remove key; returns its former value |
@@ -48,7 +48,8 @@ description: 'Deep copy via DeepClone, functional Map/Filter/Reduce helpers, Sor
 ## AHK V2 CONSTRAINTS
 
 - ✗ `{key: val}` — creates an Object instance, not a Map; Object lacks `.Has()`, `.Get()`, `.Count`, `.CaseSense`, `.Delete()`, `.Clear()`, and direct for-loop enumeration
-- ✓ `Map("key", val)` — the only correct key-value container with the full method set
+- ✓ `m := Map()` then `m["key"] := val` — Map is the only correct key-value container with the full method set; build it empty and assign each key individually
+- ✗ `Map("k1", v1, "k2", v2, ...)` — constructor pair form is banned in this project; positional pair lists obscure key-value structure and resist clean diffs
 
 - ✗ `arr[0]` — `IndexError` always; zero is not a valid Array index in AHK v2
 - ✓ `arr[1]` for first element, `arr[-1]` for last — negative indices are valid and idiomatic
@@ -77,20 +78,27 @@ Safe-access priority order for Array and Map:
 ## TIER 1 — Data Storage Fundamentals: Map vs Object Literal; Choosing Array vs Map
 > METHODS COVERED: Map() · Array · [] literal
 
-AHK v2 provides two primary data-container types: `Array` (ordered, 1-based integer-indexed) and `Map` (unordered, any-typed key-value). Both extend `Object`. Object literals `{key: val}` create plain Object instances — not Maps — and must never be used as data containers. The only safe data-container literals are `[]` for Arrays and `Map()` for key-value data.
+AHK v2 provides two primary data-container types: `Array` (ordered, 1-based integer-indexed) and `Map` (unordered, any-typed key-value). Both extend `Object`. Object literals `{key: val}` create plain Object instances — not Maps — and must never be used as data containers. The only safe data-container forms are `[]` for Arrays and an empty `Map()` with keys assigned individually (`m["k"] := v`); the multi-pair constructor form `Map(k1, v1, k2, v2, ...)` is banned in this project.
 
 Choose Array when access is positional (ordered sequence, push/pop stack); choose Map when access is by name or arbitrary key. Compose them freely for nested structures.
 ```ahk
-; ✓ Map() is the only correct key-value container in AHK v2
-config := Map("width", 800, "height", 600)
+; ✓ Map() is the only correct key-value container in AHK v2 — build empty, assign per key
+config := Map()
+config["width"]  := 800
+config["height"] := 600
 
-; ✓ Static Map inside a class — centralises config and magic strings
+; ✗ Constructor pair form — banned; positional pairs hide which value belongs to which key
+; config := Map("width", 800, "height", 600)
+
+; ✓ Static Map inside a class — declare empty, populate in static __New
 class AppConfig {
-    static Settings := Map(
-        "theme",   "dark",
-        "lang",    "en",
-        "version", "2.0"
-    )
+    static Settings := Map()
+
+    static __New() {
+        AppConfig.Settings["theme"]   := "dark"
+        AppConfig.Settings["lang"]    := "en"
+        AppConfig.Settings["version"] := "2.0"
+    }
 }
 
 ; ✗ Object literal as data storage — Object lacks Map's method set
@@ -99,7 +107,7 @@ class AppConfig {
 ; Array vs Map selection reference:
 ; Need                         | Use   | Example
 ; Ordered sequence             | Array | steps := ["init", "run", "cleanup"]
-; Named/keyed lookup           | Map   | cfg := Map("host", "localhost")
+; Named/keyed lookup           | Map   | cfg := Map(), cfg["host"] := "localhost"
 ; Integer index, 1-based       | Array | arr[1], arr[-1]
 ; Any-typed key                | Map   | m["key"], m[42], m[objRef]
 ; Push / Pop stack behaviour   | Array | arr.Push(x) / arr.Pop()
@@ -124,7 +132,7 @@ MsgBox(fruits.Length) ; 3
 ; ✗ Zero-based access — IndexError always thrown; zero slot does not exist
 ; MsgBox(fruits[0])   ; → IndexError
 
-; --- Mutation methods ---
+; Mutation methods
 
 arr := ["A", "B", "C"]
 
@@ -146,7 +154,7 @@ arr.RemoveAt(2, 2)          ; removes indices 2–3, arr = ["A","D"]
 ; ✓ Delete — clears element value without changing Length (slot becomes unset)
 arr.Delete(1)               ; arr[1] has no value, Length unchanged
 
-; --- Safe access ---
+; Safe access
 
 arr2 := ["alpha", , "gamma"]  ; index 2 has no value (unset)
 
@@ -163,7 +171,7 @@ val := arr2.Get(1, "default")   ; "alpha"
 arr2.Default := "N/A"
 MsgBox(arr2[2])   ; "N/A"  (no UnsetItemError)
 
-; --- Clone and Capacity ---
+; Clone and Capacity
 
 ; ✓ Clone — shallow copy; mutations to the copy do not affect the original's structure
 original := [1, 2, 3]
@@ -183,15 +191,19 @@ Loop 1000
 
 Maps are unordered key-value stores. Keys can be any Integer, String, or Object reference. Float keys are silently converted to String. Accessing a missing key throws `UnsetItemError` unless `.Default` is set or `.Get()` is used.
 ```ahk
-; ✓ Inline construction — each pair is key then value
-colours := Map("red", "ff0000", "green", "00ff00", "blue", "0000ff")
+; ✓ Build empty, assign each key individually — one line per key, greppable, diff-friendly
+colours := Map()
+colours["red"]   := "ff0000"
+colours["green"] := "00ff00"
+colours["blue"]  := "0000ff"
 
-; ✓ Multi-line construction — preferred for Maps with more than three pairs
-settings := Map(
-    "host",    "localhost",
-    "port",    5432,
-    "timeout", 30
-)
+; ✗ Constructor pair form — banned in this project; positional pairs obscure structure
+; colours := Map("red", "ff0000", "green", "00ff00", "blue", "0000ff")
+
+settings := Map()
+settings["host"]    := "localhost"
+settings["port"]    := 5432
+settings["timeout"] := 30
 
 ; ✓ Reading and writing
 MsgBox(colours["red"])        ; "ff0000"
@@ -199,9 +211,11 @@ settings["timeout"] := 60    ; update existing key
 settings["user"] := "admin"  ; add new key
 MsgBox(settings.Count)        ; 4
 
-; --- Safe access ---
+; Safe access
 
-cfg := Map("theme", "dark", "lang", "en")
+cfg := Map()
+cfg["theme"] := "dark"
+cfg["lang"]  := "en"
 
 ; ✓ Has — check existence before access to avoid UnsetItemError
 if cfg.Has("theme")
@@ -218,12 +232,15 @@ MsgBox(cfg["missing_key"])   ; "unknown" (no exception)
 ; ✗ Bare bracket access without guard — UnsetItemError if key absent
 ; val := cfg["nonexistent"]   ; → UnsetItemError
 
-; --- Mutation methods ---
+; Mutation methods
 
-m := Map("a", 1, "b", 2)
+m := Map()
+m["a"] := 1
+m["b"] := 2
 
-; ✓ Set — batch-assign multiple pairs (single Capacity adjustment, more efficient than loop)
-m.Set("c", 3, "d", 4)     ; m now has a, b, c, d
+; ✓ Set — method form of assignment; one pair per call mirrors m[k] := v
+m.Set("c", 3)
+m["d"] := 4               ; m now has a, b, c, d
 
 ; ✓ Delete — remove a key, returns its value
 removed := m.Delete("a")   ; removed = 1, "a" gone from Map
@@ -232,10 +249,11 @@ removed := m.Delete("a")   ; removed = 1, "a" gone from Map
 m.Clear()
 MsgBox(m.Count)  ; 0
 
-; --- CaseSense — MUST be set before any key insertion ---
+; CaseSense — MUST be set before any key insertion
 
 ; Default: case-sensitive ("On")
-m1 := Map("Hello", 1)
+m1 := Map()
+m1["Hello"] := 1
 MsgBox(m1.Has("hello"))   ; 0 (false)
 
 ; ✓ Case-insensitive — configure on an empty Map before the first key
@@ -249,13 +267,16 @@ m3 := Map()
 m3.CaseSense := "Locale"
 
 ; ✗ CaseSense after key insertion — exception thrown
-; m4 := Map("key", 1)
+; m4 := Map()
+; m4["key"] := 1
 ; m4.CaseSense := "Off"   ; → exception: cannot change on non-empty Map
 
-; --- Clone and Capacity ---
+; Clone and Capacity
 
 ; ✓ Clone — shallow copy; key-value pairs are independent, but nested objects are shared
-original := Map("x", 10, "y", 20)
+original := Map()
+original["x"] := 10
+original["y"] := 20
 copy := original.Clone()
 copy["z"] := 30
 MsgBox(original.Count)   ; still 2
@@ -272,7 +293,7 @@ Loop 500
 
 AHK v2 `for` loops call `__Enum` on the container. Array `for` loops can capture value only or index + value; Map `for` loops capture key + value. Map enumeration order follows sorted alphanumeric key order — not insertion order. To preserve insertion order, maintain an auxiliary Array of keys alongside the Map.
 ```ahk
-; --- Array iteration ---
+; Array iteration
 
 colours := ["red", "green", "blue"]
 
@@ -297,9 +318,12 @@ while (i < colours.Length) {
 
 ; Note: if an element is unset, the for-loop variable is uninitialized for that iteration
 
-; --- Map iteration ---
+; Map iteration
 
-scores := Map("Alice", 95, "Bob", 87, "Carol", 92)
+scores := Map()
+scores["Alice"] := 95
+scores["Bob"]   := 87
+scores["Carol"] := 92
 
 ; ✓ Key + value — standard Map enumeration
 for name, score in scores
@@ -330,18 +354,18 @@ allKeys := scores.Keys()   ; ["Alice", "Bob", "Carol"]
 
 Compose Arrays and Maps freely: use Array as the outer ordered container (rows) and Map as the inner named-field container (fields per row). This mirrors relational table rows and prevents silent positional-index bugs. Static Maps inside classes centralise configuration and error-code lookup tables. AHK v2 has no built-in functional methods (filter/map/reduce) — build them via for-loop accumulation.
 ```ahk
-; --- Array of Maps — nested record structure ---
+; Array of Maps — nested record structure
 
 ; ✓ Each row is a Map() — named field access prevents positional index errors
 class UserManager {
     static _users := []
 
     static AddUser(name, role) {
-        UserManager._users.Push(Map(
-            "name",      name,
-            "role",      role,
-            "loginTime", A_Now
-        ))
+        user := Map()
+        user["name"]      := name
+        user["role"]      := role
+        user["loginTime"] := A_Now
+        UserManager._users.Push(user)
     }
 
     static ShowAll() {
@@ -356,22 +380,23 @@ UserManager.AddUser("Alice", "admin")
 UserManager.AddUser("Bob",   "viewer")
 UserManager.ShowAll()
 
-; --- Static class Maps — centralise config and error messages ---
+; Static class Maps — centralise config and error messages
 
-; ✓ Static Maps as class-level lookup tables; .Get() provides safe access with fallback
+; ✓ Static Maps as class-level lookup tables; declared empty, populated in static __New
 class AppSettings {
-    static Defaults := Map(
-        "width",    1280,
-        "height",   720,
-        "theme",    "dark",
-        "language", "en"
-    )
+    static Defaults      := Map()
+    static ErrorMessages := Map()
 
-    static ErrorMessages := Map(
-        "NOT_FOUND",   "Resource not found.",
-        "PERMISSION",  "Access denied.",
-        "TIMEOUT",     "Connection timed out."
-    )
+    static __New() {
+        AppSettings.Defaults["width"]    := 1280
+        AppSettings.Defaults["height"]   := 720
+        AppSettings.Defaults["theme"]    := "dark"
+        AppSettings.Defaults["language"] := "en"
+
+        AppSettings.ErrorMessages["NOT_FOUND"]  := "Resource not found."
+        AppSettings.ErrorMessages["PERMISSION"] := "Access denied."
+        AppSettings.ErrorMessages["TIMEOUT"]    := "Connection timed out."
+    }
 
     static Get(key) {
         return AppSettings.Defaults.Get(key, "")
@@ -385,7 +410,7 @@ class AppSettings {
 MsgBox(AppSettings.Get("theme"))         ; "dark"
 MsgBox(AppSettings.Error("NOT_FOUND"))   ; "Resource not found."
 
-; --- Array filtering and transformation — for-loop accumulation pattern ---
+; Array filtering and transformation — for-loop accumulation pattern
 
 ; Note: AHK v2 has no built-in filter/map/reduce — see Module_Arrays.md for full helpers
 
@@ -415,8 +440,12 @@ for n in numbers
 ; ✓ Pre-allocate Array Capacity before bulk Push — single allocation
 rows := Array()
 rows.Capacity := 5000
-Loop 5000
-    rows.Push(Map("id", A_Index, "value", A_Index * 2))
+Loop 5000 {
+    row := Map()
+    row["id"]    := A_Index
+    row["value"] := A_Index * 2
+    rows.Push(row)
+}
 
 ; ✓ Pre-allocate Map Capacity before bulk Set — single bucket allocation
 lookup := Map()
@@ -469,7 +498,7 @@ Loop len
 
 AHK v2 throws `IndexError` for out-of-bounds Array access (including index 0) and `UnsetItemError` for accessing an absent Map key or an unset Array element. Prefer `.Get(index/key, default)` over `try/catch` for simple fallback scenarios — it is faster and more readable. Use `try/catch` only when the exception message carries diagnostic information not otherwise available.
 ```ahk
-; --- Array error handling ---
+; Array error handling
 
 arr := ["a", "b", "c"]
 
@@ -497,9 +526,11 @@ try {
 ; ✗ Unguarded access — IndexError thrown immediately
 ; MsgBox(arr[0])    ; → IndexError
 
-; --- Map error handling ---
+; Map error handling
 
-cfg := Map("host", "localhost", "port", 5432)
+cfg := Map()
+cfg["host"] := "localhost"
+cfg["port"] := 5432
 
 ; ✓ Has() guard — use when branch logic differs for present vs absent
 if cfg.Has("user")
@@ -529,9 +560,10 @@ try {
 
 | Pattern | Wrong | Correct | LLM Common Cause |
 |---------|-------|---------|------------------|
-| Object literal as data container | `config := {width: 800, height: 600}` | `config := Map("width", 800, "height", 600)` | AHK v1 training data — v1 object literals behaved more like Maps |
+| Object literal as data container | `config := {width: 800, height: 600}` | `config := Map()` then `config["width"] := 800` per key | Legacy habit from older AutoHotkey, where object literals behaved more like Maps |
+| Map constructor pairs | `Map("k1", v1, "k2", v2)` | `m := Map()` then `m["k1"] := v1` per key | Pair form appears throughout AHK documentation; this project bans it — positional pairs obscure structure |
 | Zero-based Array access | `arr[0]` | `arr[1]` for first element, `arr[-1]` for last | Dominant 0-based indexing habit from most language training data (C, Python, JS) |
-| Unguarded Map key access | `val := m["key"]` | `val := m.Get("key", default)` or `if m.Has("key")` | v1 returned blank string on missing key; v2 throws UnsetItemError — regression to v1 behaviour |
+| Unguarded Map key access | `val := m["key"]` | `val := m.Get("key", default)` or `if m.Has("key")` | Older AutoHotkey returned a blank string on a missing key; v2 throws UnsetItemError — legacy-habit regression |
 | CaseSense set after key insertion | `m["key"] := 1` then `m.CaseSense := "Off"` | Set `CaseSense` on an empty Map before the first key | Missing API knowledge — insertion-time constraint is not obvious from method names |
 | Assuming Clone() is deep | `deep := nested.Clone()` then mutating inner Maps | Use `DeepClone` from Module_Arrays.md | Cross-language habit — Python/JS `.copy()` / spread also produce shallow copies but the consequence is less visible |
 | Calling .Keys() as built-in | `m.Keys()` | `for k in m` or `Map.Prototype.DefineProp("Keys", ...)` | Missing v2 API knowledge — Python and JS both provide `.keys()` natively on their dict/Map types |

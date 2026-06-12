@@ -61,8 +61,10 @@ description: 'Raw DllCall, Buffer, and Struct marshalling belong in Module_DllCa
 - ✗ ignoring a `"Ptr*"` ComCall output reference — leaks a COM ref
 - ✓ wrap it (`ComValue(13, p)`) or `ObjRelease(p)` when done
 
-- ✗ `obj.Method(0x4000, &v)` to pass ByRef — wrong layer
-- ✓ `obj.Method(ComValue(0x4000 | 3, &v))` — ByRef VT_I4
+- ✗ `obj.Method(ComValue(0x4000 | 3, &v))` to pass ByRef — `&v` is an AHK VarRef, not a
+  memory address; VT_BYREF needs a real pointer
+- ✓ `buf := Buffer(4, 0)` then `obj.Method(ComValue(0x4000 | 3, buf.Ptr))` — ByRef VT_I4;
+  read the written-back value with `NumGet(buf, 0, "Int")`
 
 ## TIER 1 — Create and drive an automation object (IDispatch late binding)
 > COVERED: ComObject · property/method access · headless flags · Quit
@@ -95,7 +97,10 @@ for proc in wmi.ExecQuery("SELECT Name, ProcessId FROM Win32_Process")
 > COVERED: ComObjConnect · event-named sink methods · disconnect
 
 Connect the object's outgoing interface to a sink object whose **method names match the
-event names**. Disconnect by calling `ComObjConnect(obj)` with no sink.
+event names**. Each handler receives the event's documented parameters **plus the COM
+object itself as a trailing final parameter** — declare that extra parameter (or make the
+handler variadic) or the dispatch throws when the event fires. Disconnect by calling
+`ComObjConnect(obj)` with no sink.
 
 ```ahk
 ; ✓ Internet Explorer navigation events routed to a sink class
@@ -106,7 +111,7 @@ class BrowserEvents {
         ComObjConnect(this.ie, this)        ; methods below are the event handlers
         this.ie.Navigate("https://example.com")
     }
-    DocumentComplete(pDisp, &url) {          ; fires when a document finishes loading
+    DocumentComplete(pDisp, &url, ieObj) {   ; event params + the COM object as final param
         ToolTip("loaded: " url)
     }
     __Delete() {
@@ -122,9 +127,11 @@ class BrowserEvents {
 ; ✓ Pass an explicit VT_I4 where an API expects a typed VARIANT
 arg := ComValue(3, 42)                       ; VT_I4
 
-; ✓ Receive a value ByRef: VT_BYREF | VT_I4
-out := 0
-ref := ComValue(0x4000 | 3, &out)
+; ✓ Receive a value ByRef: VT_BYREF | VT_I4 wants a memory ADDRESS — back it with a Buffer
+buf := Buffer(4, 0)                          ; 4 bytes for the 32-bit int
+ref := ComValue(0x4000 | 3, buf.Ptr)         ; pass ref where the method takes the VARIANT
+; ... after the call, read what the method wrote back:
+out := NumGet(buf, 0, "Int")
 
 ; ✓ Build a SafeArray of variants and fill it
 arr := ComObjArray(12, 3)                     ; VT_VARIANT, 3 elements

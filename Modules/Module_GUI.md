@@ -127,10 +127,10 @@ class SimpleDialog {
     }
 }
 
-; ✗ v1 command syntax — does not exist in v2; causes load-time error
-; Gui, Add, Text,, Hello World!    ; → MethodError (v1 command)
-; Gui, Show                        ; → MethodError (v1 command)
-; new SimpleDialog()               ; → load-time error — new keyword does not exist in v2
+; ✗ legacy command-style GUI syntax (comma-separated arguments, no parentheses) does not
+;   exist in v2 — every GUI operation is a method call on a Gui object
+; new SimpleDialog()    ; → "new" is not a keyword in v2; it parses as a variable read
+;                          (load-time warning) and throws UnsetError at runtime
 ```
 
 ## TIER 2 — Controls, Event Handling, ListView, TreeView, Multi-Window
@@ -193,11 +193,10 @@ class FormGui {
 ; this.controls["submitBtn"].OnEvent("Click", (*) => {
 ;     saved := this.gui.Submit()
 ;     MsgBox(saved.UserName)
-; })                                          ; → SyntaxError (multi-line arrow block)
+; })                                          ; → load-time parse error (multi-line arrow block)
 
-; === ListView and TreeView CRUD ===
-
-; --- ListView: columns, Add, Delete, Modify, GetNext loop, enumeration ---
+; ListView and TreeView CRUD
+; ListView: columns, Add, Delete, Modify, GetNext loop, enumeration
 class ListViewCrudDemo {
     __New() {
         this.gui      := Gui("+Resize", "ListView CRUD")
@@ -285,7 +284,7 @@ class ListViewCrudDemo {
     }
 }
 
-; --- TreeView: Add with parent IDs, GetNext traversal, Modify, Delete ---
+; TreeView: Add with parent IDs, GetNext traversal, Modify, Delete
 class TreeViewCrudDemo {
     __New() {
         this.gui      := Gui("+Resize", "TreeView CRUD")
@@ -370,7 +369,7 @@ class TreeViewCrudDemo {
 ; Loop lv.GetCount() { lv.Delete(A_Index) }   ; → row numbers shift after each delete;
 ;                                                  use GetNext while-loop instead
 
-; === Multi-Window Management — Owner / Owned Windows ===
+; Multi-Window Management — Owner / Owned Windows
 ;
 ; +Owner rules:
 ;   - childGui.Opt("+Owner" . parentGui.Hwnd) makes childGui owned by parentGui
@@ -492,18 +491,18 @@ class MultiSectionGui {
     }
 
     CreateControls() {
-        ; --- Section 1: User Info ---
+        ; Section 1: User Info
         this.gui.AddText("xm Section", "User Information")         ; ✓ xm Section
         this.controls["nameEdit"]  := this.gui.AddEdit("xm w340 vUserName")
         this.gui.AddText("xm", "Email:")
         this.controls["emailEdit"] := this.gui.AddEdit("xm w340 vUserEmail")
 
-        ; --- Section 2: Preferences ---
+        ; Section 2: Preferences
         this.gui.AddText("xm Section", "Preferences")              ; ✓ xm resets
         this.controls["notifyChk"]   := this.gui.AddCheckBox("xm", "Enable Notifications")
         this.controls["autoSaveChk"] := this.gui.AddCheckBox("xm", "Auto-save")
 
-        ; --- Section 3: Actions (multi-column row) ---
+        ; Section 3: Actions (multi-column row)
         this.gui.AddText("xm Section", "")
         this.controls["saveBtn"]   := this.gui.AddButton("xm w160",    "Save")
         this.controls["cancelBtn"] := this.gui.AddButton("x+20 w160",  "Cancel") ; ✓ x+n
@@ -517,7 +516,7 @@ class MultiSectionGui {
     }
 }
 
-; --- PositionValidator: run this mentally before outputting any TIER 3+ code ---
+; PositionValidator: run this mentally before outputting any TIER 3+ code
 class PositionValidator {
     static ValidatePositioning(guiCode) {
         errors := []
@@ -548,7 +547,7 @@ class PositionValidator {
     }
 }
 
-; === Responsive Window — gui.OnEvent("Size", Handler) ===
+; Responsive Window — gui.OnEvent("Size", Handler)
 ;
 ; Size event callback signature (class method form):
 ;   HandleSize(guiObj, minMax, width, height)
@@ -611,7 +610,7 @@ class ResizableLogGui {
 }
 
 ; ✗ Arrow syntax for multi-statement Size handler — INVALID in AHK v2
-; this.gui.OnEvent("Size", (g, mm, w, h) => {   ; → SyntaxError (multi-line arrow block)
+; this.gui.OnEvent("Size", (g, mm, w, h) => {   ; → load-time parse error (multi-line arrow block)
 ;     this.controls["log"].Move(...)
 ;     this.controls["clearBtn"].Move(...)
 ; })
@@ -806,52 +805,53 @@ GuiForm(x, y, w, h, extraParams := "") {
 }
 
 ; ✓ Correct: TIER 5 layout foundation — single pad, currentY tracking
+;   Never name the local "gui" — it shadows the Gui class and throws UnsetError
 CreateSettingsGui() {
-    gui := Gui("+Resize", "Settings")
-    gui.OnEvent("Close",  (*) => gui.Hide())
-    gui.OnEvent("Escape", (*) => gui.Hide())
+    g := Gui("+Resize", "Settings")
+    g.OnEvent("Close",  (*) => g.Hide())
+    g.OnEvent("Escape", (*) => g.Hide())
 
     pad          := 10          ; ✓ one variable controls ALL spacing
     currentY     := pad         ; ✓ Y cursor starts at top margin
     windowWidth  := 500
     contentWidth := windowWidth - (pad * 2)
 
-    gui.SetFont("s12 bold")
-    gui.Add("Text", GuiForm(pad, currentY, contentWidth, 25, "+Center"), "Application Settings")
+    g.SetFont("s12 bold")
+    g.Add("Text", GuiForm(pad, currentY, contentWidth, 25, "+Center"), "Application Settings")
     currentY += 25 + pad * 2    ; ✓ major section break uses pad*2
-    gui.SetFont("s9 norm")
+    g.SetFont("s9 norm")
 
-    ; --- Inline label + edit row ---
+    ; Inline label + edit row
     labelWidth := 80
-    gui.Add("Text", GuiForm(pad, currentY, labelWidth, 23), "Name:")
-    gui.Add("Edit", GuiForm(pad + labelWidth + pad, currentY,
+    g.Add("Text", GuiForm(pad, currentY, labelWidth, 23), "Name:")
+    g.Add("Edit", GuiForm(pad + labelWidth + pad, currentY,
             contentWidth - labelWidth - pad, 23, "vName"), "")
     currentY += 23 + pad
 
-    gui.Add("Text", GuiForm(pad, currentY, labelWidth, 23), "Email:")
-    gui.Add("Edit", GuiForm(pad + labelWidth + pad, currentY,
+    g.Add("Text", GuiForm(pad, currentY, labelWidth, 23), "Email:")
+    g.Add("Edit", GuiForm(pad + labelWidth + pad, currentY,
             contentWidth - labelWidth - pad, 23, "vEmail"), "")
     currentY += 23 + pad
 
-    ; --- CheckBox group ---
-    gui.Add("CheckBox", GuiForm(pad, currentY, contentWidth, 23, "vAutoSave"),
+    ; CheckBox group
+    g.Add("CheckBox", GuiForm(pad, currentY, contentWidth, 23, "vAutoSave"),
             "Auto-save enabled")
     currentY += 23 + pad
 
-    gui.Add("CheckBox", GuiForm(pad, currentY, contentWidth, 23, "vDarkMode"),
+    g.Add("CheckBox", GuiForm(pad, currentY, contentWidth, 23, "vDarkMode"),
             "Dark mode")
     currentY += 23 + pad * 2    ; ✓ section break before buttons
 
-    ; --- OK button ---
+    ; OK button
     btnW := 100
     btnH := 28
-    okBtn := gui.Add("Button", GuiForm(pad, currentY, btnW, btnH, "Default"), "OK")
-    okBtn.OnEvent("Click", (*) => gui.Submit())
+    okBtn := g.Add("Button", GuiForm(pad, currentY, btnW, btnH, "Default"), "OK")
+    okBtn.OnEvent("Click", (*) => g.Submit())
     currentY += btnH + pad
 
     ; ✓ window height = currentY + pad (bottom margin)
-    gui.Show(Format("w{} h{}", windowWidth, currentY + pad))
-    return gui
+    g.Show(Format("w{} h{}", windowWidth, currentY + pad))
+    return g
 }
 
 CreateSettingsGui()
@@ -905,7 +905,7 @@ class PerformantGui {
 
 ; ✓ Correct: GuiForm performance — pre-compute derived layout values once
 EfficientGuiFormLayout() {
-    gui := Gui(, "Efficient")
+    g := Gui(, "Efficient")
     pad          := 10
     currentY     := pad
     windowWidth  := 500
@@ -917,12 +917,12 @@ EfficientGuiFormLayout() {
 
     Loop numCols {
         x := pad + (A_Index - 1) * (colWidth + pad)    ; ✓ formula, not literals
-        gui.Add("Edit", GuiForm(x, currentY, colWidth, 23), "Col " A_Index)
+        g.Add("Edit", GuiForm(x, currentY, colWidth, 23), "Col " A_Index)
     }
     currentY += 23 + pad
 
-    gui.Show(Format("w{} h{}", windowWidth, currentY + pad))
-    return gui
+    g.Show(Format("w{} h{}", windowWidth, currentY + pad))
+    return g
 }
 ```
 
@@ -942,9 +942,9 @@ GuiForm(x, y, w, h, extraParams := "") {
     return extraParams ? params " " extraParams : params
 }
 
-; --- PATTERN 1: Two-column side-by-side controls ---
+; PATTERN 1: Two-column side-by-side controls
 TwoColumnDemo() {
-    gui := Gui(, "Two Columns")
+    g := Gui(, "Two Columns")
     pad          := 10
     currentY     := pad
     windowWidth  := 650
@@ -953,17 +953,17 @@ TwoColumnDemo() {
     leftWidth := (contentWidth - pad) / 2    ; ✓ gap between columns = pad
     rightX    := pad + leftWidth + pad
 
-    gui.Add("ListView", GuiForm(pad,   currentY, leftWidth, 200), ["Source"])
-    gui.Add("ListView", GuiForm(rightX, currentY, leftWidth, 200), ["Destination"])
+    g.Add("ListView", GuiForm(pad,   currentY, leftWidth, 200), ["Source"])
+    g.Add("ListView", GuiForm(rightX, currentY, leftWidth, 200), ["Destination"])
     currentY += 200 + pad
 
-    gui.Show(Format("w{} h{}", windowWidth, currentY + pad))
-    return gui
+    g.Show(Format("w{} h{}", windowWidth, currentY + pad))
+    return g
 }
 
-; --- PATTERN 2: N equal columns ---
+; PATTERN 2: N equal columns
 ThreeColumnDemo() {
-    gui := Gui(, "Three Columns")
+    g := Gui(, "Three Columns")
     pad          := 10
     currentY     := pad
     windowWidth  := 650
@@ -975,15 +975,15 @@ ThreeColumnDemo() {
 
     Loop numCols {
         x := pad + (A_Index - 1) * (colWidth + pad)
-        gui.Add("ListView", GuiForm(x, currentY, colWidth, 150), ["Column " A_Index])
+        g.Add("ListView", GuiForm(x, currentY, colWidth, 150), ["Column " A_Index])
     }
     currentY += 150 + pad
 
-    gui.Show(Format("w{} h{}", windowWidth, currentY + pad))
-    return gui
+    g.Show(Format("w{} h{}", windowWidth, currentY + pad))
+    return g
 }
 
-; --- PATTERN 3: Right-aligned button row ---
+; PATTERN 3: Right-aligned button row
 RightAlignedButtons(gui, currentY, windowWidth, pad) {
     labels  := ["OK", "Cancel", "Apply"]
     btnW    := 100
@@ -998,7 +998,7 @@ RightAlignedButtons(gui, currentY, windowWidth, pad) {
     return currentY + btnH + pad
 }
 
-; --- PATTERN 4: Centered button row ---
+; PATTERN 4: Centered button row
 CenteredButtons(gui, currentY, windowWidth, pad) {
     labels := ["Save", "Cancel"]
     btnW   := 110
@@ -1013,7 +1013,7 @@ CenteredButtons(gui, currentY, windowWidth, pad) {
     return currentY + btnH + pad
 }
 
-; --- PATTERN 5: Distributed button row (equal widths, full content width) ---
+; PATTERN 5: Distributed button row (equal widths, full content width)
 DistributedButtons(gui, currentY, windowWidth, pad) {
     labels      := ["Back", "Next", "Finish"]
     btnH        := 30
@@ -1027,43 +1027,43 @@ DistributedButtons(gui, currentY, windowWidth, pad) {
     return currentY + btnH + pad
 }
 
-; --- PATTERN 6: GroupBox with nested inner padding ---
+; PATTERN 6: GroupBox with nested inner padding
 GroupBoxDemo() {
-    gui := Gui(, "Group Demo")
+    g := Gui(, "Group Demo")
     pad          := 10
     currentY     := pad
     windowWidth  := 500
     contentWidth := windowWidth - (pad * 2)
 
     groupH := 110
-    gui.Add("GroupBox", GuiForm(pad, currentY, contentWidth, groupH), "Options")
+    g.Add("GroupBox", GuiForm(pad, currentY, contentWidth, groupH), "Options")
 
     innerY     := currentY + 20           ; allow for GroupBox label height
     innerX     := pad * 2
     innerWidth := contentWidth - (pad * 2)
 
-    gui.Add("CheckBox", GuiForm(innerX, innerY, innerWidth, 23, "vAutoSave"),
+    g.Add("CheckBox", GuiForm(innerX, innerY, innerWidth, 23, "vAutoSave"),
             "Enable auto-save")
     innerY += 23 + pad
 
-    gui.Add("CheckBox", GuiForm(innerX, innerY, innerWidth, 23, "vNotifications"),
+    g.Add("CheckBox", GuiForm(innerX, innerY, innerWidth, 23, "vNotifications"),
             "Enable notifications")
     innerY += 23 + pad
 
-    gui.Add("CheckBox", GuiForm(innerX, innerY, innerWidth, 23, "vDarkMode"),
+    g.Add("CheckBox", GuiForm(innerX, innerY, innerWidth, 23, "vDarkMode"),
             "Dark mode")
 
     currentY += groupH + pad
 
-    gui.Show(Format("w{} h{}", windowWidth, currentY + pad))
-    return gui
+    g.Show(Format("w{} h{}", windowWidth, currentY + pad))
+    return g
 }
 
-; --- COMPLETE PRODUCTION GUI: all patterns combined ---
+; COMPLETE PRODUCTION GUI: all patterns combined
 CreateProductionGui() {
-    gui := Gui("+Resize", "Production Settings")
-    gui.OnEvent("Close",  (*) => gui.Hide())
-    gui.OnEvent("Escape", (*) => gui.Hide())
+    g := Gui("+Resize", "Production Settings")
+    g.OnEvent("Close",  (*) => g.Hide())
+    g.OnEvent("Escape", (*) => g.Hide())
 
     pad          := 10
     currentY     := pad
@@ -1071,18 +1071,18 @@ CreateProductionGui() {
     contentWidth := windowWidth - (pad * 2)
 
     ; Title
-    gui.SetFont("s12 bold")
-    gui.Add("Text", GuiForm(pad, currentY, contentWidth, 25, "+Center"),
+    g.SetFont("s12 bold")
+    g.Add("Text", GuiForm(pad, currentY, contentWidth, 25, "+Center"),
             "Application Settings")
     currentY += 25 + pad * 2
-    gui.SetFont("s9 norm")
+    g.SetFont("s9 norm")
 
     ; Label + edit pairs
     labelWidth := 80
     for idx, fieldDef in [Map("label", "Name:",  "vname", "vName"),
                            Map("label", "Email:", "vname", "vEmail")] {
-        gui.Add("Text", GuiForm(pad, currentY, labelWidth, 23), fieldDef["label"])
-        gui.Add("Edit", GuiForm(pad + labelWidth + pad, currentY,
+        g.Add("Text", GuiForm(pad, currentY, labelWidth, 23), fieldDef["label"])
+        g.Add("Edit", GuiForm(pad + labelWidth + pad, currentY,
                 contentWidth - labelWidth - pad, 23, fieldDef["vname"]), "")
         currentY += 23 + pad
     }
@@ -1091,15 +1091,15 @@ CreateProductionGui() {
 
     ; GroupBox with checkboxes
     groupH := 100
-    gui.Add("GroupBox", GuiForm(pad, currentY, contentWidth, groupH), "Preferences")
+    g.Add("GroupBox", GuiForm(pad, currentY, contentWidth, groupH), "Preferences")
     innerY     := currentY + 20
     innerX     := pad * 2
     innerWidth := contentWidth - (pad * 2)
 
-    gui.Add("CheckBox", GuiForm(innerX, innerY, innerWidth, 23, "vAutoSave"),
+    g.Add("CheckBox", GuiForm(innerX, innerY, innerWidth, 23, "vAutoSave"),
             "Auto-save")
     innerY += 23 + pad
-    gui.Add("CheckBox", GuiForm(innerX, innerY, innerWidth, 23, "vDarkMode"),
+    g.Add("CheckBox", GuiForm(innerX, innerY, innerWidth, 23, "vDarkMode"),
             "Dark mode")
     currentY += groupH + pad * 2
 
@@ -1112,22 +1112,22 @@ CreateProductionGui() {
 
     for idx, label in labels {
         x   := startX + (idx - 1) * (btnW + pad)
-        btn := gui.Add("Button", GuiForm(x, currentY, btnW, btnH), label)
+        btn := g.Add("Button", GuiForm(x, currentY, btnW, btnH), label)
         if (label = "OK")
-            btn.OnEvent("Click", (*) => gui.Submit())
+            btn.OnEvent("Click", (*) => g.Submit())
         else if (label = "Cancel")
-            btn.OnEvent("Click", (*) => gui.Hide())     ; ✓ gui.Hide(), not gui.Close()
+            btn.OnEvent("Click", (*) => g.Hide())     ; ✓ Hide() — Close() does not exist on Gui
     }
     currentY += btnH + pad
 
     ; ✓ window height exactly matches content
-    gui.Show(Format("w{} h{}", windowWidth, currentY + pad))
-    return gui
+    g.Show(Format("w{} h{}", windowWidth, currentY + pad))
+    return g
 }
 
 CreateProductionGui()
 
-; --- LAYOUT VALIDATION AUDIT (run mentally before finalizing any TIER 6 GUI) ---
+; LAYOUT VALIDATION AUDIT (run mentally before finalizing any TIER 6 GUI)
 ; Check: single `pad` variable defined — no mixed spacing values
 ; Check: all control positions derived from pad and currentY
 ; Check: window height = final currentY + pad
@@ -1140,9 +1140,9 @@ CreateProductionGui()
 
 | Pattern | Wrong | Correct | LLM Common Cause |
 |---------|-------|---------|------------------|
-| v1 command syntax | `Gui, Add, Text,, Hello` | `gui.AddText(, "Hello")` | AHK v1 training data dominates; v2 method syntax is less represented |
-| No class encapsulation | `g := Gui(...)` at top level with no class | All GUI code in a class `__New()` method | v1 scripts were procedural; LLM generates bare Gui() calls by default |
-| Object literal for control storage | `this.ctrls := {btn: ctrl, edit: edit}` | `this.controls := Map(); this.controls["btn"] := ctrl` | AHK v1 used `{}` as dictionaries; LLM carries this habit into v2 |
+| v1 command syntax | Comma-separated command-style GUI statements (legacy syntax — does not exist in v2) | `gui.AddText(, "Hello")` | legacy training data dominates; v2 method syntax is less represented |
+| No class encapsulation | `g := Gui(...)` at top level with no class | All GUI code in a class `__New()` method | legacy scripts were procedural; LLM generates bare Gui() calls by default |
+| Object literal for control storage | `this.ctrls := {btn: ctrl, edit: edit}` | `this.controls := Map()` then `this.controls["btn"] := ctrl` | legacy AutoHotkey used `{}` as dictionaries; LLM carries this habit into v2 |
 | `new` keyword for instantiation | `new MyGui()` | `MyGui()` | All mainstream OOP languages (Java, C#, Python) use `new`; LLM defaults to it |
 | `gui.Close()` to dismiss window | `gui.Close()` | `gui.Hide()` or `gui.Destroy()` | JavaScript `window.close()` / HTML dialog `.close()` habit |
 | Multi-line arrow handler | `(*) => { saved := ...; MsgBox(...) }` | Separate named method + `.Bind(this)` | JavaScript/C# lambdas allow multi-statement bodies; LLM assumes same in AHK |

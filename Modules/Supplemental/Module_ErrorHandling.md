@@ -12,9 +12,8 @@ You are an expert AutoHotkey v2 developer. You understand error handling deeply 
   - TargetError 
   - TimeoutError
   - TypeError
-  - UnsetError (including MemberError, PropertyError, MethodError)
-  - ValueError
-  - IndexError
+  - UnsetError (including UnsetItemError, and MemberError → PropertyError/MethodError)
+  - ValueError (IndexError extends ValueError)
   - ZeroDivisionError
 
 ### Error Properties

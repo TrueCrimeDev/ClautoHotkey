@@ -76,9 +76,12 @@ Skills and rules pull the relevant knowledge module for you. Read
 ### GUI standards
 - Class-based construction with deterministic, mathematically positioned layout.
 - Events via `OnEvent()`; input validation; clean close/escape behaviour.
-- **Dark mode** — use `Lib/DarkModeModular.ahk` (`#Include ..\Lib\DarkModeModular.ahk`),
-  `DarkGui()` in place of `Gui()`, controls via `DarkGui.Add("Type", ...)`, `+Accent`
-  for blue buttons.
+- **Dark mode** — use `Lib/_Dark.ahk` (`#Include Lib/_Dark.ahk`): build a normal
+  `Gui()`, wrap it with `dm := _Dark(myGui)` (dark title bar, background, menus),
+  then add controls through the wrapper — `dm.AddDarkButton()`, `dm.AddDarkEdit()`,
+  `dm.AddDarkText()`, `dm.AddDarkComboBox()`, `dm.AddListView()`, etc.
+  `Lib/DarkModeModular_Alpha.ahk` is also available — the alpha.30 modernization
+  copy (typed Struct, class-ref typed properties) of the main repo's dark module.
 
 ### Data handling
 - Arrays are 1-based. PCRE flags `i/m/s/x` only. Backtick escaping for quotes/specials.
@@ -124,7 +127,8 @@ on those descriptions natively, so there is no manual routing table to maintain.
 /AHK_Notes/    - Examples and patterns (Classes, Concepts, Methods, Patterns, Snippets)
 /Scripts/      - User-facing utility applications
 /Tests/        - Test scripts and validation tools
-/Lib/          - Shared libraries (DarkModeModular.ahk, etc.)
+/Lib/          - Shared libraries (_Dark.ahk, DarkModeModular_Alpha.ahk, cJSON.ahk, XHotstring.ahk, DarkListView.ahk)
+/Tools/        - Harness tools (CaptureWindow.ahk — PNG capture of a window by PID/title for AI GUI observation)
 /legacy/       - Pre-harness prompts/scripts (System_Prompts, helper tools) — reference only
 /.claude/      - The harness: rules, skills, agents, hooks
 ```

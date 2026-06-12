@@ -10,7 +10,7 @@ description: 'COM/IDispatch automation and vtable ComCall belong in Module_COM.m
 
 # Module_DllCall
 
-_AHK v2.0+ (typed Struct requires the v2.1-alpha.30 +Console fork)_
+_AHK v2.0+ (typed Struct requires v2.1-alpha.30 — upstream or the +Console fork)_
 
 ## API QUICK-REFERENCE
 
@@ -19,7 +19,7 @@ _AHK v2.0+ (typed Struct requires the v2.1-alpha.30 +Console fork)_
 |------|-----------|-------|
 | `DllCall()` | `DllCall("Dll\Func", Type1, Arg1, ..., ReturnType)` | Dll prefix optional for `user32`/`kernel32`/`gdi32`/`comctl32`; append `"W"`/`"A"` for explicit wide/ansi |
 | Calling convention | `DllCall("CDecl ...")` or `"CDecl ReturnType"` | Default is stdcall; cdecl (e.g. `msvcrt`) needs the `CDecl` prefix |
-| Void return (fork) | `DllCall("...", ..., "Void")` | Call runs but yields blank-unset instead of a fabricated numeric return |
+| Void return (v2.1-alpha.30) | `DllCall("...", ..., "Void")` | Call runs but yields blank-unset instead of a fabricated numeric return |
 
 ### Argument / return types
 | Type | Width | Notes |

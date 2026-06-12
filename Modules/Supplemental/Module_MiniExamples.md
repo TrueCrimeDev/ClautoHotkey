@@ -1,4 +1,6 @@
 
+All examples target the project interpreter (`#Requires AutoHotkey v2.1-alpha.30`); they omit per-example pins for brevity.
+ 
 <<<>>>
  
 Description:
@@ -807,6 +809,9 @@ Common usage of an  statement. This example is executed as follows:
       Left-click at the coordinates 100, 200
  
  
+Code:
+ 
+```ahkv2
 if WinExist("Untitled - Notepad")
 {
     WinActivate
@@ -817,7 +822,13 @@ else
     WinActivate "Some Other Window"
     MouseClick "Left", 100, 200
 }
- Demonstrates different styles of how the  statement can be used too.
+```
+ 
+<<<>>>
+ 
+Description:
+ 
+Demonstrates different styles of how the  statement can be used too.
  
  
 Code:
@@ -1490,16 +1501,19 @@ Example2()
  
 Description:
  
-Lists the properties owned by an object.
+Lists the key-value pairs stored in a Map.
  
  
 Code:
  
 ```ahkv2
-colours := {red: 0xFF0000, blue: 0x0000FF, green: 0x00FF00}
+colours := Map()
+colours["red"] := 0xFF0000
+colours["blue"] := 0x0000FF
+colours["green"] := 0x00FF00
 s := ""
-for k, v in colours.OwnProps()
-    s .= k "=" v "`n"
+for name, value in colours
+    s .= name "=" value "`n"
 MsgBox s
 ```
  
@@ -1917,7 +1931,7 @@ On_WM_MOUSEMOVE(wParam, lParam, msg, Hwnd)
     if (Hwnd != PrevHwnd)
     {
         Text := "", ToolTip() 
-        CurrControl := GuiCtrlFromHwnd(Hwnd)
+        CurrControl := GuiCtrlFromHwnd(Hwnd) ?? 0
         if CurrControl
         {
             if !CurrControl.HasProp("ToolTip")
@@ -2108,7 +2122,7 @@ readContent(FileName)
     catch
     {
         MsgBox("Could not open '" FileName "'.")
-        return
+        return ""
     }
     MainEdit.Value := FileContent  
     FileMenu.Enable("3&")  
@@ -2126,7 +2140,7 @@ saveContent(FileName)
     catch
     {
         MsgBox("The attempt to overwrite '" FileName "' failed.")
-        return
+        return ""
     }
  
     MyGui.Title := FileName
@@ -2332,7 +2346,7 @@ RegisterHotkey(*)
  
 Description:
  
-Hotstring Helper. The following script might be useful if you are a heavy user of hotstrings. It's based on the v1 script created by Andreas Borutta. By pressing Win+H (or another hotkey of your choice), the currently selected text can be turned into a hotstring. For example, if you have "by the way" selected in a word processor, pressing Win+H will prompt you for its abbreviation (e.g. btw), add the new hotstring to the script and activate it.
+Hotstring Helper. The following script might be useful if you are a heavy user of hotstrings. It's based on a script by Andreas Borutta. By pressing Win+H (or another hotkey of your choice), the currently selected text can be turned into a hotstring. For example, if you have "by the way" selected in a word processor, pressing Win+H will prompt you for its abbreviation (e.g. btw), add the new hotstring to the script and activate it.
  
  
 Code:
@@ -2455,6 +2469,9 @@ This example is executed as follows:
       Terminate the script.
  
  
+Code:
+ 
+```ahkv2
 if (Color = "Blue" or Color = "White")
 {
     MsgBox "The color is one of the allowed values."
@@ -2470,7 +2487,13 @@ else
     MsgBox "This color is not recognized."
     ExitApp
 }
- A single multi-statement line does not need to be enclosed in braces.
+```
+ 
+<<<>>>
+ 
+Description:
+ 
+A single multi-statement line does not need to be enclosed in braces.
  
  
 Code:
@@ -2486,7 +2509,7 @@ MsgBox MyVar
  
 Description:
  
-Similar to AutoHotkey v1's If Var [not] between Lower and Upper, the following examples check whether a variable's contents are numerically or alphabetically between two values (inclusive).
+The following examples check whether a variable's contents are numerically or alphabetically between two values (inclusive), using comparison operators combined with `and`.
 Checks whether var is in the range 1 to 5:
  
  
@@ -2501,7 +2524,7 @@ if (var >= 1 and var <= 5)
  
 Description:
  
-Similar to AutoHotkey v1's If Var [not] in/contains MatchList, the following examples check whether a variable's contents match one of the items in a list.
+The following examples check whether a variable's contents match one of the items in a list, using a RegEx alternation.
 Checks whether var is the file extension exe, bat or com:
  
  
@@ -4178,6 +4201,9 @@ AccumulateError(errors, e, mode)
         if HasProp(e, "extra")
             FileAppend "     Specifically: " e.Extra "`n", "*"
     }
+    catch as reportErr {
+        errors.Push(reportErr)
+    }
     errors.Push(e)
     return -1 
 }
@@ -4206,6 +4232,11 @@ WinMove 0, 0, 0, 0, "non-existent window"
 Description:
  
 Asks the user before exiting the script. To test this example, right-click the tray icon and click Exit.
+ 
+ 
+Code:
+ 
+```ahkv2
 Persistent  
 OnExit ExitFunc
 ExitFunc(ExitReason, ExitCode)
@@ -4218,7 +4249,13 @@ ExitFunc(ExitReason, ExitCode)
     }
  
 }
- Registers a method to be called on exit.
+```
+ 
+<<<>>>
+ 
+Description:
+ 
+Registers a method to be called on exit.
  
  
 Code:
@@ -4256,8 +4293,8 @@ WM_LBUTTONDOWN(wParam, lParam, msg, hwnd)
     X := lParam & 0xFFFF
     Y := lParam >> 16
     Control := ""
-    thisGui := GuiFromHwnd(hwnd)
-    thisGuiControl := GuiCtrlFromHwnd(hwnd)
+    thisGui := GuiFromHwnd(hwnd) ?? 0
+    thisGuiControl := GuiCtrlFromHwnd(hwnd) ?? 0
     if thisGuiControl
     {
         thisGui := thisGuiControl.Gui
@@ -4557,7 +4594,7 @@ MsgBox Extension[]
  
 Description:
  
-Similar to AutoHotkey v1's Transform Deref, the following function expands variable references and escape sequences contained inside other variables. Furthermore, this example shows how to find all matches in a string rather than stopping at the first match (similar to the g flag in JavaScript's RegEx).
+The following function expands variable references and escape sequences contained inside other variables. Furthermore, this example shows how to find all matches in a string rather than stopping at the first match (similar to the g flag in JavaScript's RegEx).
  
  
 Code:

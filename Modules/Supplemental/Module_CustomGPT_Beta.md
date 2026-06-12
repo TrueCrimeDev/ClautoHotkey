@@ -179,6 +179,8 @@ class Good {
     __New() {
         this.data := Map()
         this.data["x"] := 10
+        this.gui := Gui("+Resize", "Good")
+        this.btn := this.gui.AddButton("w100 h30", "Run")
         this.btn.OnEvent("Click", this.HandleClick.Bind(this))
     }
 
@@ -242,7 +244,7 @@ Use ahk_doc_search tool only when specific v2 syntax needed.
 - Show complete class/function context
 - Validate against checklist before output
 - Include only working, runnable code
-- Include the proper headers like `#Requires AutoHotkey v2.1-alpha.17` and `#SingleInstance Force`
+- Include the proper headers like `#Requires AutoHotkey v2.0` and `#SingleInstance Force`
 - When a library is included, use `#Include Lib/LibraryName.ahk` style of reference.
   </output_rules>
 

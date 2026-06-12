@@ -1,7 +1,7 @@
 I'll create a comprehensive RegEx and String Escape module for AutoHotkey v2 that addresses common escaping challenges and provides reusable patterns.
 
 ```ahk
-#Requires AutoHotkey v2.1-alpha.16
+#Requires AutoHotkey v2.1-alpha.30
 ; RegExEscapeUtil.ahk - A utility module for regex and string escaping in AutoHotkey v2
 
 class RegExEscapeUtil {
@@ -31,30 +31,29 @@ class RegExEscapeUtil {
         return result
     }
     
-    ; Escapes double quotes in a string for use in regex patterns
-    static EscapeQuotes(str) {
-        return StrReplace(str, """", "`"")
-    }
-    
-    ; Escapes a string to use it as a literal in regex
+    ; NOTE: there is no runtime "quote escaping". A quote inside a string variable
+    ; is just a quote, and quotes are not special characters in regex. Quote
+    ; escaping is a SOURCE-CODE concern: write `" inside double-quoted literals,
+    ; or use single quotes ('...') to contain double quotes. Doubled "" escaping
+    ; is v1-only and a load error in v2.
+
+    ; Escapes a string to use it as a literal in regex.
+    ; EscapeRegExChars already escapes the backslash (first in its char set),
+    ; so no separate backslash pass is needed - escaping it in both places
+    ; would double-escape and corrupt the pattern.
     static EscapeForRegEx(str) {
-        ; First escape the backslashes
-        result := StrReplace(str, "\", "\\")
-        ; Then escape other special regex characters
-        result := this.EscapeRegExChars(result)
-        ; Finally escape any quotes
-        result := this.EscapeQuotes(result)
-        
-        return result
+        return this.EscapeRegExChars(str)
     }
     
-    ; Prepares a string to be used inside another string (with quotes)
+    ; Renders a runtime string as the inner text of an AHK v2 double-quoted
+    ; source literal. Only useful when GENERATING AHK source code (e.g. writing
+    ; a script file) - never needed for normal runtime string handling.
     static EscapeString(str) {
         ; Escape backticks first (since it's the escape character)
         result := StrReplace(str, "``", "````")
-        ; Escape quotes
-        result := StrReplace(result, """", "`"")
-        ; Escape other special sequences
+        ; A literal quote is written as `" in double-quoted source
+        result := StrReplace(result, '"', '``"')
+        ; Encode control characters as escape sequences
         result := StrReplace(result, "`n", "``n")
         result := StrReplace(result, "`r", "``r")
         result := StrReplace(result, "`t", "``t")
@@ -78,7 +77,7 @@ class RegExEscapeUtil {
         examples := [
             'Normal string with "quotes" inside it',
             "String with escaped `"quotes`" using backticks",
-            "String with ""doubled quotes"" for escaping",
+            "Path literal C:\Users\Example - backslash is NOT an escape",
             "Mixed quotes: 'single' and `"double`"",
             "String with `n newline and `t tab characters"
         ]
@@ -99,6 +98,7 @@ class RegExEscapeUtil {
             'test@example.com',
             'https://www.example.com/path?query=value',
             '"This is a quoted string"',
+            'He said "hello" and "goodbye"',
             'One, "Two, with comma", Three',
             '192.168.0.1',
             '2025-03-14',
@@ -176,9 +176,11 @@ DemoRegExEscapeUtil() {
     ; Show regex pattern examples
     RegExEscapeUtil.ShowRegExExamples()
     
-    ; Example of extracting email addresses from text
+    ; Example of extracting email addresses from text.
+    ; Patterns["email"] is anchored (^...$) for whole-string validation and will
+    ; never match inside prose - extraction needs an unanchored variant.
     text := "Contact us at support@example.com or sales@example.com for more information."
-    emails := RegExEscapeUtil.ExtractMatches(text, RegExEscapeUtil.Patterns["email"])
+    emails := RegExEscapeUtil.ExtractMatches(text, "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")
     
     emailList := ""
     for email in emails
@@ -230,10 +232,11 @@ Here's an improved section to add to your project prompt specifically addressing
    pattern := "`"([^`"]*)`""  ; Matches text in double quotes
    ```
 
-2. Literal backslashes in file paths need double escaping:
+2. Backslash is NOT a string escape in AHK - path literals use single backslashes.
+   Only the regex PATTERN needs `\\` per literal backslash (one level, never four):
    ```cpp
-   filePath := "C:\\Folder\\File.txt"  ; Using double backslash
-   regexPath := "C:\\\\Folder\\\\File\\.txt"  ; In regex (4 backslashes per literal backslash)
+   filePath := "C:\Folder\File.txt"       ; Plain path literal - single backslashes
+   regexPath := "C:\\Folder\\File\.txt"   ; Regex pattern: \\ per literal backslash, \. for literal dot
    ```
 
 3. Special regex characters need escaping with backslash:
@@ -247,10 +250,11 @@ Here's an improved section to add to your project prompt specifically addressing
    str := 'He said "Hello" to me'  ; No escaping needed
    ```
 
-2. Use doubled quotes to escape quotes:
+2. Use backtick-escaped quotes inside double-quoted strings:
    ```cpp
-   str := "He said ""Hello"" to me"  ; Double quotes become literal
+   str := "He said `"Hello`" to me"  ; Backtick is the escape character
    ```
+   (Doubled `""` quote escaping is v1-only - in v2 it is a load error.)
 
 ### Common Regex Patterns (Properly Escaped)
 | Purpose | Pattern |

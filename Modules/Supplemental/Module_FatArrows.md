@@ -1,11 +1,78 @@
-I'll create a well-engineered prompt to add to your LLM for teaching AutoHotkey v2's object-oriented event handling.
+# AutoHotkey v2 Fat Arrows and Callbacks
 
-# AutoHotkey v2 Event Handling: A Comprehensive Guide
+A practical guide to fat-arrow functions, callback binding, and event handling in
+AHK v2 — including the rules that decide when a fat arrow is safe and when a named
+method is required.
+
+## Fat-Arrow Rules
+
+A fat arrow (`=>`) defines a function whose body is a **single expression**. The
+expression's result is the function's return value. There is no block form.
+
+```cpp
+Square := x => x * x                 ; single expression, returns x * x
+Add := (a, b) => a + b               ; parentheses required for multiple parameters
+```
+
+The hard rules:
+
+1. **Single expression only.** `=> {` is a **syntax error on every v2 build**,
+   including v2.1-alpha.30. A fat-arrow body cannot be a block and cannot contain
+   multiple statements.
+
+   ```cpp
+   ; WRONG: load-time syntax error on all v2 builds
+   handler := (a, b) => {
+       total := a + b
+       return total
+   }
+   ```
+
+2. **v2.1's multi-statement function expression is arrowless.** Under a v2.1 pin,
+   write the parameter list followed directly by a brace block — no `=>`:
+
+   ```cpp
+   handler := (a, b) {
+       total := a + b
+       return total
+   }
+   ```
+
+3. **Use a named method + `.Bind(this)` for event handlers.** Fat arrows are for
+   trivial one-expression adapters that return a value. Anything with real logic —
+   or anything whose body is a call to a void function — belongs in a named method:
+
+   ```cpp
+   this.btn.OnEvent("Click", this.HandleClick.Bind(this))
+   ```
+
+4. **The v2.1 void-call gotcha.** Under a v2.1 pin, calling a function that
+   returns nothing yields `unset` — and a fat-arrow body *is* its return value.
+   An arrow like `(*) => gui.Hide()` therefore returns unset, and any consumer
+   that touches the result throws. The examples in this guide pin
+   `v2.1-alpha.30`, so handler-position arrows that wrap void calls are written
+   as named methods throughout.
+
+   ```cpp
+   ; HAZARD under v2.1: Hide() is void, so the arrow returns unset
+   gui.OnEvent("Escape", (*) => gui.Hide())
+
+   ; SAFE: named handler
+   gui.OnEvent("Escape", HideOnEscape)
+
+   HideOnEscape(thisGui) {
+       thisGui.Hide()
+   }
+   ```
+
+Good fat-arrow use cases: sort comparators, `Map`/filter predicates, value
+transforms (`x => x * 2`), and single-expression adapters that forward to a
+method *and* return its value.
 
 ## Core Event Handling Concepts
 
 ```cpp
-#Requires AutoHotkey v2.1-alpha.16
+#Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 
 EventHandlingBasics()
@@ -21,11 +88,12 @@ class EventHandlingBasics {
         ; Method 1: Bind using .Bind() - recommended approach
         this.btn.OnEvent("Click", this.HandleButtonClick.Bind(this))
         
-        ; Method 2: Using fat arrow binding (retains 'this' context)
-        this.gui.OnEvent("Close", (*) => this.HandleClose())
+        ; Method 2: named method bound for Close - HandleClose is void, so a
+        ; fat arrow here would return unset under v2.1
+        this.gui.OnEvent("Close", this.HandleClose.Bind(this))
         
-        ; Method 3: Additional event params using fat arrow
-        this.gui.OnEvent("Size", (sender, width, height) => this.HandleResize(width, height))
+        ; Method 3: fat arrow forwarding extra event params (single expression)
+        this.gui.OnEvent("Size", (gui, minMax, width, height) => this.HandleResize(width, height))
         
         ; Show the GUI
         this.gui.Show("w300 h200")
@@ -48,45 +116,10 @@ class EventHandlingBasics {
 }
 ```
 
-## Event Propagation and Bubbling
-
-```cpp
-#Requires AutoHotkey v2.1-alpha.16
-#SingleInstance Force
-
-EventPropagation()
-class EventPropagation {
-    __New() {
-        this.gui := Gui(, "Event Propagation")
-        
-        ; Create nested controls
-        this.group := this.gui.AddGroupBox("w280 h150", "Event Container")
-        this.btn1 := this.gui.AddButton("xp+20 yp+30 w240", "Parent Button")
-        this.btn2 := this.gui.AddButton("xp+30 yp+40 w180", "Child Button")
-        
-        ; Set up event handlers with event stopping
-        this.btn1.OnEvent("Click", this.OnParentClick.Bind(this))
-        this.btn2.OnEvent("Click", this.OnChildClick.Bind(this))
-        
-        this.gui.Show("w300 h200")
-    }
-    
-    OnParentClick(sender, info) {
-        MsgBox "Parent button clicked"
-        return true
-    }
-    
-    OnChildClick(sender, info) {
-        MsgBox "Child button clicked"
-        ; No return value = event continues propagating
-    }
-}
-```
-
 ## Custom Event System
 
 ```cpp
-#Requires AutoHotkey v2.1-alpha.16
+#Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 
 CustomEventSystem()
@@ -140,11 +173,14 @@ class CustomEventSystem {
     StartDemo() {
         ; Subscribe to events
         this.On("countChanged", this.DisplayCount.Bind(this))
-        this.On("countChanged", (*) => ToolTip("Count updated"))
+        this.On("countChanged", this.ShowCountTip.Bind(this))
         this.On("maxReached", (*) => MsgBox("Maximum count reached!"))
         
-        ; Start a timer to increment count
-        SetTimer(this.IncrementCount.Bind(this), 1000)
+        ; Start a timer - store the bound ref once; each .Bind() call creates
+        ; a NEW object, so a fresh Bind passed to SetTimer later would never
+        ; match (and never stop) this timer
+        this.countTick := this.IncrementCount.Bind(this)
+        SetTimer(this.countTick, 1000)
     }
     
     IncrementCount() {
@@ -153,12 +189,16 @@ class CustomEventSystem {
         
         if (this.count >= 5) {
             this.Trigger("maxReached")
-            SetTimer(this.IncrementCount.Bind(this), 0)  ; Stop timer
+            SetTimer(this.countTick, 0)  ; Stop timer (same bound object)
         }
     }
     
     DisplayCount(newCount) {
         ToolTip("Current count: " newCount)
+    }
+    
+    ShowCountTip(*) {
+        ToolTip("Count updated")
     }
 }
 ```
@@ -166,7 +206,7 @@ class CustomEventSystem {
 ## Event-Driven Architecture Pattern
 
 ```cpp
-#Requires AutoHotkey v2.1-alpha.16
+#Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 
 ; Start the application
@@ -279,11 +319,11 @@ class MainView {
     }
     
     AddItem(*) {
-        ; Get value from control
-        this.gui.Submit(false)
-        if (this.gui["NewTask"] != "") {
-            this.model.AddItem(this.gui["NewTask"])
-            this.gui["NewTask"] := ""  ; Clear input
+        ; gui["NewTask"] returns the control object - read and clear via .Value
+        taskCtrl := this.gui["NewTask"]
+        if (taskCtrl.Value != "") {
+            this.model.AddItem(taskCtrl.Value)
+            taskCtrl.Value := ""  ; Clear input
         }
     }
     
@@ -328,7 +368,7 @@ class StatsView {
 ## Event Handling with Hotkeys and Hotstrings
 
 ```cpp
-#Requires AutoHotkey v2.1-alpha.16
+#Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 
 HotkeyManager()
@@ -336,6 +376,7 @@ class HotkeyManager {
     __New() {
         ; Initialize storage for hotkeys and their callbacks
         this.hotkeyMap := Map()
+        this.helpList := ""  ; created below - RegisterHotkey checks it before updating
         
         ; Set up default hotkeys
         this.RegisterHotkey("^c", this.OnCopy.Bind(this))
@@ -356,11 +397,11 @@ class HotkeyManager {
     
     RegisterHotkey(hotkeyString, callback, description := "") {
         ; Store information about this hotkey
-        this.hotkeyMap[hotkeyString] := {
-            callback: callback,
-            description: description || "Action for " hotkeyString,
-            enabled: true
-        }
+        info := Map()
+        info["callback"] := callback
+        info["description"] := description != "" ? description : "Action for " hotkeyString
+        info["enabled"] := true
+        this.hotkeyMap[hotkeyString] := info
         
         ; Create the actual hotkey
         Hotkey(hotkeyString, callback)
@@ -374,15 +415,15 @@ class HotkeyManager {
         if this.hotkeyMap.Has(hotkeyString) {
             state := enable ? "On" : "Off"
             Hotkey(hotkeyString, state)
-            this.hotkeyMap[hotkeyString].enabled := enable
+            this.hotkeyMap[hotkeyString]["enabled"] := enable
         }
     }
     
     UpdateHelpList() {
         this.helpList.Delete()
         for key, info in this.hotkeyMap {
-            status := info.enabled ? "" : " (disabled)"
-            this.helpList.Add(, key, info.description status)
+            status := info["enabled"] ? "" : " (disabled)"
+            this.helpList.Add(, key, info["description"] status)
         }
         this.helpList.ModifyCol(1, "AutoHdr")
         this.helpList.ModifyCol(2, "AutoHdr")
@@ -396,14 +437,14 @@ class HotkeyManager {
         ClipWait(1)
         if (A_Clipboard != "")
             ToolTip("Copied: " SubStr(A_Clipboard, 1, 50) (StrLen(A_Clipboard) > 50 ? "..." : ""))
-        SetTimer(() => ToolTip(), -3000)  ; Clear tooltip after 3 seconds
+        SetTimer(ClearTip, -3000)  ; Clear tooltip after 3 seconds
     }
     
     OnPaste(*) {
         if (A_Clipboard != "")
             ToolTip("Pasting from clipboard...")
         SendInput("^v")
-        SetTimer(() => ToolTip(), -1000)
+        SetTimer(ClearTip, -1000)
     }
     
     ToggleHelp(*) {
@@ -415,6 +456,10 @@ class HotkeyManager {
         }
     }
 }
+
+ClearTip() {
+    ToolTip()
+}
 ```
 
 ## Best Practices for Event Handling
@@ -422,7 +467,7 @@ class HotkeyManager {
 ### Binding Context Properly
 
 ```cpp
-#Requires AutoHotkey v2.1-alpha.16
+#Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 
 BindingContextDemo()
@@ -431,14 +476,19 @@ class BindingContextDemo {
         this.counter := 0
         this.gui := Gui()
         
-        ; GOOD: Bind using .Bind(this) - preserves context
-        this.btn1 := this.gui.AddButton("w200", "Good Button").OnEvent("Click", this.GoodHandler.Bind(this))
+        ; GOOD: bind a named method - preserves context
+        ; (assign the control first; OnEvent returns nothing, so never chain off it)
+        this.btn1 := this.gui.AddButton("w200", "Good Button")
+        this.btn1.OnEvent("Click", this.GoodHandler.Bind(this))
         
-        ; BAD: Not binding - loses 'this' context
-        this.btn2 := this.gui.AddButton("w200", "Bad Button").OnEvent("Click", this.BadHandler)
+        ; BAD: passing the method without binding - loses 'this' context
+        this.btn2 := this.gui.AddButton("w200", "Bad Button")
+        this.btn2.OnEvent("Click", this.BadHandler)
         
-        ; GOOD: Using arrow function - preserves context
-        this.btn3 := this.gui.AddButton("w200", "Arrow Button").OnEvent("Click", (*) => this.ArrowHandler())
+        ; GOOD: another bound named method - CounterHandler is void, so a fat
+        ; arrow like (*) => this.CounterHandler() would return unset under v2.1
+        this.btn3 := this.gui.AddButton("w200", "Counter Button")
+        this.btn3.OnEvent("Click", this.CounterHandler.Bind(this))
         
         this.gui.Show()
     }
@@ -458,9 +508,9 @@ class BindingContextDemo {
         }
     }
     
-    ArrowHandler() {
+    CounterHandler(*) {
         this.counter++
-        MsgBox "Arrow handler called. Counter: " this.counter
+        MsgBox "Counter handler called. Counter: " this.counter
     }
 }
 ```
@@ -468,7 +518,7 @@ class BindingContextDemo {
 ### Memory Management and Cleanup
 
 ```cpp
-#Requires AutoHotkey v2.1-alpha.16
+#Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 
 MemoryManagementDemo()
@@ -507,8 +557,8 @@ class MemoryManagementDemo {
         ; Clean up timer
         SetTimer(this.timerCallback, 0)
         
-        ; Remove event handlers
-        this.btn.OnEvent("Click", this.boundHandlers["click"], -1)
+        ; Remove event handlers (AddRemove 0 = remove; -1 would mean call-first)
+        this.btn.OnEvent("Click", this.boundHandlers["click"], 0)
         
         ; Clear references
         this.boundHandlers := Map()
@@ -525,7 +575,7 @@ class MemoryManagementDemo {
 ### Performance Considerations
 
 ```cpp
-#Requires AutoHotkey v2.1-alpha.16
+#Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 
 PerformanceDemo()
@@ -594,54 +644,49 @@ class PerformanceDemo {
 }
 ```
 
-## Event Delegation Pattern
+## Shared Handler Pattern
+
+AHK GUI events do not bubble or delegate the way DOM events do — a `Gui` object
+has no "Click" event (registering one throws a ValueError), and clicks on
+controls are delivered only to that control's own registered handlers. The
+closest equivalent is registering one bound handler on every control and
+switching on the sender.
 
 ```cpp
-#Requires AutoHotkey v2.1-alpha.16
+#Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 
-EventDelegationDemo()
-class EventDelegationDemo {
+SharedHandlerDemo()
+class SharedHandlerDemo {
     __New() {
-        this.gui := Gui(, "Event Delegation Demo")
+        this.gui := Gui(, "Shared Handler Demo")
         this.gui.SetFont("s10")
         
         ; Container for buttons
         this.container := this.gui.AddGroupBox("w400 h200", "Button Container")
         
-        ; Create multiple buttons
-        for i in Range(1, 5) {
-            btn := this.gui.AddButton("xp+20 yp+30 w80 h30", "Button " i)
-            btn.Name := "Button" i  ; Add identifier
+        ; Create multiple buttons that share one bound handler
+        boundClick := this.HandleClick.Bind(this)
+        Loop 5 {
+            btn := this.gui.AddButton("xp+20 yp+30 w80 h30", "Button " A_Index)
+            btn.Name := "Button" A_Index  ; Add identifier
+            btn.OnEvent("Click", boundClick)
         }
-        
-        ; Add single click handler to the GUI instead of each button
-        this.gui.OnEvent("Click", this.HandleClick.Bind(this))
         
         this.gui.Show("w450 h300")
     }
     
-    HandleClick(sender, info) {
-        ; Check if the click was on a button
-        if Type(info) = "GuiControl" && InStr(info.Name, "Button") {
-            MsgBox "Clicked on " info.Name " with text: " info.Text
-        }
+    HandleClick(ctrl, info) {
+        ; The first parameter is the control that fired the event
+        MsgBox "Clicked on " ctrl.Name " with text: " ctrl.Text
     }
-}
-
-; Simple Range function
-Range(start, end, step := 1) {
-    result := []
-    Loop (end - start) // step + 1
-        result.Push(start + (A_Index - 1) * step)
-    return result
 }
 ```
 
 ## Advanced: Cross-Object Communication
 
 ```cpp
-#Requires AutoHotkey v2.1-alpha.16
+#Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 
 ; Create the mediator and start the application
@@ -733,7 +778,7 @@ class SenderModule {
     
     HandleResponse(data) {
         ToolTip("Message receipt confirmed: " data)
-        SetTimer () => ToolTip(), -3000
+        SetTimer(ClearTip, -3000)
     }
 }
 
@@ -813,7 +858,7 @@ class LoggingModule {
         this.logBox.Value .= "[" FormatTime(, "HH:mm:ss") "] " eventType ": " data "`n"
         
         ; Auto-scroll to bottom
-        this.logBox.SendMsg(0x115, 7)  ; WM_VSCROLL, SB_BOTTOM
+        SendMessage(0x115, 7, 0, this.logBox.Hwnd)  ; WM_VSCROLL, SB_BOTTOM
     }
     
     RefreshLog(*) {
@@ -828,11 +873,15 @@ class LoggingModule {
         }
     }
 }
+
+ClearTip() {
+    ToolTip()
+}
 ```
 
 ## Key Concepts in Event Handling
 
-1. **Binding Context**: Always use `.Bind(this)` or arrow functions to preserve `this` context in callbacks.
+1. **Binding Context**: Always use `.Bind(this)` to preserve `this` context in callbacks. A fat arrow also captures `this`, but only use one when the single-expression body returns a value.
 
 2. **Event Parameters**: Event handlers typically receive information about the event source and sometimes additional data.
 
@@ -840,7 +889,7 @@ class LoggingModule {
 
 4. **Performance Optimization**: Use debouncing and throttling for frequently-triggered events.
 
-5. **Event Delegation**: Handle multiple similar events with a single handler to reduce overhead.
+5. **Shared Handlers**: Reuse one bound handler across similar controls to reduce overhead (AHK has no DOM-style event delegation or bubbling).
 
 6. **Cross-Object Communication**: Use mediator or pub/sub patterns for decoupled object interactions.
 
@@ -850,7 +899,7 @@ class LoggingModule {
 
 ## Best Practices Summary
 
-1. **Use Proper Binding**: Always preserve context with `.Bind(this)` or arrow functions.
+1. **Use Proper Binding**: Always preserve context with `.Bind(this)`; reserve fat arrows for single-expression bodies that return a value.
 
 2. **Organize Code**: Keep event handling logic separate from business logic.
 

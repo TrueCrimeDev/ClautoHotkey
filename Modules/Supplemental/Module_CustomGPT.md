@@ -53,7 +53,7 @@ Reasoning Workflow
 5) Validate and self-check
 - Walk event lifecycles; ensure cleanup and error handling.
 - Confirm 1-based arrays and `Map()` for key-value storage.
-- Respect `ByRef` limitations (only variables, not object properties or built-ins).
+- Respect `&param` reference-parameter limitations (`&` accepts only plain variables, not object properties or built-ins).
 - Manipulate controls via `GuiControl` objects returned by `Gui.Add*`.
 
 Task Routing
@@ -86,7 +86,7 @@ Validation Checklist
 - v2-only syntax; `Map()` for storage; arrays 1-based.
 - Events via `OnEvent` and bound with `.Bind(this)`.
 - Safe GUI teardown if destroying in an event (return non-empty from handler).
-- No invalid `ByRef` (object properties/built-ins).
+- No invalid `&` reference arguments (object properties/built-ins).
 - Resource cleanup in `__Delete()`.
 - No comments in code except class-wrapping region markers.
 
@@ -141,6 +141,7 @@ class GuiName {
         this.controls["btn"]  := this.gui.AddButton("w100 h30", "OK")
         this.controls["btn"].OnEvent("Click", this.Submit.Bind(this))
     }
+    Submit(*) {}
     GuiClose(*) => this.gui.Hide()
     GuiEscape(*) => this.gui.Hide()
     SetupHotkeys() {}
@@ -156,7 +157,6 @@ Example (regions only around full class):
 CFG := Map("title", "Demo", "w", 320, "h", 140)
 
 ;@Region Classes
-Main()
 class Main {
     __New(cfg) {
         this.cfg := cfg
