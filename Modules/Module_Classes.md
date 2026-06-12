@@ -37,9 +37,9 @@ description: 'Prototype chain manipulation, raw ObjPtr arithmetic, and GUI contr
 ### Object Utility Functions
 | Function | Signature | Notes |
 |----------|-----------|-------|
-| `ObjPtr()` | `ObjPtr(obj)` | Returns raw memory address (integer) without incrementing ref count; use for weak-reference tracking |
-| `ObjFromPtrAddRef()` | `ObjFromPtrAddRef(ptr)` | Retrieves object from pointer and increments ref count; valid only while the object has not been freed |
-| `IsSet()` | `IsSet(varOrProp)` | Returns true if variable/property has a value — use instead of `!= unset` comparisons |
+| `ObjPtr()` | `ObjPtr(obj)` | Returns raw memory address (integer) without incrementing ref count; the pointer does not keep the object alive |
+| `ObjFromPtrAddRef()` | `ObjFromPtrAddRef(ptr)` | Retrieves object from pointer and increments ref count; calling it on a freed pointer is undefined behavior — never use it as a liveness probe |
+| `IsSet()` | `IsSet(var)` | Variables only — `IsSet(obj.prop)` is a load-time error; test properties with `.HasProp(name)` or `try` |
 
 ### Map (preferred class state container)
 | Method/Property | Signature | Notes |
@@ -53,7 +53,7 @@ description: 'Prototype chain manipulation, raw ObjPtr arithmetic, and GUI contr
 
 ## AHK V2 CONSTRAINTS
 
-- ✗ `new ClassName()` — TypeError; `new` is not a keyword in AHK v2
+- ✗ `new ClassName()` — `new` is not a keyword in AHK v2; it parses as a variable read (load-time warning) and throws UnsetError at runtime
 - ✓ `ClassName(args*)` — bare call is the only valid instantiation form
 
 - ✗ `SetTimer(this.Method, 1000)` — `this` is wrong or missing inside the callback
@@ -65,8 +65,8 @@ description: 'Prototype chain manipulation, raw ObjPtr arithmetic, and GUI contr
 - ✗ Relying on `__Delete()` alone for resource release — GC timing is non-deterministic; resources leak on exception paths
 - ✓ Always provide a named `dispose()` that is called explicitly in a `try/finally` block; let `__Delete()` delegate to `dispose()` as a safety net
 
-- ✗ `__Get(name)` / `__Set(name, val)` two-parameter meta-function signatures from v1
-- ✓ `__Get(name, params)` / `__Set(name, params, value)` — the `params` Array argument is required in v2 even if unused
+- ✗ `__Get(name)` / `__Set(name, val)` — wrong arity; the meta-function still fires, then throws "Too many parameters passed to function" at access time
+- ✓ `__Get(name, params)` / `__Set(name, params, value)` — the `params` Array argument is required even if unused
 
 - ✗ `this.ClassName.StaticMethod()` or `this.StaticProp` for class-level members
 - ✓ `ClassName.StaticMethod()` / `ClassName.StaticProp` — static members belong to the class object, not instances
@@ -119,12 +119,15 @@ class MathUtils {
 }
 
 ; ✓ Instantiate without "new" — ClassName() is the only valid form in AHK v2
-animal  := Animal("Buddy", 5)
+;   Never name the variable "animal" — assigning to a variable that matches a
+;   script-defined class name is a load-time error
+pet     := Animal("Buddy", 5)
 area    := MathUtils.calculateArea(10)
 version := MathUtils.getVersion()
 
-; ✗ "new" keyword is not valid in AHK v2 — TypeError at runtime
-; animal := new Animal("Buddy", 5)    ; → TypeError
+; ✗ "new" is not a keyword in AHK v2 — it parses as a variable read (load-time
+;   warning) and throws UnsetError at runtime
+; pet := new Animal("Buddy", 5)    ; → UnsetError on the variable "new"
 
 ; ✓ Properties with full get/set accessor blocks — setter enforces invariants at assignment time
 class Person {
@@ -152,28 +155,32 @@ class Person {
     displayName => this._name " (" this._age " years old)"
 
     ; ✓ Parameterised property — bracket key selects which sub-value to read/write
+    ;   The backing Map is initialised in __New, so the getter can never read an
+    ;   undefined property (reading it uninitialised would throw PropertyError)
     phoneNumber[type] {
         get {
             return this.phoneNumbers.Get(type, "")
         }
         set {
-            if !this.HasProp("phoneNumbers")
-                this.phoneNumbers := Map()
             this.phoneNumbers[type] := value
         }
     }
 
     __New(name, age) {
+        this.phoneNumbers := Map()   ; ✓ initialise the backing Map before any access
         this.name := name    ; Calls the setter — validation runs here
         this.age  := age     ; Calls the setter — clamps negative values
     }
 }
 
-person := Person("John", 25)
-person.phoneNumber["mobile"] := "555-1234"
-displayText := person.displayName
+john := Person("John", 25)
+john.phoneNumber["mobile"] := "555-1234"
+displayText := john.displayName
 
 ; ✓ Timer callback with .Bind(this) — the critical pattern for any method used as a callback
+; PITFALL: while the timer is running, SetTimer holds the bound callback and the bound
+; callback holds this — so __Delete can never fire on its own. Stop() is the real
+; teardown; __Delete is only a safety net once the timer is already stopped.
 class TooltipTimer {
     static Config := Map(
         "interval",    1000,
@@ -193,17 +200,22 @@ class TooltipTimer {
         SetTimer(this.timerCallback, TooltipTimer.Config["interval"])
     }
 
+    ; ✓ Explicit stop — releases the timer's hold on the bound callback (and on this)
+    Stop() {
+        if this.state["isActive"] {
+            SetTimer(this.timerCallback, 0)
+            this.state["isActive"] := false
+            ToolTip()
+        }
+    }
+
     UpdateDisplay() {
         this.state["seconds"]++
         ToolTip(Format(TooltipTimer.Config["format"], this.state["seconds"]))
     }
 
     __Delete() {
-        if this.state["isActive"] {
-            SetTimer(this.timerCallback, 0)
-            this.state["isActive"] := false
-            ToolTip()
-        }
+        this.Stop()   ; safety net — unreachable while the timer still holds the callback
     }
 }
 
@@ -211,6 +223,8 @@ class TooltipTimer {
 ; SetTimer(this.UpdateDisplay, 1000)    ; → wrong "this" context, likely MethodError
 
 timer := TooltipTimer()
+; ... later, when finished:
+timer.Stop()    ; ✓ explicit stop — never rely on __Delete while the timer is active
 ```
 
 ## TIER 2 — Inheritance and Polymorphism
@@ -379,8 +393,8 @@ class ConfigManager {
 }
 
 config := ConfigManager()
-config.newSetting := "value"    ; __Set fires
-value  := config.newSetting     ; __Get fires
+config.newSetting := "value"    ; __Set fires — and caches the value as an own property via DefineProp
+value  := config.newSetting     ; own property now exists, so __Get does NOT fire
 config.setTheme("light")        ; __Call fires
 theme  := config.getTheme()     ; __Call fires
 config["debug"] := true         ; __Item set fires
@@ -388,9 +402,9 @@ config["debug"] := true         ; __Item set fires
 for key, value in config
     MsgBox(key ": " value)
 
-; ✗ v1 two-parameter meta-function signatures — interceptors silently never fire in v2
-; __Get(name)         ; → wrong arity, AHK v2 skips this
-; __Set(name, value)  ; → wrong arity, AHK v2 skips this
+; ✗ Wrong-arity meta-function signatures — the interceptor still fires, then throws
+; __Get(name)         ; → "Too many parameters passed to function" on first property read
+; __Set(name, value)  ; → "Too many parameters passed to function" on first property write
 
 ; ✓ Fluent interface: every builder method returns this, enabling dot-chained calls
 class QueryBuilder {
@@ -642,8 +656,9 @@ class DatabaseConnection {
         for tempFile in this._tempFiles {
             try {
                 FileDelete(tempFile)
-            } catch {
-                ; Continue cleanup even if individual file deletion fails
+            } catch as err {
+                ; ✓ Log and continue — cleanup proceeds, but the failure stays visible
+                OutputDebug("Temp file cleanup failed: " tempFile " — " err.Message)
             }
         }
         this._tempFiles   := []
@@ -693,7 +708,7 @@ ResourceManager.use(DatabaseConnection("server=localhost;database=test"), _runDb
 
 ### Performance Notes
 
-**Object pooling** eliminates repeated allocation for frequently created short-lived objects. The `ObjectPool` class maintains per-type queues (`_pools` Map keyed by `.__Class`). `acquire()` pops from the pool or creates a new instance with `%className%(params*)` (dynamic class call by name string). `release()` calls `cleanup()` if it exists, then pushes back. Pool objects must implement `reset(params*)` and `cleanup()` rather than relying on `__New`/`__Delete`, to avoid lifecycle interference with the pool.
+**Object pooling** eliminates repeated allocation for frequently created short-lived objects. The `ObjectPool` class maintains per-type queues (`_pools` Map keyed by `.__Class`). `acquire()` pops from the pool or constructs a fresh zero-argument instance with `%className%()` (dynamic class call by name string), then calls `reset(initParams*)` on **both** the reused and the fresh instance. `release()` calls `cleanup()` if it exists, then pushes back. Pool objects must implement `reset(params*)` and `cleanup()` rather than relying on `__New`/`__Delete`, to avoid lifecycle interference with the pool.
 
 **Lazy initialisation** defers expensive computation until first access. A property getter checks an `_initialized` flag and caches the result — subsequent reads return the cached value in O(1). An `invalidate()` method clears the flag to force recomputation. This is strictly better than computing in `__New` when the property may never be accessed.
 
@@ -717,13 +732,13 @@ class ObjectPool {
 
     static acquire(className, initParams*) {
         pool := ObjectPool.getPool(className)
-        if pool.Length > 0 {
+        if pool.Length > 0
             obj := pool.Pop()
-            if obj.HasMethod("reset")
-                obj.reset(initParams*)
-            return obj
-        }
-        return %className%(initParams*)  ; Dynamic class instantiation by name
+        else
+            obj := %className%()  ; Dynamic zero-arg construction — state comes from reset()
+        if obj.HasMethod("reset")
+            obj.reset(initParams*)  ; ✓ reset() runs on BOTH the reused and the fresh instance
+        return obj
     }
 
     static release(obj) {
@@ -842,76 +857,44 @@ array2 := array1.clone()              ; Shares backing array — O(1)
 array2.push(4)                        ; Triggers copy — array1 unchanged
 ```
 
-## TIER 6 — Observer Pattern and Weak References
-> METHODS COVERED: `ObjPtr()` · `ObjFromPtrAddRef()` · `.Clone()` · `.Clear()` · `.Delete()` · `RemoveAt()` · `IsSet()` · `OutputDebug()`
+## TIER 6 — Observer Pattern and Subscription Lifecycle
+> METHODS COVERED: `on()` · `off()` · `emit()` · `dispose()` · `Map()` · `.Has()` · `.Get()` · `.Delete()` · `.Clear()` · `OutputDebug()`
 
-Circular references prevent garbage collection: if Model holds a strong reference to View and View holds a strong reference to Model, neither is freed when both go out of scope. The weak-reference pattern stores `ObjPtr(target)` (an integer, not a reference) instead of the object itself. On each `emit()`, call `ObjFromPtrAddRef(ptr)` inside `try/catch` to test liveness — if the object was collected, the call throws and the dead listener is removed. This allows the emitter to outlive its subscribers without leaking them.
+Circular references prevent garbage collection: if Model holds a strong reference to View (through a bound callback) and View holds a strong reference to Model, neither is freed when both go out of scope. The cure is an explicit subscription lifecycle: `on()` returns a token, the subscriber keeps the token, and the subscriber's `dispose()` calls `emitter.off(token)` to unsubscribe — with `__Delete()` delegating to `dispose()` as a safety net. While a subscription is active, the emitter holds a strong reference to the subscriber through the bound callback, so explicit `dispose()` is the primary teardown. Do not attempt pointer-based weak references: probing object liveness with `ObjFromPtrAddRef(ptr)` on a freed pointer is undefined behavior — it does not throw, it resurrects a dangling object.
 ```ahk
-; ✓ EventEmitter with weak-reference subscriber tracking — prevents circular reference leaks
+; ✓ EventEmitter with token-based subscriptions — explicit lifecycle, no dangling pointers
 class EventEmitter {
-    _listeners := Map()
-    _weakRefs  := Map()
+    _subs      := Map()    ; token → subscription record
+    _nextToken := 0
 
-    ; ✓ Pass target object to store weak reference — emitter does not own the subscriber
-    on(event, callback, target := unset) {
-        if !this._listeners.Has(event)
-            this._listeners[event] := []
+    ; ✓ on() returns a token — the subscriber stores it and passes it back to off()
+    on(event, callback) {
+        token := ++this._nextToken
+        sub := Map()
+        sub["event"]    := event
+        sub["callback"] := callback
+        this._subs[token] := sub
+        return token
+    }
 
-        listener := {callback: callback}
-
-        if IsSet(target) {
-            listener.targetPtr := ObjPtr(target)   ; Integer pointer — not a reference; does not prevent GC
-            listener.weakRef   := true
-
-            if !this._weakRefs.Has(listener.targetPtr)
-                this._weakRefs[listener.targetPtr] := []
-            this._weakRefs[listener.targetPtr].Push(listener)
-        }
-
-        this._listeners[event].Push(listener)
+    off(token) {
+        if this._subs.Has(token)
+            this._subs.Delete(token)
         return this
     }
 
-    off(event, callback := unset) {
-        if !this._listeners.Has(event)
-            return this
-
-        listeners := this._listeners[event]
-        if !IsSet(callback) {
-            for listener in listeners
-                this._cleanupWeakRef(listener)
-            this._listeners[event] := []
-        } else {
-            for i, listener in listeners {
-                if listener.callback = callback {
-                    this._cleanupWeakRef(listener)
-                    listeners.RemoveAt(i)
-                    break
-                }
-            }
-        }
-        return this
-    }
-
-    ; ✓ Clone listener list before iterating — allows safe removal of dead entries during emit
+    ; ✓ Snapshot matching tokens before dispatching — a callback may unsubscribe mid-emit
     emit(event, args*) {
-        if !this._listeners.Has(event)
-            return this
-
-        listeners := this._listeners[event].Clone()
-
-        for i, listener in listeners {
-            if listener.HasProp("weakRef") {
-                try {
-                    ObjFromPtrAddRef(listener.targetPtr)
-                } catch {
-                    this._removeDeadListener(event, listener)
-                    continue
-                }
-            }
-
+        matching := []
+        for token, sub in this._subs {
+            if sub["event"] = event
+                matching.Push(token)
+        }
+        for token in matching {
+            if !this._subs.Has(token)   ; unsubscribed by an earlier callback this emit
+                continue
             try {
-                listener.callback(args*)
+                this._subs[token]["callback"](args*)
             } catch as err {
                 OutputDebug("Event listener error: " err.Message)
             }
@@ -919,44 +902,8 @@ class EventEmitter {
         return this
     }
 
-    _cleanupWeakRef(listener) {
-        if !listener.HasProp("weakRef")
-            return
-
-        if this._weakRefs.Has(listener.targetPtr) {
-            refs := this._weakRefs[listener.targetPtr]
-            for i, ref in refs {
-                if ref = listener {
-                    refs.RemoveAt(i)
-                    break
-                }
-            }
-            if refs.Length = 0
-                this._weakRefs.Delete(listener.targetPtr)
-        }
-    }
-
-    _removeDeadListener(event, deadListener) {
-        if !this._listeners.Has(event)
-            return
-
-        listeners := this._listeners[event]
-        for i, listener in listeners {
-            if listener = deadListener {
-                listeners.RemoveAt(i)
-                this._cleanupWeakRef(listener)
-                break
-            }
-        }
-    }
-
     __Delete() {
-        for event, listeners in this._listeners {
-            for listener in listeners
-                this._cleanupWeakRef(listener)
-        }
-        this._listeners.Clear()
-        this._weakRefs.Clear()
+        this._subs.Clear()
     }
 }
 
@@ -965,54 +912,70 @@ class Model extends EventEmitter {
     _data := Map()
 
     set(key, value) {
-        oldValue := this._data.Has(key) ? this._data[key] : unset
+        oldValue := this._data.Get(key, "")   ; ✓ concrete default — never unset
         this._data[key] := value
-        this.emit("change", {key: key, value: value, oldValue: oldValue})
+        payload := Map()                      ; ✓ Map() payload, entries assigned individually
+        payload["key"]      := key
+        payload["value"]    := value
+        payload["oldValue"] := oldValue
+        this.emit("change", payload)
     }
 
-    ; ✓ Has() guard before access — returns unset cleanly when key is absent
+    ; ✓ Explicit default for absent keys — callers always receive a concrete value.
+    ;   Under a v2.1 #Requires pin, consuming a void return throws "No value was
+    ;   returned." — a getter must not fall off the end without returning.
     get(key) {
-        if this._data.Has(key)
-            return this._data[key]
-        ; Implicit: returns unset (no value) if key is absent
+        return this._data.Get(key, "")
     }
 }
 
-; ✓ View registers with weak reference — Model does not hold a strong ref back to View
+; ✓ View stores its subscription token; dispose() unsubscribes, __Delete delegates
 class View {
-    model := unset
+    appModel := ""
+    _token   := 0
 
-    __New(model) {
-        this.model := model
-        this.model.on("change", this.onModelChange.Bind(this), this)
-        ; ✓ Passing "this" as third arg stores ObjPtr(this) — not a strong reference; GC can still collect View
+    __New(appModel) {
+        this.appModel := appModel
+        this._token   := appModel.on("change", this.onModelChange.Bind(this))
     }
 
     onModelChange(data) {
-        MsgBox("View updated: " data.key " = " data.value)
+        MsgBox("View updated: " data["key"] " = " data["value"])
+    }
+
+    ; ✓ Primary teardown — while subscribed, the emitter holds this View alive
+    ;   through the bound callback, so __Delete alone can never run first
+    dispose() {
+        if this._token {
+            this.appModel.off(this._token)
+            this._token := 0
+        }
     }
 
     __Delete() {
-        MsgBox("View destroyed")
+        this.dispose()   ; safety net — effective once the subscription is already gone
     }
 }
 
-; No memory leak: when view is unset, the weak reference allows GC to collect it
-model := Model()
-view  := View(model)
-model.set("name", "John")   ; View receives change notification
-view  := unset              ; View is GC'd; emitter cleans up dead listener on next emit
+; Never name these variables "model"/"view" — assigning to a variable that matches
+; a script-defined class name is a load-time error
+appModel := Model()
+appView  := View(appModel)
+appModel.set("name", "John")   ; View receives the change notification
+appView.dispose()              ; ✓ breaks the emitter→subscriber reference explicitly
+appView := unset               ; View is now collectable; __Delete fires
 
-; ✗ Omitting the target arg stores no weak reference — strong ref creates circular ref
-; this.model.on("change", this.onModelChange.Bind(this))  ; → strong ref → circular ref → neither frees
+; ✗ Dropping the only external reference without dispose() does NOT free the View —
+;   the emitter still holds the bound callback, and the bound callback holds the View
+; appView := unset    ; → View.__Delete never fires until the emitter itself is destroyed
 ```
 
 ## ANTI-PATTERNS
 
 | Pattern | Wrong | Correct | LLM Common Cause |
 |---------|-------|---------|------------------|
-| Class instantiation with `new` | `obj := new ClassName()` | `obj := ClassName()` | AHK v1 and almost all OOP language training data use `new` |
-| Object literal as data container | `state := {x: 0, y: 0}` | `state := Map("x", 0, "y", 0)` | AHK v1 training data — object literals were the only container pre-v2 |
+| Class instantiation with `new` | `obj := new ClassName()` | `obj := ClassName()` | Legacy AutoHotkey and almost all OOP language training data use `new` |
+| Object literal as data container | `state := {x: 0, y: 0}` | `state := Map()` then `state["x"] := 0` per key | legacy training data — object literals were the only container pre-v2 |
 | Raw method reference as callback | `SetTimer(this.Update, 1000)` | `SetTimer(this.Update.Bind(this), 1000)` | Global-function paradigm habit — free functions do not need context binding |
 | `super()` as constructor call | `super(args*)` in `__New` | `super.__New(args*)` | Python/Java training data where `super().__init__()` is idiomatic |
 | Static access via `this` | `this.StaticProp := val` | `ClassName.StaticProp := val` | Python (`cls.prop`) / Java (`this.field` for both) training data conflation |

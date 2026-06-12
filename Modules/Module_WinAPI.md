@@ -12,7 +12,7 @@ description: 'Raw DllCall/Buffer/Struct mechanics belong in Module_DllCall.md; c
 
 # Module_WinAPI
 
-_AHK v2.0+ (typed Struct in WinRT helpers requires the v2.1-alpha.30 +Console fork)_
+_AHK v2.0+ (typed Struct in WinRT helpers requires v2.1-alpha.30 — upstream or the +Console fork)_
 
 ## API QUICK-REFERENCE
 

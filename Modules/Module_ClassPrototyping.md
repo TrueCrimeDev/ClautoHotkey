@@ -15,7 +15,7 @@ description: 'Static class definitions using the `class` keyword, standard inher
 ### Object — Descriptor Construction and Prototype Manipulation
 | Method/Property | Signature | Notes |
 |----------------|-----------|-------|
-| `Object()` | `Object()` | Creates a plain Object instance with no initial own properties — the preferred form for descriptor containers; `{}` creates an Object instance of the same type but Object() makes the descriptor role explicit |
+| `Object()` | `Object()` | Creates a plain Object instance with no initial own properties — an optional stricter convention for descriptor containers; `{}` creates an Object instance of the same type and is the project-standard descriptor form |
 | `.DefineProp()` | `obj.DefineProp(Name, Descriptor)` | Assigns a property descriptor to `obj`; Descriptor must be an Object with `.Get`, `.Set`, `.Call`, or `.Value` |
 | `.HasProp()` | `obj.HasProp(Name)` | Returns true if the named property exists on `obj` or its prototype chain; does not invoke the getter |
 | `.HasMethod()` | `obj.HasMethod(Name)` | Returns true if the named Call descriptor is resolvable on `obj` or its prototype chain |
@@ -42,13 +42,13 @@ description: 'Static class definitions using the `class` keyword, standard inher
 
 ## AHK V2 CONSTRAINTS
 
-- **Prefer `Object()` for descriptor objects over `{}`** — although both produce an Object instance of the same type and both are accepted by DefineProp, `Object()` is the explicit convention in this module to keep descriptor construction unambiguous and separated from general object literal usage.
-- **Every Get descriptor function must have exactly one parameter: the object instance** — `GetterFunc(Obj)`. AHK v2 injects the target object as the first argument unconditionally; a zero-parameter getter will receive the object and discard it, returning unpredictable results.
-- **Every Set descriptor function must have exactly two parameters: the object instance and the assigned value** — `SetterFunc(Obj, Value)`. Omitting `Obj` shifts `Value` into the wrong slot.
+- **`{}` literals are correct and expected for descriptor objects** — the project convention (CLAUDE.md) explicitly endorses `{Get: ..., Set: ..., Call: ..., Value: ...}` for DefineProp descriptors. `Object()` followed by property assignment is an optional stricter house convention to make the descriptor role explicit; both produce the same Object type and both are accepted by DefineProp.
+- **Every Get descriptor function must have exactly one parameter: the object instance** — `GetterFunc(Obj)`. AHK v2 injects the target object as the first argument unconditionally; reading the property through a zero-parameter getter throws "Too many parameters passed to function".
+- **Every Set descriptor function must have exactly two parameters: the object instance and the assigned value** — `SetterFunc(Obj, Value)`. A single-parameter setter throws "Too many parameters passed to function" the moment the property is assigned.
 - **Every Call descriptor function must accept the object instance as its first parameter** — `MethodFunc(Obj, Args*)`. The invocation `myObj.Prop(x)` internally becomes `Desc.Call(myObj, x)`.
 - **Do not use `Class(BaseObj)` in v2.0 scripts** — it is a v2.1-alpha feature; the resulting object lacks a `.Call` method and cannot act as a class factory. Use manual prototype chain construction with `ObjSetBase()` instead.
 - **Do not modify built-in prototypes (`Array.Prototype`, `Map.Prototype`, etc.) unless explicitly required** — changes propagate globally to every instance of that type in the script, creating invisible coupling and name collision risk.
-- **Fat-arrow functions assigned to descriptors must be single-expression** — `(Obj) => Obj.Name` is valid; `(Obj) => { x := 1 \| return x }` is a syntax error. Use a named function block for any multi-statement descriptor logic.
+- **Fat-arrow functions assigned to descriptors must be single-expression** — `(Obj) => Obj.Name` is valid; a block body `(Obj) => { ... }` is a syntax error on all v2 builds, including v2.1-alpha. Use a named function for any multi-statement descriptor logic; v2.1-alpha also offers the arrowless function expression `(params) { ... }` for inline multi-statement bodies.
 
 Safe-access priority order for prototype manipulation:
   1. `.HasProp(Name)` — check existence before reading or redefining; avoids UnsetError on absent properties
@@ -57,17 +57,17 @@ Safe-access priority order for prototype manipulation:
   4. `try/catch` — only when the DefineProp call itself may fail and the exception message carries diagnostic information
 
 Pair of every prohibition with its consequence and positive alternative:
-- ✗ `desc := {Get: MyFunc}` — object literal descriptors are avoided in this module; Object() is the explicit convention for descriptor containers
-- ✓ `desc := Object()` then `desc.Get := MyFunc` — Object() is the preferred descriptor container in this module series
-- ✗ `GetterFunc()` with no parameters — object instance silently discarded; returns wrong value
+- ✓ `desc := {Get: MyFunc}` — object-literal descriptors are correct and expected (project convention)
+- ✓ `desc := Object()` then `desc.Get := MyFunc` — equivalent; an optional stricter house convention that makes the descriptor role explicit
+- ✗ `GetterFunc()` with no parameters — reading the property throws "Too many parameters passed to function"
 - ✓ `GetterFunc(Obj)` — receives the target object as first argument
-- ✗ `(Obj) => { x := 1 \| return x }` — syntax error; multi-line fat-arrow is not valid in AHK v2
-- ✓ Named function block `MyFunc(Obj) { x := 1 \| return x }` — full function body supported
+- ✗ `(Obj) => { ... }` block-body fat arrow — syntax error on all v2 builds, including v2.1-alpha
+- ✓ Named function with a real block body (`MyFunc(Obj) {` … `return x` … `}`) — full multi-statement support; v2.1-alpha also offers the arrowless `(Obj) { ... }` function expression
 
 ## TIER 1 — Descriptor Object Fundamentals: Dynamic Call Assignment
 > METHODS COVERED: Object() · DefineProp() · .Call (descriptor key)
 
-A Call descriptor turns any function into a method on a specific object instance. The descriptor must be a raw `Object()` — not an object literal — and the function it holds must accept the target object as its first parameter. This tier covers the minimal DefineProp pattern: create descriptor, assign function, attach to instance.
+A Call descriptor turns any function into a method on a specific object instance. The descriptor can be an object literal (`{Call: fn}`, the project-standard form) or a raw `Object()` (this module's stricter convention), and the function it holds must accept the target object as its first parameter. This tier covers the minimal DefineProp pattern: create descriptor, assign function, attach to instance.
 ```ahk
 CustomMethod(Obj, Prefix) {
     return Prefix . ": " . Obj.Name
@@ -87,8 +87,8 @@ MyObj.DefineProp("Greet", PropDesc)
 ; ✓ Implicitly calls CustomMethod(MyObj, "Status") — AHK injects MyObj as first argument
 Result := MyObj.Greet("Status")
 
-; ✗ Avoid {} as the descriptor object in this module — use Object() for explicit descriptor construction
-; PropDesc := {Call: CustomMethod}    ; → avoided by convention; Object() is preferred
+; ✓ Equally valid: object-literal descriptor — the project-standard form
+; PropDesc := {Call: CustomMethod}    ; → same Object type; Object() above is an optional stricter convention
 ```
 
 ## TIER 2 — Dynamic Getters and Setters: Computed and Validated Properties
@@ -127,8 +127,8 @@ MyData.Doubled := 50
 ; ✗ Assigning a non-integer raises TypeError via SetterFunc — expected behaviour
 ; MyData.Doubled := "String"          ; → TypeError("Only integers allowed.")
 
-; ✗ Omitting the Obj parameter shifts AssignedValue into the wrong slot
-; SetterFunc(AssignedValue) { ... }   ; → AssignedValue receives the object instance silently
+; ✗ Omitting the Obj parameter breaks the arity contract — AHK still passes (Obj, Value)
+; SetterFunc(AssignedValue) { ... }   ; → assignment throws "Too many parameters passed to function"
 ```
 
 ## TIER 3 — Existence Guards: Safe Property and Method Validation
@@ -237,8 +237,11 @@ Worker.Process(5)
 Worker.Process(10)
 ; ✓ Worker.CallCount is now 2
 
-; ✗ Modifying BaseAction directly to add logging destroys the original implementation
-; BaseAction(Obj, Val) { Obj.CallCount++ \| return Val * 10 }  ; → not reversible, mixes concerns
+; ✗ Modifying BaseAction directly to add logging destroys the original implementation:
+; BaseAction(Obj, Val) {
+;     Obj.CallCount++          ; → not reversible, mixes concerns
+;     return Val * 10
+; }
 ```
 
 ### Performance Notes
@@ -331,12 +334,12 @@ EntityId    := EntityInst.Identify() ; "I am a RuntimeEntity"
 
 | Pattern | Wrong | Correct | LLM Common Cause |
 |---------|-------|---------|------------------|
-| Object literal as descriptor | `DefineProp("X", {Get: MyFunc})` | `d := Object()` then `d.Get := MyFunc` then `DefineProp("X", d)` | AHK v1 and general OOP training data treat `{}` as universal object constructor; this module mandates Object() for descriptor clarity, even though both are accepted by DefineProp in AHK v2 |
-| Missing `this` parameter in descriptor function | `GetterFunc()` with no params | `GetterFunc(Obj)` where `Obj` is the injected instance | Cross-language habit — Python/JS descriptors often use implicit self/this binding; AHK v2 passes it explicitly as first arg |
+| Descriptor container choice (convention, not an error) | — | `DefineProp("X", {Get: MyFunc})` is correct and project-standard; `d := Object()` then `d.Get := MyFunc` is an optional stricter convention — both are accepted by DefineProp | Legacy AutoHotkey and general OOP training data treat `{}` as universal object constructor; some house styles use Object() purely for descriptor clarity |
+| Missing `this` parameter in descriptor function | `GetterFunc()` with no params — access throws "Too many parameters passed to function" | `GetterFunc(Obj)` where `Obj` is the injected instance | Cross-language habit — Python/JS descriptors often use implicit self/this binding; AHK v2 passes it explicitly as first arg |
 | Using `Class(BaseObj)` in stable scripts | `DynamicClass := Class(BaseObj)` | Manual prototype chain with `ObjSetBase()` | LLM training data includes v2.1-alpha documentation; model cannot distinguish alpha from stable features |
-| Multi-line fat-arrow in descriptor | `(Obj) => { x := 1 \| return x }` | Named function block `MyFunc(Obj) { x := 1 \| return x }` | JavaScript and Python both support multi-line lambda/arrow bodies; AHK v2 fat-arrow is single-expression only |
+| Multi-line fat-arrow in descriptor | Block-body arrow `(Obj) => { ... }` — syntax error on all v2 builds, including v2.1-alpha | Named function with a block body, or the v2.1-alpha arrowless `(Obj) { ... }` function expression | JavaScript and Python both support multi-line lambda/arrow bodies; AHK v2 fat-arrow is single-expression only |
 | Overusing DefineProp where `extends` suffices | Copying methods via DefineProp loop to share behaviour | `class Child extends Parent { }` | LLM pattern-matches "runtime flexibility" to metaprogramming even when static inheritance is simpler and faster |
-| Using `new` keyword | `new ClassName()` | `ClassName()` | AHK v1 required `new`; dominant OOP training data (Java, C#, JS) reinforces the keyword |
+| Using `new` keyword | `new ClassName()` | `ClassName()` | Legacy AutoHotkey required `new`; dominant OOP training data (Java, C#, JS) reinforces the keyword |
 | Modifying built-in prototypes | `Array.Prototype.DefineProp("Sum", d)` | Wrapper class or standalone function | LLM training data includes JavaScript prototype extension patterns; AHK v2 built-in pollution is global and irreversible |
 
 ## SEE ALSO

@@ -20,7 +20,7 @@ description: 'Key-value storage with Map(), deep-clone of circular-reference gra
 | `.Pop()` | `.Pop()` | Removes and returns the last element; throws if empty |
 | `.InsertAt()` | `.InsertAt(index, val*)` | Inserts at 1-based position; negative index counts from end |
 | `.RemoveAt()` | `.RemoveAt(index, Length?)` | Removes `Length` elements starting at `index`; returns removed value when `Length` omitted |
-| `.Get()` | `.Get(index, default?)` | Safe access — returns `default` if index is unset; omitting `default` throws on missing |
+| `.Get()` | `.Get(index, default?)` | Returns `default` only for an in-range unset slot; an out-of-range index still throws `IndexError`, with or without `default` |
 | `.Has()` | `.Has(index)` | Returns `true` if index exists and is not unset |
 | `.Delete()` | `.Delete(index)` | Marks element at index as unset without shifting other elements |
 | `.Clone()` | `.Clone()` | Shallow copy — nested objects are shared, not duplicated |
@@ -65,16 +65,16 @@ description: 'Key-value storage with Map(), deep-clone of circular-reference gra
 ## AHK V2 CONSTRAINTS
 
 - **1-based indexing is mandatory** — `array[1]` is the first element; `array[0]` is always wrong and always throws `IndexError` — every loop counter, range boundary, and index calculation must start from 1.
-- **No built-in `.Sort()`** — calling `array.Sort()` throws `TypeError`; use the module's `QuickSort(array, comparator?)` with an optional `(a, b) => a - b` numeric comparator or `(a, b) => b - a` for reverse.
+- **No built-in `.Sort()`** — calling `array.Sort()` throws `MethodError`; use the module's `QuickSort(array, comparator?)` with an optional `(a, b) => a - b` numeric comparator or `(a, b) => b - a` for reverse.
 - **`Array(N)` ≠ pre-allocation** — `Array(10)` creates a one-element array `[10]`; pre-allocate with `arr := [], arr.Capacity := 10` to reserve backing storage without inserting elements.
-- **No fat-arrow block bodies in v2.0** — `(x) => { return x * 2 }` is a v2.1 alpha construct; any multi-statement callback must be a named nested function (closure) defined inside the calling function.
-- **Never name a user function `Map`** — this shadows the built-in `Map` class globally within scope, breaking all `Map()` constructor calls with `TypeError`.
+- **No fat-arrow block bodies on any v2 build** — `(x) => { return x * 2 }` is a load-time syntax error everywhere, including v2.1-alpha.30; any multi-statement callback must be a named nested function (closure), or v2.1's arrowless function expression `(x) { ... }`.
+- **Never name a user function `Map`** — it silently shadows the built-in `Map` class within scope: every `Map()` "constructor" call now invokes your function instead, with no error to flag the corruption.
 - **`.Clone()` is shallow** — nested arrays or Map objects share the same reference; mutating a nested element in the clone also mutates the original — use `DeepClone()` for full independence.
 - **Do not modify an array while iterating it with `for`** — removing elements during `for index, value in array` corrupts the enumeration; use a `while`-loop with manual index management or iterate over `.Clone()`.
 
 Safe-access priority order for Array elements:
 ```
-1. .Get(index, default)   — optional slot, one-line resolution, never throws
+1. .Get(index, default)   — one-line resolution for in-range unset slots; out-of-range still throws IndexError
 2. .Has(index)            — when the present/absent branch logic differs meaningfully
 3. arr.Length guard       — when IsValidIndex check before direct access is clearest
 4. try/catch              — only when the exception itself carries diagnostic information
@@ -82,10 +82,10 @@ Safe-access priority order for Array elements:
 
 Pair every prohibition with its consequence and positive alternative:
 
-- ✗ `val := array[idx]` — `UnsetItemError` if the slot was `.Delete()`d or never set  
-- ✓ `val := array.Get(idx, "fallback")` — safe, never throws, one line
+- ✗ `val := array[idx]` — `UnsetItemError` if the in-range slot was `.Delete()`d or never set; `IndexError` if `idx` is out of range  
+- ✓ `val := array.Get(idx, "fallback")` — one line, covers the unset-slot case (out-of-range still throws `IndexError`)
 
-- ✗ `arr.Sort()` — `TypeError`: no such method on Array  
+- ✗ `arr.Sort()` — `MethodError`: no such method on Array  
 - ✓ `QuickSort(arr)` or `QuickSort(arr, (a,b) => a - b)` for numeric order
 
 - ✗ `arr := Array(10)` — creates `[10]`, not 10 empty slots  
@@ -120,11 +120,14 @@ first  := numbers[1]
 last   := numbers[numbers.Length]
 middle := numbers[numbers.Length // 2]
 
-; ✓ .Get() provides safe access with a fallback — never throws on missing index
-safe := numbers.Get(10, "default")
+; ✓ .Get() returns the fallback for an IN-RANGE unset slot — out-of-range still throws IndexError
+sparse := ["a", , "c"]                   ; index 2 exists but is unset
+safe   := sparse.Get(2, "default")       ; "default"
+; bad  := sparse.Get(10, "default")     ; → IndexError — 10 is out of range, default does not apply
 
-; ✗ Direct index access on an unset slot throws UnsetItemError
-; val := numbers[99]                    ; → UnsetItemError if slot absent
+; ✗ Direct out-of-range access throws IndexError; an in-range unset slot throws UnsetItemError
+; val := numbers[99]                    ; → IndexError — index out of range
+; val := sparse[2]                      ; → UnsetItemError — in range, but the slot has no value
 
 IsValidIndex(array, index) {
     return index >= 1 && index <= array.Length
@@ -199,7 +202,7 @@ RemoveValue(array, value) {
 ## TIER 3 — Search, Predicates, and Type Guards
 > METHODS COVERED: `IndexOf()` · `LastIndexOf()` · `Contains()` · `FindIndex()` · `IsSet()` · `Type()`
 
-AHK v2 Array objects have no built-in search method. These module functions implement the standard search contract: return a 1-based index on success, `0` on failure — never `-1`, which is the v1/JavaScript convention. `FindIndex()` accepts a predicate callback, enabling arbitrary search criteria without writing a custom loop at the call site.
+AHK v2 Array objects have no built-in search method. These module functions implement the standard search contract: return a 1-based index on success, `0` on failure — never `-1`, which is the JavaScript convention. `FindIndex()` accepts a predicate callback, enabling arbitrary search criteria without writing a custom loop at the call site.
 ```ahk
 ; ✓ IndexOf returns 1-based index or 0 — never -1 (not the AHK v2 convention)
 IndexOf(array, value, fromIndex := 1) {
@@ -238,10 +241,11 @@ FindIndex(array, callback) {
 predicate        := (val, idx, arr) => val > 10
 firstLargeIndex  := FindIndex(numbers, predicate)
 
-; ✗ Fat-arrow block bodies are invalid in AHK v2.0 — syntax error at runtime
-; predicate := (val, idx, arr) => {    ; → SyntaxError in v2.0
+; ✗ Fat-arrow block bodies are invalid on every v2 build, including v2.1-alpha.30
+; predicate := (val, idx, arr) => {    ; → load-time syntax error on all v2 builds
 ;     return val > 10
 ; }
+; v2.1's multi-statement function expression is ARROWLESS: (val, idx, arr) { ... }
 ```
 
 ## TIER 4 — Transformations: Clone, DeepClone, Map, Filter, Reduce
@@ -318,8 +322,8 @@ doubled := ArrayMap(numbers, (x) => x * 2)
 evens   := Filter(numbers, (x) => Mod(x, 2) = 0)
 sum     := Reduce(numbers, (acc, x) => acc + x)
 
-; ✗ Never name a function "Map" — it shadows the built-in Map class
-; Map(array, fn) { ... }               ; → subsequent Map() constructor calls throw TypeError
+; ✗ Never name a function "Map" — it silently shadows the built-in Map class
+; Map(array, fn) { ... }               ; → subsequent Map() calls invoke this function instead — no error, silent corruption
 ```
 
 ## TIER 5 — Sorting, Deduplication, and Performance Patterns
@@ -359,11 +363,14 @@ QuickSort(numbers, (a, b) => a - b)             ; ascending numeric
 QuickSort(numbers, (a, b) => b - a)             ; descending numeric
 QuickSort(numbers, (a, b) => (b - a) != 0 ? b - a : 0)
 
-students := [
-    Map("name", "Alice",   "grade", 85),
-    Map("name", "Bob",     "grade", 92),
-    Map("name", "Charlie", "grade", 78)
-]
+; Records are Maps built empty with individual key assignment — never constructor pairs
+MakeStudent(name, grade) {
+    s := Map()
+    s["name"]  := name
+    s["grade"] := grade
+    return s
+}
+students := [MakeStudent("Alice", 85), MakeStudent("Bob", 92), MakeStudent("Charlie", 78)]
 QuickSort(students, (a, b) => a["grade"] - b["grade"])
 
 ; ✓ SortBy uses a named nested closure — valid multi-statement callback in v2.0
@@ -408,11 +415,13 @@ UniqueBy(array, keyFunc) {
     return result
 }
 
-people := [
-    Map("id", 1, "name", "Alice"),
-    Map("id", 2, "name", "Bob"),
-    Map("id", 1, "name", "Alice")
-]
+MakePerson(id, name) {
+    p := Map()
+    p["id"]   := id
+    p["name"] := name
+    return p
+}
+people := [MakePerson(1, "Alice"), MakePerson(2, "Bob"), MakePerson(1, "Alice")]
 uniquePeople := UniqueBy(people, (p) => p["id"])
 
 ; ✓ FastContains: build lookup Map once for repeated membership tests in same dataset
@@ -539,7 +548,7 @@ filtered := Without(arr1, 2, 4)         ; [1, 3]
 | Zero-based indexing | `array[0]` | `array[1]` / `array[array.Length]` | Dominant habit from JavaScript, Python, C training data |
 | Built-in sort assumed | `arr.Sort()` | `QuickSort(arr, (a,b) => a - b)` | Missing v2 API knowledge — LLM infers `.Sort()` by analogy with String |
 | Array(N) pre-allocation | `Array(10)` | `arr := [], arr.Capacity := 10` | Missing v2 constructor semantics — `Array(N)` parallels `Array(val)` not `new Array(n)` |
-| Fat-arrow block body | `(x) => { return x * 2 }` | Named nested function inside caller | AHK v1 / other-language habit; block bodies are v2.1 alpha only |
+| Fat-arrow block body | `(x) => { return x * 2 }` | Named nested function, or arrowless `(x) { ... }` (v2.1) | JS/C# arrow habit; `=> { }` is a syntax error on every v2 build — v2.1's multi-statement form is arrowless |
 | Shadowing Map class | `Map(arr, fn) { ... }` | `ArrayMap(arr, fn) { ... }` | JavaScript `Array.prototype.map` naming convention transferred to AHK |
 | Mutating during for-in | `for i, v in arr { arr.RemoveAt(i) }` | `while`-loop with manual index | Cross-language habit; Python/JS raise RuntimeError — AHK silently corrupts |
 | Nested-loop membership | `for x in a1 { for y in a2 { if x=y ... } }` | `Map`-backed seen-set (`Unique`, `Difference`) | O(n²) pattern learned from algorithm examples without performance annotations |

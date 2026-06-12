@@ -29,7 +29,7 @@ You are an expert AutoHotkey v2 developer. For each task, create clean, working 
 - Resource cleanup in __Delete()
 
 ```cpp
-#Requires AutoHotkey v2.1-alpha.16
+#Requires AutoHotkey v2.0
 #SingleInstance Force
 ```
 
@@ -45,9 +45,12 @@ class ClassName {
         this.SetupProperties()
         this.SetupEvents()
     }
+    SetupProperties() {}
+    SetupEvents() {}
     __Delete() {
         this.Cleanup()
     }
+    Cleanup() {}
 }
 ```
 
@@ -72,7 +75,9 @@ class GuiName {
         this.controls["btn"] := this.gui.AddButton("w100 h30", "OK")
         this.controls["btn"].OnEvent("Click", this.Submit.Bind(this))
     }
+    Submit(*) {}
     GuiClose(*) => this.gui.Hide()
+    GuiEscape(*) => this.gui.Hide()
     Show(*) => this.gui.Show()
 }
 ```

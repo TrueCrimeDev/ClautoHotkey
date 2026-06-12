@@ -47,7 +47,7 @@ Use `.Bind(this)` for all event/callback functions
 Declare variables explicitly and early within their scope
 Place class instantiations at the top of the file
 Avoid unnecessary object reinitialization or duplicate event hooks
-Use proper error handling without relying on `throw` unless required
+Throw typed errors (TypeError/ValueError/custom) for invalid states; never swallow errors
 </implementation_strategy>
 
 <internal_validation id="6">

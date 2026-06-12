@@ -81,7 +81,7 @@ Use `.Bind(this)` for all event/callback functions
 Declare variables explicitly and early within their scope
 Place class instantiations at the top of the script
 Avoid unnecessary object reinitialization or duplicate event hooks
-Use proper error handling without relying on `throw` unless required
+Throw typed errors (TypeError/ValueError/custom) for invalid states; never return silent defaults for programming errors
 </implementation_strategy>
 
 <internal_validation id="6">
@@ -90,8 +90,7 @@ Use proper error handling without relying on `throw` unless required
 - Ensure all declared variables are used, and all used variables are declared
 - Check all GUI components have an event handler (e.g., Button, Edit, Escape)
 - Confirm all class instances are initialized and accessible
-- Validate proper use of Map() - NEVER use object literal syntax in Map() constructor
-- Ensure ALL Map() assignments use individual assignment: options["key"] := "value"
+- Create `Map()` empty and assign entries individually (`m["k"] := v`); never pass key-value pairs to the constructor and never pass an object literal to `Map()`
 - Ensure no fat arrow functions use multiline blocks
 - Verify all event handlers use .Bind(this) not fat arrow callbacks
 - Verify all error handling follows proper patterns (no empty catch blocks)
@@ -132,8 +131,8 @@ Ensure all code adheres to ethical use:
 
 **AHK PURITY ENFORCEMENT:**
 
-- FORBIDDEN: Arrow syntax with multi-nmmmmmmmmmmmmmmmline blocks (JavaScript pattern contamination)
-- FORBIDDEN: JavaScript/TypeScript syntax patterns (const, let, ===, !==, ??, template literals)
+- FORBIDDEN: Arrow syntax with multi-line blocks (JavaScript pattern contamination)
+- FORBIDDEN: JavaScript/TypeScript syntax patterns (const, let, ===, !==, template literals)
 - MANDATORY: Event handlers must use .Bind(this), never inline arrow functions with blocks
 - MANDATORY: Multi-line callbacks must be separate methods, not inline functions
 
@@ -253,74 +252,34 @@ Before outputting any .OnEvent(), SetTimer(), or callback code:
 
 ---
 
-# Codex Project Guide - AHK Workspace
+# Codex Project Guide - ClautoHotkey Workspace
 
-This is the root guidance for Codex working in this AutoHotkey workspace on Windows.
+Root guidance for Codex working in this AutoHotkey v2 prompt/knowledge workspace.
 
-## Project Overview
+## Interpreter
 
-- Language: AutoHotkey v2 (prefer `#Requires AutoHotkey v2`).
-- OS: Windows; shell: PowerShell (`pwsh`).
-- Style: Keep changes minimal and focused; match existing naming and layout.
-
-## Repo Layout (high-level)
-
-- `/!Running/` - entry scripts, experiments, task apps, and GUI demos.
-- `Lib/` - shared libraries loaded by scripts in `/!Running` (and others).
-- `.vscode/` - editor/debug config; do not change unless requested.
-- Many subprojects live alongside `/!Running/` - avoid editing them unless asked.
-
-When adding new modules:
-
-- Prefer placing reusable code in `/!Running/Lib/`.
-- For single-file demos/tools, add under an appropriate folder in `/!Running/`.
+- Resolve the AutoHotkey binary from `harness.env` (`AHK_BIN_WIN` / `AHK_BIN_WSL`); never hardcode a path.
+- Target build: the **v2.1-alpha.30+Console fork** (`A_AhkVersion` reports `2.1-alpha.30+Console`).
+- Fork extras: `Print(Fmt, Values*)` (always on) for stdout; `Eval(expr)` gated by `#EnableEval`; JSON diagnostics (`check /Diag=json`); structured exit codes.
 
 ## AHK Conventions
 
-- Always use v2 syntax and functions (no legacy v1).
-- Add `#Requires AutoHotkey v2` at the top of new files.
-- Use `SetWorkingDir A_ScriptDir` when a script depends on relative paths.
-- Respect existing include patterns, e.g. `#Include Classes.ahk`, `#Include <LibName.ahk>`.
-- Avoid global state unless necessary; prefer `class`/`static` members or helper funcs.
-- Keep comments concise; do not add license headers or excessive banners.
+- AHK v2 only; no v1 code or compatibility shims.
+- New scripts start with `#Requires AutoHotkey v2.1-alpha.30` and `#SingleInstance Force` (libraries take neither).
+- Follow the coding standards above: `Map()` built empty with individual assignment, event handlers as named methods + `.Bind(this)`, fat arrows for single expressions only, typed errors, no empty catch.
+- alpha.30 forms: `(a?)()` not `a?.()`; class-ref typed properties (`Int32`/`UInt32`/`IntPtr`) not type strings; parenthesize `!(a ?? b)`.
 
-## File Organization
+## Where Things Live
 
-- Aggregators: `/!Running/Lib/All.ahk` and `/!Running/Lib/Classes.ahk` include many libs.
-  - If you add a reusable class/util, update these accordingly (keep ordering stable).
-- GUI prototypes live under `/!Running/GuiTests/` and similar: follow the existing patterns.
+- `Modules/` - structured AHK v2 knowledge, one file per domain (start: `Module_Instructions.md`).
+- `Modules/Supplemental/` - deeper supplemental material.
+- `Lib/` - shared libraries (`_Dark.ahk` dark mode, `cJSON.ahk`, `XHotstring.ahk`, `DarkListView.ahk`).
+- `AHK_Notes/` - examples and patterns by topic.
 
-## Workstyle & Safety
+## Workstyle
 
 - Make surgical changes; don't refactor unrelated code.
-- Prefer small patches over broad rewrites.
-- Before deleting/moving many files, propose the plan first.
-- When unsure about intent, choose the least disruptive option and leave a short note in the PR/summary.
-
-## Shell & Tools
-
-- Use ripgrep for search: `rg "pattern"` from the project root.
-- Limit large file reads/writes; keep patch diffs focused around your changes.
-- Keep PowerShell quoting in mind; prefer single quotes for literal strings.
-
-## Testing & Running
-
-- Typical entry points are under `/!Running/` (e.g., `_!Always.ahk` and app scripts).
-- Validate GUI-related changes by launching the relevant script with AutoHotkey v2.
-- Avoid changing `Microsoft.PowerShell_profile.ps1` unless explicitly requested.
-
-## Assistant Expectations
-
-- Use concise, direct answers by default.
-- Reference files with clickable paths (single file per reference), e.g. `/!Running/Lib/All.ahk:1`.
-- When a task spans steps, maintain an explicit plan and mark progress.
-- Do not enable web search or install tools unless asked.
-
-## Out of Scope (unless asked)
-
-- Changing `.vscode/launch.json` or workspace settings.
-- Large dependency upgrades or external downloads.
-- Global system changes outside this workspace.
+- Validate every `.ahk` edit through the `harness.env` interpreter (`/ErrorStdOut /validate`, or the fork's `check`).
 
 ---
 

@@ -42,7 +42,7 @@ Escalate when detecting: Chromium automation, complex workflows, multi-window co
 
 ```xml
 <headers>
-#Requires AutoHotkey v2.1-alpha.17
+#Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force  
 #include <UIA>
 </headers>
@@ -70,7 +70,20 @@ button := parentEl.WaitElement({Type: "Button"}, 3000)
 
 ; Advanced Matching
 addressEl := windowEl.FindElement({Name: "Address", matchmode: "Substring"})
-userPattern := windowEl.FindElement({Name: "user_\\d+", matchmode: "RegEx"})
+
+; RegEx matching: the pattern is "user_\d+" - a single \d, because backslash is
+; not a string escape in AHK. CAUTION: UIA.ahk FindElement/ElementExist with
+; MatchMode "RegEx" throws "No value was returned." under v2.1-alpha.28+.
+; Prefer a Type-only condition plus client-side filtering:
+userEl := ""
+for el in windowEl.FindElements({Type: "Text"}) {
+    if RegExMatch(el.Name, "^user_\d+$") {
+        userEl := el
+        break
+    }
+}
+; Broken on alpha.28+: windowEl.FindElement({Name: "user_\d+", matchmode: "RegEx"})
+
 thirdButton := windowEl.FindElement({Type: "Button", index: 3})
 
 ; Multiple Elements
@@ -102,8 +115,9 @@ element := UIA.WaitElement(conditions, 5000)
 element.WaitProperty("IsEnabled", true, 3000)
 dialog.WaitNotExist(10000)
 
-; Existence Checks
-if (parentEl.ElementExist({Type: "Button", Name: "Save"})) {
+; Existence Checks - capture the element before acting on it
+saveBtn := parentEl.WaitElement({Type: "Button", Name: "Save"}, 3000)
+if (saveBtn) {
     saveBtn.Invoke()
 }
 
@@ -118,7 +132,10 @@ try {
     if (!element.IsEnabled) element.WaitProperty("IsEnabled", true, 3000)
     element.Invoke()
 } catch Error as e {
-    OutputDebug("UIA Error: " e.Message " | Conditions: " JSON.stringify(conditions))
+    condDesc := ""
+    for key, value in conditions.OwnProps()
+        condDesc .= key "=" value " "
+    OutputDebug("UIA Error: " e.Message " | Conditions: " RTrim(condDesc))
     return false
 }
 
@@ -137,14 +154,18 @@ MsgBox(parentEl.DumpAll())       ; Tree structure
 config := Map("timeout", 5000, "retries", 3)    ; Use Map(), not objects
 elements := ["button1", "button2"]              ; Arrays for sequences
 
-; Event Binding  
-element.OnEvent("Click", this.Handler.Bind(this))  ; Always bind context
-UIA.AddFocusChangedEventHandler(this.Focus.Bind(this))
+; Event Binding - UIA elements have NO OnEvent(); use the UIA event-handler API
+handler := UIA.CreateAutomationEventHandler(this.OnInvoked.Bind(this))  ; Always bind context
+UIA.AddAutomationEventHandler(handler, element, UIA.Event.Invoke_Invoked)
+focusHandler := UIA.CreateEventHandler(this.Focus.Bind(this), "FocusChanged")
+UIA.AddFocusChangedEventHandler(focusHandler)
 
-; Class Structure
+; Class Structure - method bodies on their own lines (one-line braced bodies are a syntax error)
 class UIAAutomator {
-    __New(appId) { this.appId := appId }         ; No "new" keyword
-    AppElement { get => this._element }          ; Property syntax
+    __New(appId) {                  ; No "new" keyword - instantiate with UIAAutomator(...)
+        this.appId := appId
+    }
+    AppElement => this._element     ; Expression property syntax
 }
 
 ; Fat Arrow Restrictions
@@ -162,7 +183,7 @@ complex := this.HandleComplex.Bind(this)        ; Multi-line use binding
 - Async elements: Use `WaitElement(conditions, timeout)` not `FindElement()`
 - Quoted conditions: `{Type: "Button"}` not `{Type: Button}`
 - Pattern safety: Check availability or use try/catch
-- Event binding: `.OnEvent("event", handler.Bind(this))`
+- Event binding: UIA handlers via `UIA.CreateAutomationEventHandler()` + `UIA.AddAutomationEventHandler()`, callbacks bound with `.Bind(this)` (elements have no `.OnEvent()`)
 - Map syntax: `Map("key", value)` not `{key: value}`
 - Error handling: No empty catch blocks, specific UIA strategies
 - Resource cleanup: Remove event handlers in __Delete()
@@ -173,7 +194,7 @@ complex := this.HandleComplex.Bind(this)        ; Multi-line use binding
 
 ```xml
 <essential_template>
-#Requires AutoHotkey v2.1-alpha.17
+#Requires AutoHotkey v2.1-alpha.30
 #include <UIA>
 
 class UIAAutomator {
@@ -196,9 +217,16 @@ class UIAAutomator {
         try {
             return this.appElement.WaitElement(conditions, timeout)
         } catch Error as e {
-            OutputDebug("Element not found: " JSON.stringify(conditions))
+            OutputDebug("Element not found: " this.DescribeConditions(conditions))
             return ""
         }
+    }
+    
+    DescribeConditions(conditions) {
+        desc := ""
+        for key, value in conditions.OwnProps()
+            desc .= key "=" value " "
+        return RTrim(desc)
     }
     
     Safe(elementConditions, action, timeout := 5000) {

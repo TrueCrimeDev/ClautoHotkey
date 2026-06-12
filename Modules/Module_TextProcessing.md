@@ -15,11 +15,11 @@ description: 'File I/O text encoding, GUI control text content, hotstring trigge
 ### String Functions
 | Method/Property | Signature | Notes |
 |-----------------|-----------|-------|
-| `StrLen()` | `StrLen(str)` | Returns character count; equivalent to `str.Length` property |
+| `StrLen()` | `StrLen(str)` | Returns character count — the only way; strings have no `.Length` property (`str.Length` throws PropertyError) |
 | `StrUpper()` | `StrUpper(str)` | Returns uppercase copy — does not modify the original variable |
 | `StrLower()` | `StrLower(str)` | Returns lowercase copy — does not modify the original variable |
 | `StrReplace()` | `StrReplace(haystack, needle, replacement?, caseSense?, &count?, limit?)` | Returns modified string; optional `&count` receives the number of replacements made |
-| `StrSplit()` | `StrSplit(str, delimiters?, padding?, maxParts?)` | Returns an Array of substrings; delimiters may be a string or an Array of strings |
+| `StrSplit()` | `StrSplit(str, delimiters?, omitChars?, maxParts?)` | Returns an Array of substrings; delimiters may be a string or an Array of strings; `omitChars` lists characters to trim from the ends of each part |
 | `InStr()` | `InStr(haystack, needle, caseSense?, startPos?, occurrence?)` | Returns 1-based position of match, or 0 if not found |
 | `SubStr()` | `SubStr(str, startPos, length?)` | 1-based; negative `startPos` counts from string end; omit `length` for remainder of string |
 | `Format()` | `Format(formatStr, values*)` | `{1}` `{2}` positional placeholders; `{1:.2f}` for numeric formatting; `{1:05d}` for zero-padding |
@@ -44,8 +44,8 @@ description: 'File I/O text encoding, GUI control text content, hotstring trigge
 
 ## AHK V2 CONSTRAINTS
 
-- **Backtick (`` ` ``) is AHK v2's only escape character** — never use `\n`, `\t`, or any backslash escape inside AHK string literals; `"hello\n"` is the 7-character literal `hello\n`, not a newline — use `` "`n" `` instead — applies to all string literals including regex patterns assigned as variables.
-- **Regex mode flags use `option)` prefix syntax only** — `"i)pattern"` for case-insensitive; `"im)pattern"` for combined options; placing flags anywhere other than the leading `option)` prefix is silently ignored, producing incorrect match behaviour.
+- **Backtick (`` ` ``) is AHK v2's only escape character for string content** — never use `\n`, `\t`, or any backslash escape to encode characters in a string; `"hello\n"` is the 7-character literal `hello\n`, not a newline — use `` "`n" `` instead. Inside a *regex pattern* string, backslash sequences such as `\d`, `\s`, `\n` are PCRE escapes interpreted by the regex engine and are correct there — the rule covers string content, not regex pattern syntax.
+- **Regex mode flags use the leading `option)` prefix** — `"i)pattern"` for case-insensitive, `"im)pattern"` for combinations; PCRE inline groups like `(?i)` also work. Suffix flags (`"pattern/i"`) are not flags at all — the trailing `/i` becomes two literal pattern characters, and the pattern quietly stops matching what you intended.
 - **RegExMatch output var requires `&` ByRef prefix** — `RegExMatch(str, pat, &match)` not `RegExMatch(str, pat, match)`; without `&`, AHK v2 passes the variable by value, the match object is never populated, and any `match[1]` access throws UnsetError.
 - **Array objects have no `.Join()` method** — join arrays with a `for` loop using a ternary separator, or append a separator in the loop then `RTrim()` the trailing delimiter; calling `.Join()` throws a MethodError.
 - **Single and double quoted strings are identical in behaviour** — both interpret backtick escape sequences in the same way; choose the quote type that minimises escaping: use single quotes when the string contains double quotes, use double quotes when the string contains apostrophes.
@@ -108,8 +108,10 @@ newlineText := "First line`nSecond line"
 ; ✓ `t is the correct AHK v2 tab character — not \t
 tabSeparated := "Name`tAge`tCity"
 
-; ✓ Colon escape required in hotstring definition strings
-hotstringColon := "::web`::website.com"
+; ✓ `: belongs to hotstring DEFINITION LINES, not string literals — in a quoted string,
+;   "`:" is simply ":". On a real hotstring line, escape a colon in the trigger:
+;   ::web`:::website.com   ; trigger "web:" expands to website.com
+colonInString := "key:value"   ; a colon in a string literal needs no escape
 
 ; ✓ Backtick-semicolon escapes a semicolon that would otherwise begin a comment
 literalSemicolon := "Command `; parameter"
@@ -130,7 +132,7 @@ simpleSingleQuotes := "It's a beautiful day"
 pathWithSpaces := '"C:\Program Files\My App\program.exe"'
 
 ; ✗ Backslash has no special meaning in AHK strings — "\n" is literally backslash-n
-; badNewline := "First line\nSecond line"   ; → literal 13-char string, not two lines
+; badNewline := "First line\nSecond line"   ; → literal 23-char string, not two lines
 ```
 
 Essential Escape Sequences:
@@ -186,7 +188,7 @@ extracted := SubStr(text, 3, 5)   ; "Hello" (start at char 3, take 5 chars)
 ; StrReplace(text, "Hello", "Hi")  ; → silent no-op, text still "  Hello World  "
 
 ; ✗ Zero-based index on Array returned by StrSplit
-; first := split[0]                ; → UnsetItemError, AHK v2 arrays are 1-based
+; first := split[0]                ; → IndexError, AHK v2 arrays are 1-based
 ```
 
 ## TIER 4 — Regex Fundamentals: RegExMatch and RegExReplace
@@ -229,16 +231,20 @@ cents := match["cents"]      ; "99"
 ; ✗ Bare output var without & — match object never populated
 ; RegExMatch("123-456-7890", phonePattern, match)  ; → match[1] throws UnsetError
 
-; ✗ Suffix flag syntax from PCRE/Perl/Python — silently ignored in AHK
-; if RegExMatch(email, "^[^@]+@[^@]+\.[^@]+$/i")   ; → flags after / have no effect
+; ✗ Suffix flag syntax from Perl/JS — the trailing /i is matched as LITERAL characters
+; if RegExMatch(email, "^[^@]+@[^@]+\.[^@]+$/i")   ; → "/i" after $ can never match; pattern always fails
+
+; ✓ PCRE inline option groups work — (?i) is a valid alternative to the i) prefix
+; if RegExMatch(email, "(?i)^[^@]+@[^@]+\.[^@]+$")  ; → case-insensitive, same as "i)..."
 ```
 
-Regex Options (prefix syntax only):
+Regex Options (leading `option)` prefix):
 - `i)` → case-insensitive matching
 - `m)` → multiline mode (`^` and `$` match line boundaries)
 - `s)` → single-line mode (`.` matches newlines)
 - `x)` → extended mode (ignore unescaped whitespace, allow `#` comments in pattern)
 - Combine: `"im)pattern"` for both multiline and case-insensitive
+- PCRE inline groups (`(?i)`, `(?im)`) also work; suffix flags (`/i`) do not — they become literal pattern characters
 
 Common Character Classes:
 - `\d` → digit `[0-9]` · `\D` → non-digit
@@ -360,10 +366,12 @@ class EscapeValidator {
         return str
     }
 
+    ; Backtick escaping is lexical — it exists only in AHK source text and is gone by
+    ; runtime. A spawned process never sees backticks; Windows command-line quoting
+    ; uses \" for an embedded quote inside a double-quoted argument.
     static EscapeForCommand(str) {
-        if InStr(str, " ") || InStr(str, "`t")
-            ; FIX 5: replacement '``"' produces the two-char sequence `"
-            return '"' . StrReplace(str, '"', '``"') . '"'
+        if InStr(str, " ") || InStr(str, "`t") || InStr(str, '"')
+            return '"' . StrReplace(str, '"', '\"') . '"'
         return str
     }
 }
@@ -407,11 +415,11 @@ try {
 
 | Pattern | Wrong | Correct | LLM Common Cause |
 |---------|-------|---------|------------------|
-| Backslash escape sequences | `"\n"` `"\t"` in AHK string | `` "`n" `` `` "`t" `` | All major language training data uses `\n`; AHK v2 uses backtick — strongest source of v1/cross-language regression |
-| v1 command-style string ops | `StringReplace, out, str, old, new` | `StrReplace(str, old, new)` | AHK v1 training data; command syntax was dominant and widely documented |
-| Bare output var in RegExMatch | `RegExMatch(str, pat, match)` | `RegExMatch(str, pat, &match)` | AHK v1 used bare variable names for output; v2 `&` ByRef prefix is easy to overlook |
+| Backslash escape sequences | `"\n"` `"\t"` in AHK string | `` "`n" `` `` "`t" `` | All major language training data uses `\n`; AHK v2 uses backtick — strongest source of cross-language regression |
+| Legacy command-style string ops | Comma-delimited command statements with bare output variables | `StrReplace(str, old, new)` and the other v2 string functions | Legacy AutoHotkey command syntax dominates older training data |
+| Bare output var in RegExMatch | `RegExMatch(str, pat, match)` | `RegExMatch(str, pat, &match)` | Legacy AutoHotkey used bare output variable names; the v2 `&` ByRef prefix is easy to overlook |
 | Calling Array .Join() | `arr.Join(", ")` | Loop with ternary separator or `RTrim()` pattern | JavaScript/Python training data; both languages have a native `.join()` method |
-| Wrong regex flag placement | `"pattern/i"` or `"(?i)pattern"` | `"i)pattern"` | Perl/PCRE/JS regex flag syntax is pervasive in training data; AHK option prefix syntax is unique |
+| Suffix regex flags | `"pattern/i"` | `"i)pattern"` prefix, or PCRE inline `(?i)` | Perl/JS suffix-flag syntax is pervasive in training data; a trailing `/i` is not a flag — it becomes the literal pattern characters `/i` and the pattern stops matching |
 | StrReplace result discarded | `StrReplace(str, old, new)` without capture | `str := StrReplace(str, old, new)` | Python `str.replace()` returns in-place in typical usage context; habit of ignoring return value |
 | Excessive escaping instead of quote-switching | `"It\`'s fine"` | `"It's fine"` (no escaping needed) | Unawareness of AHK v2's equivalent single/double quote strings; default to escaping instead |
 

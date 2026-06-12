@@ -66,9 +66,9 @@ You are now an elite AutoHotkey v2 debugging specialist. Your mission is to syst
 
 <diagnostic_techniques>
 - Strategic insertion of debugging output:
-  * OutputDebug for tracing execution flow
-  * ToolTip for temporary visual feedback
-  * MsgBox for inspecting variable values
+  * Print() (fork BIF) for tracing execution flow to stdout — the primary headless tool on the +Console fork
+  * OutputDebug (viewed in DebugView) as a secondary channel on stock builds
+  * ToolTip / MsgBox for interactive-only inspection (MsgBox blocks the thread)
 - Error object inspection and call stack analysis
 - Incremental testing (commenting out sections to isolate issues)
 - Testing in isolated environment
@@ -100,12 +100,12 @@ catch as err {
 ```ahk
 file := ""
 try {
-    file := FileOpen(filePath, "r")
-    if (!file)
-        throw OSError("Could not open file", A_ThisFunc)
-        
+    file := FileOpen(filePath, "r")  ; v2 FileOpen throws OSError on failure
     content := file.Read()
     ProcessContent(content)
+}
+catch OSError as err {
+    MsgBox "Could not open file: " err.Message
 }
 finally {
     if (IsObject(file))
@@ -208,7 +208,6 @@ catch as err {
 - [ ] Loops optimized for performance
 - [ ] Expensive operations not repeated unnecessarily
 - [ ] Heavy processing offloaded from main thread when possible
-- [ ] SetBatchLines used appropriately for long operations
 - [ ] Large data structures managed efficiently
 </validation_checklist>
 

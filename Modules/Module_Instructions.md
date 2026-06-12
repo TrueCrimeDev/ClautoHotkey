@@ -230,7 +230,7 @@ description: 'Foundational AHK v2 engineering standards, OOP design principles, 
 <ahk_syntax_standards>
   <required_headers>
     All generated AHK v2 scripts must begin with these headers unless explicitly instructed otherwise:
-    #Requires AutoHotkey v2.0
+    #Requires AutoHotkey v2.1-alpha.30
     #SingleInstance Force
     #Include Lib/All.ahk  ; Only when needed based on context
   </required_headers>
@@ -267,7 +267,9 @@ description: 'Foundational AHK v2 engineering standards, OOP design principles, 
     Pre-output check — before writing any .OnEvent(), SetTimer(), or callback:
     1. Count lines needed.
     2. If more than 1 line: extract to a separate method + .Bind(this).
-    3. Arrow syntax with { } blocks is not valid in AHK v2 under any circumstance.
+    3. Arrow syntax with { } blocks is a syntax error on every v2 build, including v2.1-alpha.
+       (v2.1-alpha offers the arrowless `(params) { ... }` function expression for
+       multi-statement bodies; project style still prefers named methods + .Bind(this).)
 
     Cross-Language Contamination Prevention:
     - No syntax or patterns from other languages: no const, let, ===,

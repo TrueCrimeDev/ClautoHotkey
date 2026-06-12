@@ -99,8 +99,8 @@ Object literal syntax ({key: value}) causes issues in AutoHotkey v2 for data sto
 </EXPLANATION>
 
 ```cpp
-config := Map("width", 800, "height", 600)
-config := {width: 800, height: 600}
+config := Map("width", 800, "height", 600)   ; CORRECT: Map() for key-value data
+config := {width: 800, height: 600}          ; WRONG: object literal as a data dictionary
 ```
 Curly braces ARE still used for:
 - Function/method bodies
@@ -114,6 +114,7 @@ All GUI code must follow strict object-oriented principles. Never create standal
 </EXPLANATION>
 
 ```cpp
+; CORRECT: GUI encapsulated in a class
 class MyApplication {
     __New() {
         this.gui := Gui("+Resize", "My App")
@@ -128,6 +129,7 @@ class MyApplication {
     }
 }
 
+; WRONG: procedural GUI code with no class encapsulation
 gui := Gui("+Resize", "My App")
 gui.Show()
 ```
@@ -146,9 +148,17 @@ gui := Gui("-MaximizeBox +ToolWindow", "Tool Window")
 gui.BackColor := "White"
 gui.MarginX := 10
 gui.MarginY := 10
-gui.OnEvent("Close", (*) => ExitApp())
-gui.OnEvent("Escape", (*) => gui.Hide())
+gui.OnEvent("Close", GuiCloseHandler)
+gui.OnEvent("Escape", GuiEscapeHandler)
 gui.Show("w400 h300")
+
+GuiCloseHandler(*) {
+    ExitApp()
+}
+
+GuiEscapeHandler(thisGui) {
+    thisGui.Hide()
+}
 ```
 </GUI_CREATION>
 
@@ -160,7 +170,8 @@ Controls are added with .Add[Type]() methods. Store control references for later
 ```cpp
 text := gui.AddText("w200", "Enter your name:")
 edit := gui.AddEdit("w200 vUserName")
-button := gui.AddButton("w100", "Submit").OnEvent("Click", ButtonClick)
+button := gui.AddButton("w100", "Submit")
+button.OnEvent("Click", ButtonClick)
 listbox := gui.AddListBox("w200 h100", ["Item 1", "Item 2", "Item 3"])
 combobox := gui.AddComboBox("w200 Choose1", ["Option A", "Option B"])
 checkbox := gui.AddCheckbox("", "Enable feature")
@@ -215,7 +226,9 @@ class MyGui {
         selectedText := ctrl.GetText(item, 1)
     }
     
-    GuiClose(*) => this.gui.Hide()
+    GuiClose(*) {
+        this.gui.Hide()
+    }
     GuiResize(thisGui, minMax, width, height) {
         
     }
@@ -245,7 +258,7 @@ class ExampleGui {
         this.gui := Gui("+Resize", "gForm Example")
         this.gui.SetFont("s10")
         this.SetupControls()
-        this.gui.OnEvent("Close", (*) => this.gui.Hide())
+        this.gui.OnEvent("Close", this.HandleClose.Bind(this))
         this.gui.Show()
     }
 
@@ -258,13 +271,17 @@ class ExampleGui {
         gu.AddButton(gForm(10, "y+20", 100, 30, "Default"), "Login")
             .OnEvent("Click", this.HandleLogin.Bind(this))
         gu.AddButton(gForm("x+10", "yp", 100, 30), "Cancel")
-            .OnEvent("Click", (*) => this.gui.Hide())
+            .OnEvent("Click", this.HandleClose.Bind(this))
         gu.AddText(gForm(10, "y+20", 210, 20, "Center"), "Ready")
     }
 
     HandleLogin(*) {
         saved := this.gui.Submit()
         MsgBox("Login attempted with: " saved.UserName)
+        this.gui.Hide()
+    }
+
+    HandleClose(*) {
         this.gui.Hide()
     }
 }
@@ -474,7 +491,7 @@ class StatefulGui {
     )
     
     __New() {
-        this.state := this.DEFAULT_STATE.Clone()
+        this.state := StatefulGui.DEFAULT_STATE.Clone()
         this.data := Map()
         this.InitializeGui()
         this.LoadState()
@@ -492,9 +509,9 @@ class StatefulGui {
         this.controls["name"] := this.gui.AddEdit("w200 vName")
         this.controls["age"] := this.gui.AddEdit("w100 Number vAge")
         this.controls["save"] := this.gui.AddButton("w100", "Save")
-            .OnEvent("Click", this.SaveData.Bind(this))
+        this.controls["save"].OnEvent("Click", this.SaveData.Bind(this))
         this.controls["load"] := this.gui.AddButton("w100", "Load")
-            .OnEvent("Click", this.LoadData.Bind(this))
+        this.controls["load"].OnEvent("Click", this.LoadData.Bind(this))
     }
     
     SaveData(*) {
@@ -581,6 +598,11 @@ class FormField {
         this.inputCtrl.Value := value
     }
     
+    AddItems(items) {
+        this.inputCtrl.Add(items)
+        return this
+    }
+    
     SetEnabled(enabled) {
         this.inputCtrl.Enabled := enabled
     }
@@ -654,7 +676,7 @@ class UserForm {
         this.builder.AddField("email", "Email", "Edit", "w200")
         this.builder.AddField("age", "Age", "Edit", "w100 Number")
         this.builder.AddField("gender", "Gender", "ComboBox", "w200")
-            .SetValue(["Male", "Female", "Other"])
+            .AddItems(["Male", "Female", "Other"])
         this.builder.AddField("newsletter", "Subscribe to newsletter", "Checkbox")
         
         this.gui.AddButton("xs y+20 w100", "Submit")
@@ -712,7 +734,7 @@ class FieldValidator {
     
     Required(message := "This field is required") {
         return this.AddRule("required", 
-            (value) => value != "" && value != unset,
+            (value) => value != "",
             message)
     }
     
@@ -799,10 +821,16 @@ class ValidatedForm {
             .Required()
             .Number()
         
+        ; Bind captures each validator per iteration - a fat-arrow closure
+        ; here would share the loop variable and validate only the last field
         for name, validator in this.validators {
             this.builder.fields[name].OnEvent("Change", 
-                (*) => validator.Validate())
+                this.ValidateOne.Bind(this, validator))
         }
+    }
+    
+    ValidateOne(validator, *) {
+        validator.Validate()
     }
     
     SubmitForm(*) {
@@ -837,7 +865,7 @@ class ResourceManagedGui {
         this.gui := ""
         this.controls := Map()
         this.eventHandlers := []
-        this.timers := []
+        this.statusTick := ""
         this.isDestroyed := false
         this.Initialize()
     }
@@ -856,8 +884,9 @@ class ResourceManagedGui {
         this.controls["submit"] := this.gui.AddButton("w100", "Submit")
         this.RegisterEventHandler(this.controls["submit"], "Click", this.HandleSubmit.Bind(this))
         
-        this.statusTimer := Timer(() => this.UpdateStatus(), 1000)
-        this.timers.Push(this.statusTimer)
+        ; Store the bound func once so the same object can stop the timer later
+        this.statusTick := this.UpdateStatus.Bind(this)
+        SetTimer(this.statusTick, 1000)
     }
     
     RegisterEventHandler(control, event, handler) {
@@ -888,26 +917,20 @@ class ResourceManagedGui {
             
         this.isDestroyed := true
         
-        for timer in this.timers {
-            if timer
-                timer.Stop()
+        if this.statusTick {
+            SetTimer(this.statusTick, 0)
+            this.statusTick := ""
         }
-        this.timers := []
         
-        for eventInfo in this.eventHandlers {
-            try {
-                
-            } catch {
-                
-            }
-        }
+        for eventInfo in this.eventHandlers
+            eventInfo["control"].OnEvent(eventInfo["event"], eventInfo["handler"], 0)
         this.eventHandlers := []
         
         if this.gui {
             try {
-                this.gui.Close()
-            } catch {
-                
+                this.gui.Destroy()
+            } catch Error as e {
+                OutputDebug("GUI destroy failed during cleanup: " . e.Message)
             }
             this.gui := ""
         }
@@ -937,7 +960,7 @@ class UserModel {
     }
     
     SetData(key, value) {
-        oldValue := this.data.Get(key, unset)
+        oldValue := this.data.Has(key) ? this.data[key] : ""
         this.data[key] := value
         this.NotifyObservers(key, value, oldValue)
     }
@@ -1045,7 +1068,9 @@ class UserView {
     
     ShowErrors(errors) {
         if errors.Length > 0 {
-            errorText := "Errors:`n" . errors.Join("`n")
+            errorText := "Errors:"
+            for err in errors
+                errorText .= "`n" . err
             MsgBox(errorText, "Validation Errors", "Icon!")
         }
     }

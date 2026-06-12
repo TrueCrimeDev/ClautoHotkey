@@ -24,7 +24,10 @@ Generate complete, production-quality GUIs from natural language descriptions.
 3. **Plan** the layout mathematically (compute all positions)
 4. **Generate** a complete class-based GUI
 5. **Validate** with `check /Diag=json`
-6. **Run** briefly to capture a screenshot (optional)
+6. **Observe** (optional): run the GUI, then capture it with `Tools/CaptureWindow.ahk` —
+   `AutoHotkey64.exe Tools/CaptureWindow.ahk <pid|wintitle> [outPng] [zoom] [print|screen]`
+   (`print` mode works occluded; `screen` mode shows exact pixels incl. GetDC overpaints).
+   Read the PNG to verify layout, then close the GUI.
 
 ## GUI Template
 

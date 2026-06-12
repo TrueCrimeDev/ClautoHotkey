@@ -18,7 +18,7 @@ description: 'Advanced meta-functions (__Get/__Set/__Call/__Delete/__Enum), mixi
 | `.HasMethod()` | `.HasMethod(name, paramCount?)` | Returns 1 if a callable method exists; optionally validates expected arity |
 | `.HasBase()` | `.HasBase(baseObj)` | Returns 1 if `baseObj` appears anywhere in the prototype chain |
 | `.GetMethod()` | `.GetMethod(name, paramCount?)` | Returns the method Func object; throws MethodError if not found |
-| `.Base` | `.Base` | Readable and writable reference to the object's direct prototype |
+| `.Base` | `.Base` | Reference to the object's direct prototype — readable and writable on instances; a Class object's base is read-only on alpha.27+ (`ClassObj.Base := X` and `ObjSetBase(ClassObj, X)` both throw) |
 
 ### Object (instance methods — available on plain objects and class instances)
 | Method / Property | Signature | Notes |
@@ -51,11 +51,11 @@ description: 'Advanced meta-functions (__Get/__Set/__Call/__Delete/__Enum), mixi
 
 ## AHK V2 CONSTRAINTS
 
-- `ClassName()` — never `new ClassName()` — the `new` keyword was removed in AHK v2 and throws TypeError; every class instantiation in v2 is a plain function call.
+- `ClassName()` — never `new ClassName()` — there is no `new` keyword in AHK v2; `new Person(...)` parses as a read of an unassigned variable named `new` (load-time warning, then an UnsetError-family failure at runtime); every class instantiation in v2 is a plain function call.
 - Arrow syntax (`=>`) is valid only for single-expression descriptor bodies — any descriptor body requiring more than one statement must use a named function reference; mixing arrow with a brace block (`=> { ... }`) is a parse error.
 - Class body property descriptors use `get => expr` / `set { ... }` syntax — do NOT write `set => { ... }` (arrow + block); this form is rejected by the AHK v2 parser inside class bodies.
 - Use `Map()` for key-value data storage, not object literals — object literals lack `.Has()`, `.Get()`, and `.Delete()`, making safe missing-key access impossible.
-- `ObjBindMethod()` or `.Bind(this)` is required whenever passing a method as a callback — a raw `this.Method` reference passed to `SetTimer` or `OnEvent` loses `this` context at invocation time, causing UnsetError inside the method body.
+- `ObjBindMethod()` or `.Bind(this)` is required whenever passing a method as a callback — a raw `this.Method` reference passed to `SetTimer` or `OnEvent` is invoked as a bare Func with zero arguments, so the method's hidden `this` parameter goes unfilled and the call throws a missing-parameter Error before the body ever runs.
 - Prototype extension via `DefineProp` is global — it applies to every instance of that type across the entire script; use judiciously to avoid hidden coupling between unrelated call sites.
 
 Safe-access priority order for object property reads:
@@ -67,10 +67,10 @@ Safe-access priority order for object property reads:
 
 ✗ / ✓ pairs:
 
-- ✗ `val := obj.missingKey` — UnsetError if property not set
+- ✗ `val := obj.missingKey` — PropertyError if the property does not exist
 - ✓ `val := obj.HasProp("missingKey") ? obj.missingKey : defaultVal` — safe, never throws
 
-- ✗ `john := new Person("John", 30)` — TypeError, `new` removed in AHK v2
+- ✗ `john := new Person("John", 30)` — `new` does not exist in v2; parses as the unassigned variable `new` (load warning + UnsetError-family failure at runtime)
 - ✓ `john := Person("John", 30)` — correct v2 instantiation
 
 - ✗ `obj.DefineProp("x", {set: (this, v) => { if v < 0 ... }})` — parse error, arrow + block
@@ -82,14 +82,14 @@ Safe-access priority order for object property reads:
 ## TIER 1 — Object Fundamentals, Creation, and the Any Root
 > METHODS COVERED: Type · HasProp · HasMethod · Map (constructor) · DefineProp (class body __New)
 
-Every value in AHK v2 — strings, integers, functions, class instances — is an object inheriting from the `Any` root class. This tier establishes the object hierarchy, the introspection methods available on every value, and the two primary creation forms: class instantiation (no `new`) and plain object literals for ad-hoc structures.
+Every value in AHK v2 — strings, integers, functions, class instances — derives from the `Any` root in the type hierarchy, but primitives are not objects: `IsObject(42)` returns 0. What they share is the `Any` introspection surface (`Type()`, `.HasProp()`, `.HasMethod()`, the `is` operator). This tier establishes that hierarchy, the introspection methods available on every value, and the two primary creation forms: class instantiation (no `new`) and Map construction for data records.
 ```ahk
-; ✓ Type() reveals the runtime type of any value — everything is a typed object in AHK v2
+; ✓ Type() reveals the runtime type of any value — every value sits in the Any hierarchy
 greeting := "Hello"
 MsgBox(Type(greeting))   ; "String"
 
 number := 42
-MsgBox(Type(number))     ; "Integer" — primitives are typed objects, not raw values
+MsgBox(Type(number))     ; "Integer" — derives from Any, but is NOT an object: IsObject(42) = 0
 
 ; ✓ HasProp/HasMethod from Any are available on every value — never throw, return 0 or 1
 obj := {}
@@ -111,21 +111,23 @@ class Person {
 john := Person("John", 30)   ; Correct v2 form — no 'new'
 john.Greet()
 
-; ✓ Object literal for ad-hoc structured data with known, fixed properties
-person := {
-    name: "John",
-    age:  30
-}
+; ✓ Map for data records — build empty, assign each field individually
+person := Map()
+person["name"] := "John"
+person["age"]  := 30
 
-; ✓ Map() for dynamic key-value storage — provides .Has(), .Get(), .Delete()
-settings := Map("theme", "dark", "volume", 80)
+; ✓ Same pattern for key-value settings — Map provides .Has(), .Get(), .Delete()
+settings := Map()
+settings["theme"]  := "dark"
+settings["volume"] := 80
 
-; ✗ 'new' keyword removed — TypeError at runtime
-; john := new Person("John", 30)   ; → TypeError
+; ✗ No 'new' keyword in v2 — parses as a read of the unassigned variable `new`
+; john := new Person("John", 30)   ; → load-time warning, then UnsetError-family failure
 
-; ✗ Object literal for data with unknown or dynamic keys — no safe missing-key access
+; ✗ Object literal as a data record — banned ({} is for DefineProp descriptors and API
+;   option bags only), and bracket access does not work on plain Objects
 ; data := {theme: "dark"}
-; MsgBox(data["nonexistent"])      ; → UnsetError
+; MsgBox(data["nonexistent"])      ; → PropertyError: Object has no property named "__Item"
 ```
 
 ## TIER 2 — Property Descriptors: get, set, call, and DefineProp
@@ -278,8 +280,8 @@ ObjDefineProp(String.Prototype, "Reverse", {call: ReverseStr})
 text := "Hello World"
 MsgBox("Reversed: " . text.Reverse())   ; "dlroW olleH"
 
-; ✗ Wrong prototype extension syntax — String.Prototype does not inherit from Object.Prototype and has no DefineProp
-; Object().DefineProp(String.Prototype, "Reverse", {call: ReverseStr})   ; → No effect on String.Prototype
+; ✗ Wrong prototype extension syntax — DefineProp takes (name, descriptor), not a target object
+; Object().DefineProp(String.Prototype, "Reverse", {call: ReverseStr})   ; → Error: Too many parameters passed to function
 
 ; Warning: Prototype extension is global — affects every call site using that type in the script
 ```
@@ -311,8 +313,9 @@ class Timer {
 timer := Timer("MyTimer")
 timer.Start()
 
-; ✗ Unbound method — 'this' inside Tick() is undefined at callback time
-; SetTimer(this.Tick, 1000)   ; → UnsetError when Tick() accesses this.name
+; ✗ Unbound method — SetTimer fires the raw Func with zero arguments, so the method's
+;   hidden 'this' parameter goes unfilled; the call fails before the body ever runs
+; SetTimer(this.Tick, 1000)   ; → missing-parameter Error at callback time
 
 ; ✓ GUI event binding — bind every OnEvent handler so class methods access instance state
 class SimpleGUI {
@@ -334,7 +337,7 @@ class SimpleGUI {
 
     OnSubmit(*) {
         name := this.nameEdit.Value
-        if (name.Length > 0) {
+        if (StrLen(name) > 0) {
             MsgBox("Hello, " . name . "!")
             this.nameEdit.Value := ""
         }
@@ -526,10 +529,10 @@ try {
 
 | Pattern | Wrong | Correct | LLM Common Cause |
 |---------|-------|---------|------------------|
-| `new` keyword for instantiation | `new Person("John", 30)` | `Person("John", 30)` | AHK v1 and every mainstream OOP language require `new`; v2 dropped it silently |
-| Object literal as data container | `{key: val}` for dynamic storage | `Map("key", val)` | AHK v1 used object literals for all key-value data; v2 Map() is the designated replacement with full API |
+| `new` keyword for instantiation | `new Person("John", 30)` | `Person("John", 30)` | Older AutoHotkey and every mainstream OOP language require `new`; v2 has no such keyword — `new` parses as an unassigned variable |
+| Object literal as data container | `{key: val}` for dynamic storage | `m := Map()` then `m["key"] := val` per key | Older AutoHotkey used object literals for all key-value data; v2 Map() is the designated replacement with full API |
 | Arrow + block in DefineProp descriptor | `set: (this, v) => { if v < 0 ... }` | Named function reference for any multi-line body | JS/Python lambda syntax allows multi-line bodies; AHK v2 arrow syntax does not — mixed-language training data causes this |
-| Unbound method as callback | `SetTimer(this.Tick, 1000)` | `SetTimer(this.Tick.Bind(this), 1000)` | AHK v1 percent-expression syntax obscured binding mechanics; LLMs trained on v1 omit `.Bind()` entirely |
+| Unbound method as callback | `SetTimer(this.Tick, 1000)` | `SetTimer(this.Tick.Bind(this), 1000)` | Legacy AutoHotkey percent-expression syntax obscured binding mechanics; older training data omits `.Bind()` entirely |
 | `IsObject()` for type checking | `if IsObject(x)` | `if x is Object` or `Type(x) != "Integer"` | `IsObject()` still exists in v2; however `is Object` offers chain-aware type checking and `Type()` returns the exact class name, making them more precise alternatives for new v2 code |
 | Wrong prototype extension site | `Object().DefineProp(String.Prototype, "x", d)` | `ObjDefineProp(String.Prototype, "x", d)` where `ObjDefineProp := Object.Prototype.DefineProp` | `String` is not a subclass of `Object` — `String.Prototype` has no `DefineProp` instance method; the underlying implementation must be extracted from `Object.Prototype.DefineProp` and called with `String.Prototype` as the explicit receiver |
 | `set => { }` block in class body | `Width { set => { this._w := value } }` | `Width { set { this._w := value } }` | Conflating DefineProp arrow descriptor syntax with class body `set` block syntax — two different parse contexts |

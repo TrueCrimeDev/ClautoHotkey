@@ -45,7 +45,7 @@ Do not name local variables with the same name as a global variable
 <REQUIRED_HEADERS>
 
 ```cpp
-#Requires AutoHotkey v2.1-alpha.16
+#Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 #Include Lib/All.ahk  ; Only when needed
 ```
@@ -102,7 +102,7 @@ Control flow blocks
 <REQUIRED_CODE_HEADER>
 
 ```cpp
-#Requires AutoHotkey v2.1-alpha.17
+#Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 #Include Lib/All.ahk
 ```
@@ -134,7 +134,7 @@ class Config {
 
 <IMPROPER_DATA_STORAGE>
 ```cpp
-config := {key: "value", error: "message"}` ; CORRECT
+config := {key: "value", error: "message"} ; INCORRECT - object literal used for data storage
 ```
 OR
 ```cpp
@@ -344,12 +344,15 @@ class MyApp {
     Users := []
 
     AddUser(name) {
-        this.Users.Push({ Name: name, LoginTime: A_Now })
+        user := Map()
+        user["Name"] := name
+        user["LoginTime"] := A_Now
+        this.Users.Push(user)
     }
 
     ShowUsers() {
         for index, user in this.Users
-            MsgBox "User " index ": " user.Name " logged in at " user.LoginTime
+            MsgBox "User " index ": " user["Name"] " logged in at " user["LoginTime"]
     }
 }
 ```
@@ -432,7 +435,7 @@ fruits := Map(
     </FUNCTION_CLASS_SYSTEM_EXPLANATION>
     <FUNCTION_CLASS_SYSTEM_EXAMPLE>
 ```cpp
-#Requires AutoHotkey v2
+#Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 
 ; Traditional function
@@ -443,8 +446,8 @@ MyFunction() {
 ; Arrow function
 callback := () => MsgBox("Called Arrow Function")
 
-; Function in an object
-obj := { method: (a, b) => a + b }
+; Callbacks stored in a Map (keyed by name - not data storage, so no object literal)
+handlers := Map("add", (a, b) => a + b)
 
 ; Example class
 class Example {
@@ -455,7 +458,7 @@ class Example {
         this.data := "instance"
         MyFunction()
         callback()
-        result := obj.method(2, 3)
+        result := handlers["add"](2, 3)
         MsgBox "Result: " result
     }
 }

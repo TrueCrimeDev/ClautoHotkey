@@ -29,7 +29,7 @@ Last 5 entries in the error log (if any):
 
 ## 4. Read these
 
-- `CLAUDE.md` — project doctrine: interpreter rule, demo location, banner rule, DarkModeModular canonical, three-layer routing
+- `CLAUDE.md` — project doctrine: interpreter rule, demo location, banner rule, _Dark.ahk canonical, three-layer routing
 - `.claude/hooks/ahk-session-primer.sh` — the skill/agent routing table (already injected at session start)
 
 ## After priming
