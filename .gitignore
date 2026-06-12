@@ -54,3 +54,4 @@ harness.env
 .claude/session-events.jsonl
 .verify.*
 .test-tmp.*
+.history/

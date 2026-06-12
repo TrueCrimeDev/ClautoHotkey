@@ -241,7 +241,6 @@
     "AutoHotkey2.CompleteFunctionParens": true,
     "AutoHotkey2.Warn.LocalSameAsGlobal": true,
     "AutoHotkey2.Warn.VarUnset": true,
-    "AutoHotkey2.Syntaxes": "C:\\Users\\uphol\\.vscode\\extensions\\thqby.vscode-autohotkey2-lsp-2.7.2\\syntaxes",
     "AutoHotkey2.DebugConfiguration": {
       "port": "9002-9100",
       "useAnnounce": "detail",
