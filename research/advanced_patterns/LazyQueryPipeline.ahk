@@ -48,19 +48,6 @@ class Query {
         return values
     }
 
-    First(predicate := unset) {
-        if IsSet(predicate) {
-            for value in this {
-                if predicate.Call(value)
-                    return value
-            }
-        } else {
-            for value in this
-                return value
-        }
-        throw UnsetItemError("Sequence contains no matching item.")
-    }
-
     __Enum(numVars) {
         if numVars != 1
             throw ValueError("Query supports one loop variable.", -1, numVars)
@@ -128,8 +115,9 @@ class MapIterator {
     }
 
     Call(&value) {
-        item := unset
-        if !this.Inner(&item)
+        item := 0
+        inner := this.Inner
+        if !inner(&item)
             return false
 
         this.Index += 1
@@ -157,9 +145,10 @@ class FilterIterator {
     }
 
     Call(&value) {
+        inner := this.Inner
         loop {
-            item := unset
-            if !this.Inner(&item)
+            item := 0
+            if !inner(&item)
                 return false
 
             this.Index += 1
@@ -192,7 +181,8 @@ class TakeIterator {
         if this.Remaining <= 0
             return false
 
-        if !this.Inner(&value)
+        inner := this.Inner
+        if !inner(&value)
             return false
 
         this.Remaining -= 1
@@ -219,17 +209,18 @@ class SkipIterator {
     }
 
     Call(&value) {
+        inner := this.Inner
         if !this.Ready {
             while this.Remaining > 0 {
-                ignored := unset
-                if !this.Inner(&ignored)
+                ignored := 0
+                if !inner(&ignored)
                     return false
                 this.Remaining -= 1
             }
             this.Ready := true
         }
 
-        return this.Inner(&value)
+        return inner(&value)
     }
 }
 
@@ -254,8 +245,9 @@ class ScanIterator {
     }
 
     Call(&value) {
-        item := unset
-        if !this.Inner(&item)
+        item := 0
+        inner := this.Inner
+        if !inner(&item)
             return false
 
         this.Index += 1
@@ -287,9 +279,10 @@ class DistinctIterator {
     }
 
     Call(&value) {
+        inner := this.Inner
         loop {
-            item := unset
-            if !this.Inner(&item)
+            item := 0
+            if !inner(&item)
                 return false
 
             this.Index += 1
@@ -316,21 +309,21 @@ Print(text) {
 }
 
 range := RangeSource(1, 1)
-result := Query.From(range)
+result := (Query.From(range)
     .Map((value, index) => value * value)
     .Filter((value, index) => Mod(value, 3) = 0)
     .Scan(0, (total, value, index) => total + value)
     .Take(5)
-    .ToArray()
+    .ToArray())
 
 Print("pipeline=" Join(result))
 Print("source_produced=" range.Produced)
 
-unique := Query.From([1, 1, 2, 3, 2, 4, 4, 5])
+unique := (Query.From([1, 1, 2, 3, 2, 4, 4, 5])
     .Distinct()
     .Skip(1)
     .Take(3)
-    .ToArray()
+    .ToArray())
 Print("distinct_slice=" Join(unique))
 
 bounded := Query.Range(10, -2, 2).ToArray()
