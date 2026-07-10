@@ -83,11 +83,15 @@ class ReactiveNode {
     }
 
     Subscribe(callback, emitCurrent := false) {
+        currentValue := 0
+        if emitCurrent
+            currentValue := this.Value
+
         subscription := Subscription(this, callback)
         this.Subscribers[subscription] := callback
 
         if emitCurrent
-            callback.Call(this.Value, unset)
+            callback.Call(currentValue)
 
         return subscription
     }
@@ -103,12 +107,13 @@ class ReactiveNode {
             snapshot.Push([subscription, callback])
 
         for pair in snapshot {
-            if pair[1].Active {
-                if IsSet(oldValue)
-                    pair[2].Call(value, oldValue)
-                else
-                    pair[2].Call(value, unset)
-            }
+            if !pair[1].Active
+                continue
+
+            if IsSet(oldValue)
+                pair[2].Call(value, oldValue)
+            else
+                pair[2].Call(value)
         }
     }
 
@@ -238,16 +243,17 @@ class Computed extends ReactiveNode {
         this.Dependencies := this.NewDependencies
         this.NewDependencies := 0
         oldValue := this._Value
-        changed := !this.HasValue || !this._Same(oldValue, nextValue)
+        hadValue := this.HasValue
+        changed := !hadValue || !this._Same(oldValue, nextValue)
         this._Value := nextValue
         this.HasValue := true
         this.Dirty := false
 
         if changed && this.Subscribers.Count > 0 {
-            if this.HasValue
+            if hadValue
                 this._Notify(nextValue, oldValue)
             else
-                this._Notify(nextValue, unset)
+                this._Notify(nextValue)
         }
 
         return nextValue
@@ -270,7 +276,7 @@ discount := Signal(0.10)
 subtotal := Computed(() => price.Value * quantity.Value)
 total := Computed(() => Round(subtotal.Value * (1 - discount.Value), 2))
 notifications := []
-subscription := total.Subscribe((value, oldValue) => notifications.Push(value), true)
+subscription := total.Subscribe((value, oldValue := unset) => notifications.Push(value), true)
 
 ReactiveRuntime.Batch(() => (price.Value := 120, quantity.Value := 3))
 discount.Value := 0.20
