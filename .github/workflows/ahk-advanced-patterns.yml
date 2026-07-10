@@ -84,11 +84,11 @@ jobs:
 
           $expected = @{}
           $expected["ReactiveEngine.ahk"] = @(
-              "initial=180",
-              "after_batch=324",
-              "after_discount=288",
+              "initial=180.00",
+              "after_batch=324.00",
+              "after_discount=288.00",
               "notification_count=3",
-              "total=288",
+              "total=288.00",
               "cycle_detected=1"
           )
           $expected["LazyQueryPipeline.ahk"] = @(
