@@ -1,0 +1,136 @@
+name: AHK esoteric enum research
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify ${{ matrix.label }}
+    runs-on: windows-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: v2.0.26
+            version: 2.0.26
+            url: https://github.com/AutoHotkey/AutoHotkey/releases/download/v2.0.26/AutoHotkey_2.0.26.zip
+          - label: v2.1-alpha.30
+            version: 2.1-alpha.30
+            url: https://github.com/AutoHotkey/AutoHotkey/releases/download/v2.1-alpha.30/AutoHotkey_2.1-alpha.30.zip
+
+    steps:
+      - name: Check out probes
+        uses: actions/checkout@v4
+
+      - name: Download interpreter
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $zip = Join-Path $env:RUNNER_TEMP "autohotkey-${{ matrix.label }}.zip"
+          $dir = Join-Path $env:RUNNER_TEMP "autohotkey-${{ matrix.label }}"
+          Invoke-WebRequest -Uri "${{ matrix.url }}" -OutFile $zip
+          Expand-Archive -Path $zip -DestinationPath $dir -Force
+          $exe = Get-ChildItem -Path $dir -Filter AutoHotkey64.exe -Recurse | Select-Object -First 1 -ExpandProperty FullName
+          if (-not $exe) {
+              throw "AutoHotkey64.exe was not found after extraction."
+          }
+          "AHK_EXE=$exe" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "Downloaded ${{ matrix.label }}"
+          "sha256=$((Get-FileHash -Path $zip -Algorithm SHA256).Hash)"
+
+      - name: Execute and verify probes
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $transcript = Join-Path $env:RUNNER_TEMP "transcript-${{ matrix.label }}.txt"
+          "target=${{ matrix.label }}" | Set-Content -Path $transcript -Encoding utf8
+
+          $expected = @{}
+          $expected["01_minimal_lazy_take.ahk"] = @(
+              "before=0",
+              "values=1,4,9,16,25",
+              "produced=5",
+              "enumerators=1"
+          )
+          $expected["02_edge_counts.ahk"] = @(
+              "zero_length=0",
+              "after_zero_produced=0",
+              "after_zero_enumerators=0",
+              "negative_length=0",
+              "after_negative_produced=0",
+              "after_negative_enumerators=0",
+              "one_values=1",
+              "after_one_produced=1",
+              "after_one_enumerators=1"
+          )
+          $expected["03_reenumeration.ahk"] = @(
+              "first=1,4,9",
+              "second=1,4,9",
+              "produced=6",
+              "enumerators=2"
+          )
+          $expected["04_two_variable_interaction.ahk"] = @(
+              "pairs=1:1,2:4,3:9,4:16",
+              "produced=4",
+              "enumerators=1",
+              "last_num_vars=2"
+          )
+          $expected["05_nested_composition.ahk"] = @(
+              "pairs=1:1,1:4",
+              "produced=3",
+              "enumerators=2"
+          )
+          $expected["06_large_bounded_run.ahk"] = @(
+              "count=100000",
+              "last=10000000000",
+              "produced=100000",
+              "enumerators=1"
+          )
+
+          $scripts = Get-ChildItem -Path "research/ahk_esoteric_enum" -Filter "*.ahk" | Sort-Object Name
+          if ($scripts.Count -ne 6) {
+              throw "Expected 6 probes, found $($scripts.Count)."
+          }
+
+          foreach ($script in $scripts) {
+              $header = "=== $($script.Name) ==="
+              $header | Tee-Object -FilePath $transcript -Append
+
+              $output = @(& $env:AHK_EXE /ErrorStdOut $script.FullName 2>&1 | ForEach-Object { $_.ToString() })
+              $exitCode = $LASTEXITCODE
+              $output | Tee-Object -FilePath $transcript -Append
+              "exit_code=$exitCode" | Tee-Object -FilePath $transcript -Append
+
+              if ($exitCode -ne 0) {
+                  throw "$($script.Name) exited with code $exitCode."
+              }
+
+              $versionLine = $output | Where-Object { $_ -like "version=*" } | Select-Object -First 1
+              if ($versionLine -ne "version=${{ matrix.version }}") {
+                  throw "$($script.Name) reported '$versionLine', expected 'version=${{ matrix.version }}'."
+              }
+
+              foreach ($line in $expected[$script.Name]) {
+                  if ($output -notcontains $line) {
+                      throw "$($script.Name) did not emit expected line '$line'."
+                  }
+              }
+          }
+
+          "All six probes matched expected output on ${{ matrix.label }}." | Tee-Object -FilePath $transcript -Append
+          Copy-Item -Path $transcript -Destination "transcript-${{ matrix.label }}.txt"
+
+      - name: Upload transcript
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: transcript-${{ matrix.label }}
+          path: transcript-${{ matrix.label }}.txt
+          if-no-files-found: warn
