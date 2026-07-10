@@ -26,16 +26,18 @@ jobs:
             url: https://www.autohotkey.com/download/2.1/AutoHotkey_2.1-alpha.30.zip
 
     steps:
-      - name: Check out probes
-        uses: actions/checkout@v4
-
       - name: Download interpreter
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
           $zip = Join-Path $env:RUNNER_TEMP "autohotkey-${{ matrix.label }}.zip"
           $dir = Join-Path $env:RUNNER_TEMP "autohotkey-${{ matrix.label }}"
-          Invoke-WebRequest -Uri "${{ matrix.url }}" -OutFile $zip
+          & curl.exe --fail --location --retry 3 --user-agent "Mozilla/5.0" "${{ matrix.url }}" --output $zip
+          if ($LASTEXITCODE -ne 0) {
+              throw "curl failed with exit code $LASTEXITCODE for ${{ matrix.url }}"
+          }
+          "downloaded_bytes=$((Get-Item $zip).Length)"
+          "sha256=$((Get-FileHash -Path $zip -Algorithm SHA256).Hash)"
           Expand-Archive -Path $zip -DestinationPath $dir -Force
           $exe = Get-ChildItem -Path $dir -Filter AutoHotkey64.exe -Recurse | Select-Object -First 1 -ExpandProperty FullName
           if (-not $exe) {
@@ -43,7 +45,9 @@ jobs:
           }
           "AHK_EXE=$exe" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           "Downloaded ${{ matrix.label }}"
-          "sha256=$((Get-FileHash -Path $zip -Algorithm SHA256).Hash)"
+
+      - name: Check out probes
+        uses: actions/checkout@v4
 
       - name: Execute and verify probes
         shell: pwsh
