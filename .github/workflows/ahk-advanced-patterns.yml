@@ -83,7 +83,7 @@ jobs:
           "target=${{ matrix.label }}" | Set-Content -Path $transcript -Encoding utf8
 
           $expected = @{}
-          $expected["ReactiveGraph.ahk"] = @(
+          $expected["ReactiveEngine.ahk"] = @(
               "initial=180",
               "after_batch=324",
               "after_discount=288",
@@ -98,25 +98,22 @@ jobs:
               "descending=10,8,6,4,2"
           )
 
-          $scripts = Get-ChildItem -Path "harness\research\advanced_patterns" -Filter "*.ahk" | Sort-Object Name
-          if ($scripts.Count -ne 2) {
-              throw "Expected 2 scripts, found $($scripts.Count)."
-          }
-
-          foreach ($script in $scripts) {
-              "=== $($script.Name) ===" | Tee-Object -FilePath $transcript -Append
+          $scriptNames = @("LazyQueryPipeline.ahk", "ReactiveEngine.ahk")
+          foreach ($scriptName in $scriptNames) {
+              $script = Get-Item "harness\research\advanced_patterns\$scriptName"
+              "=== $scriptName ===" | Tee-Object -FilePath $transcript -Append
               $output = @(& $env:AHK_EXE /ErrorStdOut $script.FullName 2>&1 | ForEach-Object { $_.ToString() })
               $exitCode = $LASTEXITCODE
               $output | Tee-Object -FilePath $transcript -Append
               "exit_code=$exitCode" | Tee-Object -FilePath $transcript -Append
 
               if ($exitCode -ne 0) {
-                  throw "$($script.Name) exited with code $exitCode."
+                  throw "$scriptName exited with code $exitCode."
               }
 
-              foreach ($line in $expected[$script.Name]) {
+              foreach ($line in $expected[$scriptName]) {
                   if ($output -notcontains $line) {
-                      throw "$($script.Name) did not emit expected line '$line'."
+                      throw "$scriptName did not emit expected line '$line'."
                   }
               }
           }
