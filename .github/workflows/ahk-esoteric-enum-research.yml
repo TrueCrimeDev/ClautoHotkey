@@ -23,7 +23,7 @@ jobs:
             url: https://github.com/AutoHotkey/AutoHotkey/releases/download/v2.0.26/AutoHotkey_2.0.26.zip
           - label: v2.1-alpha.30
             version: 2.1-alpha.30
-            url: https://github.com/AutoHotkey/AutoHotkey/releases/download/v2.1-alpha.30/AutoHotkey_2.1-alpha.30.zip
+            url: https://www.autohotkey.com/download/2.1/AutoHotkey_2.1-alpha.30.zip
 
     steps:
       - name: Check out probes
