@@ -12,27 +12,43 @@ permissions:
 jobs:
   verify:
     name: Verify ${{ matrix.label }}
-    runs-on: windows-latest
-    timeout-minutes: 10
+    runs-on: windows-2022
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
         include:
           - label: v2.0.26
             version: 2.0.26
+            mode: download
             url: https://github.com/AutoHotkey/AutoHotkey/releases/download/v2.0.26/AutoHotkey_2.0.26.zip
           - label: v2.1-alpha.30
             version: 2.1-alpha.30
-            url: https://www.autohotkey.com/download/2.1/AutoHotkey_2.1-alpha.30.zip
+            mode: build
+            ref: v2.1-alpha.30
 
     steps:
-      - name: Download interpreter
+      - name: Check out probes
+        uses: actions/checkout@v4
+        with:
+          path: harness
+
+      - name: Check out AutoHotkey source
+        if: matrix.mode == 'build'
+        uses: actions/checkout@v4
+        with:
+          repository: AutoHotkey/AutoHotkey
+          ref: ${{ matrix.ref }}
+          path: autohotkey-src
+
+      - name: Download stable interpreter
+        if: matrix.mode == 'download'
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
           $zip = Join-Path $env:RUNNER_TEMP "autohotkey-${{ matrix.label }}.zip"
           $dir = Join-Path $env:RUNNER_TEMP "autohotkey-${{ matrix.label }}"
-          & curl.exe --fail --location --retry 3 --user-agent "Mozilla/5.0" "${{ matrix.url }}" --output $zip
+          & curl.exe --fail --location --retry 3 "${{ matrix.url }}" --output $zip
           if ($LASTEXITCODE -ne 0) {
               throw "curl failed with exit code $LASTEXITCODE for ${{ matrix.url }}"
           }
@@ -44,10 +60,25 @@ jobs:
               throw "AutoHotkey64.exe was not found after extraction."
           }
           "AHK_EXE=$exe" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          "Downloaded ${{ matrix.label }}"
 
-      - name: Check out probes
-        uses: actions/checkout@v4
+      - name: Build alpha interpreter
+        if: matrix.mode == 'build'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $msbuild = & $vswhere -latest -requires Microsoft.Component.MSBuild -find "MSBuild\**\Bin\MSBuild.exe" | Select-Object -First 1
+          if (-not $msbuild) {
+              throw "MSBuild was not found."
+          }
+          & $msbuild "autohotkey-src\AutoHotkeyx.sln" /m /p:Configuration=Release /p:Platform=x64 /verbosity:minimal
+          if ($LASTEXITCODE -ne 0) {
+              throw "MSBuild failed with exit code $LASTEXITCODE."
+          }
+          $exe = Resolve-Path "autohotkey-src\bin\AutoHotkey64.exe"
+          "AHK_EXE=$exe" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "source_commit=$(git -C autohotkey-src rev-parse HEAD)"
+          "exe_sha256=$((Get-FileHash -Path $exe -Algorithm SHA256).Hash)"
 
       - name: Execute and verify probes
         shell: pwsh
@@ -98,7 +129,7 @@ jobs:
               "enumerators=1"
           )
 
-          $scripts = Get-ChildItem -Path "research/ahk_esoteric_enum" -Filter "*.ahk" | Sort-Object Name
+          $scripts = Get-ChildItem -Path "harness\research\ahk_esoteric_enum" -Filter "*.ahk" | Sort-Object Name
           if ($scripts.Count -ne 6) {
               throw "Expected 6 probes, found $($scripts.Count)."
           }
