@@ -140,6 +140,32 @@ Fire automatically across the Claude Code lifecycle:
 
 (`check-ahk-connection` and `post-capture-guidance` add hints for the optional debug MCP; `_harness-env.sh` is the shared config loader every hook sources.)
 
+### Analysis Harness
+
+The static-analysis core lives in `Lib/` and the tiered grading gates in
+`Tools/harness/`. Everything runs on the interpreter itself — no external
+toolchain.
+
+| Piece | What it is |
+|-------|------------|
+| `Lib/TreeSitter.ahk` | Native binding to the holy-tao tree-sitter-autohotkey grammar (`Lib/tree-sitter-ahk.dll`, x64, kept next to it) |
+| `Lib/Lint.ahk` | Structural lint — empty catches, v1-isms, shape problems |
+| `Lib/CodeIntel.ahk` | Scope-aware semantics: symbol table, call graph, references, plus diagnostics (`unused-function`, `undefined-call`, `property-called-as-method`, opt-in `unknown-member`) with built-in member sets read off the running interpreter |
+| `Tools/harness/GateStatic.ahk` | Tier-1 gate: fork `check` + `/validate` + Lint + CodeIntel, one NDJSON result per script |
+| `Tools/harness/GateDryRun.ahk` + `DryRunShim.ahk` | Tier-3 gate: executes candidates with synthetic input, `Gui`, dialogs, and mutating file/registry I/O shimmed to record intent instead of firing |
+| `Tools/harness/HarnessCore.ahk` | The shared NDJSON result emitter — the whole inter-tier contract |
+| `Tools/harness/CheckResults.py` | Flags empty, timed-out and contradictory results before synthesis |
+| `Tools/harness/CONTRACT.md` | The result schema every tier obeys |
+
+```bash
+AutoHotkey64.exe Tools/harness/GateStatic.ahk MyScript.ahk        # static gate
+AutoHotkey64.exe Tools/harness/GateDryRun.ahk MyScript.ahk       # dry-run gate
+```
+
+Gates exit `0` when every script passes, `1` on failure, `2` on usage error.
+A parse failure ends that script's branch — later checks record `"skipped"`,
+never a silent zero. Details: `Tools/harness/CONTRACT.md`.
+
 ### Commands
 
 Slash commands in `.claude/commands/`:

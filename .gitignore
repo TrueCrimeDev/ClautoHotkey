@@ -55,3 +55,6 @@ harness.env
 .verify.*
 .test-tmp.*
 .history/
+
+# tree-sitter grammar binary: the analysis harness is inert without it
+!Lib/tree-sitter-ahk.dll
