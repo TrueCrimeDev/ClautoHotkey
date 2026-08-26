@@ -251,8 +251,9 @@ clipboard tools. They predate the harness and aren't part of it; kept for refere
 ---
 
 <div align="center">
-  <h2>Showcase — WinUI3 in AHK v2</h2>
-  <p><em>Native WinUI3 apps written in AutoHotkey v2 — built with this harness.</em></p>
+  <h2>Showcase</h2>
+  <p><em>GUIs built with this harness.</em></p>
+  <h3>WinUI3 in AHK v2</h3>
 </div>
 
 **[WinUI3](https://github.com/TrueCrimeDev/WinUI3)** puts native WinUI3 controls in
@@ -277,6 +278,22 @@ screenshot-reviewed by the AI itself via `Tools/CaptureWindow.ahk`.
   <tr>
     <td><img src="https://github.com/TrueCrimeDev/WinUI3/raw/main/Settings.png" alt="SettingsCard page with grouped options" width="450"></td>
     <td><img src="https://github.com/TrueCrimeDev/WinUI3/raw/main/CommandBar.png" alt="CommandBar organized in switchable tabs" width="450"></td>
+  </tr>
+</table>
+
+<div align="center">
+  <h3>Dark Mode Win32</h3>
+  <p><em>Classic Win32 controls, fully dark-themed by <code>Lib/DarkModeModular_Alpha.ahk</code>.</em></p>
+</div>
+
+<table>
+  <tr>
+    <td align="center"><strong>Modular Dark Mode System</strong><br><sub>the library's built-in showcase</sub></td>
+    <td align="center"><strong>Window Manager</strong><br><sub><code>Scripts/WindowManagerApp.ahk</code></sub></td>
+  </tr>
+  <tr>
+    <td><img src="Assets/DarkModeShowcase.png" alt="Dark-themed menu bar, ListView, TreeView, buttons, sliders, and progress controls" width="450"></td>
+    <td><img src="Assets/WindowManager.png" alt="Dark window-management control panel" width="280"></td>
   </tr>
 </table>
 
