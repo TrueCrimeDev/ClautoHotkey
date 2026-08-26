@@ -100,12 +100,8 @@ Fresh-context investigators — launched when a task needs its own window:
 | `ahk-analysis` | Code-quality, performance, and pattern analysis with recommendations |
 | `ahk-context` | Project state, variable scope, and object-lifecycle tracking |
 | `ahk-dependency-graph` | Parse `#Include` chains into a dependency map ("what breaks if I edit X?") |
-| `ahk-profiler` | Instrument scripts with timing; report the slowest methods |
-| `ahk-test-generator` | Generate Yunit-style test suites for a class or script |
-| `ahk-com-explorer` | Introspect COM / WinAPI; generate typed wrappers and `DllCall` signatures |
 | `ahk-uia-explorer` | Dump a window's UI Automation tree and generate interaction code |
 | `ahk-orchestrator-v2` | Launch / stop / restart multiple scripts as one system |
-| `layout` | GUI layout enforcement — overlap-free, mathematically positioned controls |
 
 ### Rules
 
@@ -255,17 +251,32 @@ clipboard tools. They predate the harness and aren't part of it; kept for refere
 ---
 
 <div align="center">
-  <h2>Screenshots</h2>
+  <h2>Showcase — WinUI3 in AHK v2</h2>
+  <p><em>Native WinUI3 apps written in AutoHotkey v2 — built with this harness.</em></p>
 </div>
+
+**[WinUI3](https://github.com/TrueCrimeDev/WinUI3)** puts native WinUI3 controls in
+AutoHotkey v2 via XAML Islands and direct WinRT interop. It was developed end-to-end
+inside ClautoHotkey's harness: every edit validated on save against the +Console fork,
+GUI work auto-routed through the `gui-work` rules and skills, and each window
+screenshot-reviewed by the AI itself via `Tools/CaptureWindow.ahk`.
 
 <table>
   <tr>
-    <td align="center"><strong>Ultimate Logger</strong></td>
-    <td align="center"><strong>List Editor</strong></td>
+    <td align="center"><strong>Toolkit Showcase — DataTable</strong></td>
+    <td align="center"><strong>Acrylic + Dark Mode Split</strong></td>
   </tr>
   <tr>
-    <td><img src="Assets/UltimateLogger.png" alt="Ultimate Logger" width="450"></td>
-    <td><img src="https://github.com/TrueCrimeDev/DarkMode/raw/main/screenshot1.png" alt="List Editor" width="450"></td>
+    <td><img src="https://github.com/TrueCrimeDev/WinUI3/raw/main/Toolbar.png" alt="Toolkit Showcase with a sortable DataTable" width="450"></td>
+    <td><img src="https://github.com/TrueCrimeDev/WinUI3/raw/main/Split.png" alt="DWM Acrylic backdrop beside an opaque dark surface" width="450"></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>SettingsCard</strong></td>
+    <td align="center"><strong>TabbedCommandBar</strong></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/TrueCrimeDev/WinUI3/raw/main/Settings.png" alt="SettingsCard page with grouped options" width="450"></td>
+    <td><img src="https://github.com/TrueCrimeDev/WinUI3/raw/main/CommandBar.png" alt="CommandBar organized in switchable tabs" width="450"></td>
   </tr>
 </table>
 
