@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 456" role="img" aria-label="Knowledge modules and the ahk-mcp docs server feed the Claude Code harness, which validates every .ahk edit against the AutoHotkey Console fork engine." font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto">
+      <polygon points="0 0, 9 4, 0 8" fill="#8B949E"/>
+    </marker>
+  </defs>
+
+  <rect x="16" y="16" width="214" height="80" rx="10" fill="#161B22" stroke="#58A6FF" stroke-width="1.5"/>
+  <text x="123" y="49" text-anchor="middle" fill="#E6EDF3" font-size="17" font-weight="600">Knowledge</text>
+  <text x="123" y="73" text-anchor="middle" fill="#8B949E" font-size="12.5">ClautoHotkey Modules/</text>
+
+  <rect x="250" y="16" width="214" height="80" rx="10" fill="#161B22" stroke="#3FB950" stroke-width="1.5"/>
+  <text x="357" y="49" text-anchor="middle" fill="#E6EDF3" font-size="17" font-weight="600">Docs server</text>
+  <text x="357" y="73" text-anchor="middle" fill="#8B949E" font-size="12.5">ahk-mcp</text>
+
+  <line x1="123" y1="96" x2="123" y2="167" stroke="#8B949E" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="133" y="136" fill="#8B949E" font-size="12">instructions</text>
+
+  <line x1="357" y1="96" x2="357" y2="167" stroke="#8B949E" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="347" y="136" text-anchor="end" fill="#8B949E" font-size="12">serves docs</text>
+
+  <rect x="90" y="176" width="300" height="96" rx="10" fill="#161B22" stroke="#A371F7" stroke-width="2.5"/>
+  <text x="240" y="210" text-anchor="middle" fill="#E6EDF3" font-size="17" font-weight="600">Tooling — the harness</text>
+  <text x="240" y="234" text-anchor="middle" fill="#8B949E" font-size="12.5">.claude/ · hooks · rules · skills · agents</text>
+  <text x="240" y="258" text-anchor="middle" fill="#A371F7" font-size="10" font-weight="600" letter-spacing="2">THE MAIN FEATURE</text>
+
+  <line x1="240" y1="272" x2="240" y2="335" stroke="#8B949E" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="250" y="308" fill="#8B949E" font-size="12">validates every .ahk edit</text>
+
+  <rect x="90" y="344" width="300" height="96" rx="10" fill="#161B22" stroke="#F0883E" stroke-width="1.5"/>
+  <text x="240" y="378" text-anchor="middle" fill="#E6EDF3" font-size="17" font-weight="600">Engine</text>
+  <text x="240" y="402" text-anchor="middle" fill="#8B949E" font-size="12.5">AutoHotkey +Console fork</text>
+  <text x="240" y="424" text-anchor="middle" fill="#8B949E" font-size="12.5">Print · Eval · JSON diagnostics</text>
+</svg>

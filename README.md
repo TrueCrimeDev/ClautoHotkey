@@ -39,19 +39,12 @@ structured knowledge modules, and an MCP docs server.
   <p><em>An AI-native AutoHotkey v2 development system — four parts that fit together.</em></p>
 </div>
 
-```mermaid
-flowchart LR
-    E["Engine<br/>AutoHotkey +Console fork<br/>Print / Eval / JSON diagnostics"]
-    subgraph CC["Claude Code (open ClautoHotkey as the project)"]
-        direction TB
-        K["Knowledge<br/>ClautoHotkey Modules/"]
-        T["Tooling<br/>ahk-claude-harness<br/>hooks / rules / skills / agents"]
-    end
-    M["Docs server<br/>ahk-mcp<br/>docs / completion / diagnostics"]
-    K --> T
-    T -- "validates every .ahk edit" --> E
-    M -- "serves docs" --> T
-```
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="Assets/system-diagram-dark.svg">
+    <img src="Assets/system-diagram-light.svg" alt="Knowledge modules and the ahk-mcp docs server feed the Claude Code harness, which validates every .ahk edit against the AutoHotkey +Console fork engine." width="480">
+  </picture>
+</div>
 
 | Part | What it is |
 |------|-----------|
