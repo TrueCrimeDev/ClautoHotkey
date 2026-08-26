@@ -283,17 +283,25 @@ screenshot-reviewed by the AI itself via `Tools/CaptureWindow.ahk`.
 
 <div align="center">
   <h3>Dark Mode Win32</h3>
-  <p><em>Classic Win32 controls, fully dark-themed by <code>Lib/DarkModeModular_Alpha.ahk</code>.</em></p>
+  <p><em>Classic Win32 controls, fully dark-themed by <a href="https://github.com/TrueCrimeDev/DarkMode">DarkMode</a> — this repo's <code>Lib/DarkModeModular_Alpha.ahk</code>.</em></p>
 </div>
 
 <table>
   <tr>
-    <td align="center"><strong>Modular Dark Mode System</strong><br><sub>the library's built-in showcase</sub></td>
-    <td align="center"><strong>Window Manager</strong><br><sub><code>Scripts/WindowManagerApp.ahk</code></sub></td>
+    <td align="center"><strong>Modular Dark Mode System — Blue preset</strong></td>
+    <td align="center"><strong>Pipeline Monitor</strong></td>
   </tr>
   <tr>
-    <td><img src="Assets/DarkModeShowcase.png" alt="Dark-themed menu bar, ListView, TreeView, buttons, sliders, and progress controls" width="450"></td>
-    <td><img src="Assets/WindowManager.png" alt="Dark window-management control panel" width="280"></td>
+    <td><img src="https://github.com/TrueCrimeDev/DarkMode/raw/main/screenshots/DarkModeModular_Fable_Blue.png" alt="Full dark control set: menu bar, ListView, TreeView, tabs, DatePicker, and MonthCal in the Blue preset" width="450"></td>
+    <td><img src="https://github.com/TrueCrimeDev/DarkMode/raw/main/screenshots/App_PipelineMonitor.png" alt="Dark pipeline monitor streaming command output" width="450"></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>DarkPropertyGrid</strong></td>
+    <td align="center"><strong>DarkRichEdit</strong></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/TrueCrimeDev/DarkMode/raw/main/screenshots/App_PropertyGrid.png" alt="Editable property grid with change log" width="450"></td>
+    <td><img src="https://github.com/TrueCrimeDev/DarkMode/raw/main/screenshots/App_RichEdit.png" alt="Styled RichEdit log with palette swap" width="450"></td>
   </tr>
 </table>
 
