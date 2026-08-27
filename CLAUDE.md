@@ -5,7 +5,7 @@ Guidance for Claude Code (claude.ai/code) when working in this repository.
 ## Project Overview
 
 ClautoHotkey is an **AI-native AutoHotkey v2 development system**. The centerpiece is
-a Claude Code harness (`.claude/`) that validates every `.ahk` edit, auto-loads the
+a Claude Code harness — installable as a plugin — that validates every `.ahk` edit, auto-loads the
 right rules, and routes work to AHK-specific skills and agents — backed by a
 console-enabled engine, structured knowledge modules, and an optional MCP docs server.
 
@@ -18,7 +18,7 @@ All AutoHotkey execution resolves the binary from `harness.env`
 blocks any other `AutoHotkey*.exe` in a Bash command.
 
 ```bash
-source .claude/hooks/_harness-env.sh
+source hooks/_harness-env.sh
 "$AHK_BIN_WSL" /ErrorStdOut=utf-8 "<script_path>"
 ```
 
@@ -26,20 +26,21 @@ This repo targets the **v2.1-alpha.30 +Console fork**
 (<https://github.com/TrueCrimeDev/AutoHotkey>): real stdout/stderr, `Print(fmt, vals*)`,
 `Eval(expr)`, JSON diagnostics (`check /Diag=json`), and structured exit codes. Stock
 AutoHotkey v2 also works (set `AHK_DIAG_JSON=0`) but without `Print`/`Eval` or JSON
-diagnostics. Fork details: `.claude/rules/ahk-interpreter.md` and `ahk-fork-features.md`.
+diagnostics. Fork details: `rules/ahk-interpreter.md` and `ahk-fork-features.md`.
 
 ## How work is routed
 
 The harness has three layers — use them in priority order. The full tables live in
 `README.md`; the essentials:
 
-1. **Auto-loading rules** (`.claude/rules/`) activate by file path — no invocation
-   needed. Editing any `.ahk` pulls in `ahk-v2-syntax`; editing under `Lib/` pulls in
+1. **Auto-loading rules** (`rules/`) activate by file path — no invocation
+   needed. Editing any `.ahk` pulls in `ahk-v2-syntax` and `ahk-target` (which keeps
+   generated code on the build the user actually has); editing under `Lib/` pulls in
    `lib-development`; editing a GUI file pulls in `gui-work`. Also: `main-script`,
    `test-scripts`, `demo-location`, `no-banner-comments`, `ahk-interpreter`,
    `ahk-fork-features`.
 
-2. **Skills** (`.claude/skills/`) handle most routine work — invoke with `/<name>`. Nineteen
+2. **Skills** (`skills/`) handle most routine work — invoke with `/<name>`. Nineteen
    of them, in two groups.
 
    *Knowledge skills* load a module and apply its rules: `/ahk-gui`, `/ahk-oop`, `/ahk-text`,
@@ -51,7 +52,7 @@ The harness has three layers — use them in priority order. The full tables liv
 
    Cheap, in-context. **Skills are the default entry point for AHK work.**
 
-3. **Agents** (`.claude/agents/`) run in a fresh context window when a task warrants it:
+3. **Agents** (`agents/`) run in a fresh context window when a task warrants it:
    `ahk-analysis`, `ahk-context`, `ahk-dependency-graph`, `ahk-profiler`,
    `ahk-test-generator`, `ahk-com-explorer`, `ahk-uia-explorer`, `ahk-orchestrator-v2`,
    `layout`. Launch one only when the investigation justifies the boot cost.
@@ -151,7 +152,11 @@ runs automatically as a `pre-commit` hook over staged modules.
 
 ```
 /Modules/      - Structured AHK v2 knowledge, one per domain (frontmatter + body)
-/.claude/      - The harness: rules, skills, agents, hooks
+/skills/       - 19 skills (9 load a knowledge module, 10 drive the tooling)
+/agents/       - 9 fresh-context investigators
+/rules/        - 10 path-triggered rules
+/hooks/        - 12 lifecycle hooks, wired by hooks/hooks.json
+/.claude-plugin/ - plugin + marketplace manifests (this repo installs as a plugin)
 /AHK_Notes/    - Examples and patterns (Classes, Concepts, Methods, Patterns, Snippets)
 /Scripts/      - User-facing utility applications
 /Tests/        - Test scripts and validation tools

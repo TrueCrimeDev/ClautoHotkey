@@ -4,7 +4,7 @@ A quick map of the harness. Paths are relative to the repo root. Work is routed 
 **skills** (model-invoked, the default front door) → **modules** (the knowledge a skill loads)
 → **agents** (fresh-context investigators).
 
-## Skills (`.claude/skills/`)
+## Skills (`skills/`)
 
 Invoke with `/<name>`. Each skill triggers on its `description`. Knowledge skills load a
 module and apply its rules; tool skills drive the interpreter or the repo directly.
@@ -33,9 +33,9 @@ module and apply its rules; tool skills drive the interpreter or the repo direct
 | `/ahk-docs` | Search the AHK v2 docs | `/ahk-mistakes` | Recurring mistakes from the log |
 | `/ahk-audit-errors` | Find silent failures | `/ahk-debug-dashboard` | Live debug state |
 
-When ClautoHotkey is opened inside the parent `Autohotkey` workspace, the parent's
-`.claude/skills/` carries the same nineteen plus `/ahk-cross-review` and `/gist`. This
-repo's copies are directory-scoped to `ClautoHotkey/` and take precedence here.
+These ship as a Claude Code plugin, so they apply to your AutoHotkey scripts wherever
+they live — see [Install](README.md#install). Skills load their modules through
+`${CLAUDE_PLUGIN_ROOT}`, so nothing depends on where the repo sits.
 
 ## Modules (`Modules/`)
 
@@ -72,13 +72,13 @@ wrong fence tags, `=> {`, banner dividers, removed alpha.30 constructs), frontma
 validity, and dangling cross-references. It runs as a `pre-commit` hook over staged
 modules; run it directly to lint the whole corpus.
 
-## Agents (`.claude/agents/`)
+## Agents (`agents/`)
 
 Fresh-context investigators — launched when a task needs its own window.
 
-- [ahk-analysis](.claude/agents/ahk-analysis.md) · [ahk-context](.claude/agents/ahk-context.md) · [ahk-dependency-graph](.claude/agents/ahk-dependency-graph.md) · [ahk-profiler](.claude/agents/ahk-profiler.md) · [ahk-test-generator](.claude/agents/ahk-test-generator.md) · [ahk-com-explorer](.claude/agents/ahk-com-explorer.md) · [ahk-uia-explorer](.claude/agents/ahk-uia-explorer.md) · [ahk-orchestrator-v2](.claude/agents/ahk-orchestrator-v2.md) · [layout](.claude/agents/layout.md)
+- [ahk-analysis](agents/ahk-analysis.md) · [ahk-context](agents/ahk-context.md) · [ahk-dependency-graph](agents/ahk-dependency-graph.md) · [ahk-profiler](agents/ahk-profiler.md) · [ahk-test-generator](agents/ahk-test-generator.md) · [ahk-com-explorer](agents/ahk-com-explorer.md) · [ahk-uia-explorer](agents/ahk-uia-explorer.md) · [ahk-orchestrator-v2](agents/ahk-orchestrator-v2.md) · [layout](agents/layout.md)
 
-See [agentreadme.md](.claude/agentreadme.md) for descriptions.
+See [agents/README.md](agents/README.md) for descriptions.
 
 ## Legacy (`legacy/`)
 

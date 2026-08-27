@@ -1,0 +1,20 @@
+{
+  "$schema": "https://code.claude.com/schemas/marketplace.json",
+  "name": "clautohotkey",
+  "owner": {
+    "name": "TrueCrimeDev",
+    "url": "https://github.com/TrueCrimeDev"
+  },
+  "metadata": {
+    "description": "AutoHotkey v2 tooling for Claude Code",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "clautohotkey",
+      "source": "./",
+      "description": "AutoHotkey v2 coding companion — knowledge modules, domain skills, investigation agents, and a validator that blocks broken edits.",
+      "category": "languages"
+    }
+  ]
+}

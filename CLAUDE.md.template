@@ -1,0 +1,72 @@
+# CLAUDE.md
+
+Project guidance for Claude Code. Rendered by `setup.sh` — edit it freely; it is yours,
+and `setup.sh` will not overwrite it once it exists.
+
+## Project
+
+<!-- One or two lines: what this collection of scripts is for. -->
+
+**AutoHotkey v2 only.**
+
+## Interpreter
+
+Every AutoHotkey run resolves the binary from `harness.env` (`AHK_BIN_WIN` →
+`AHK_BIN_WSL`) — never hardcode a path. The `check-ahk-binary` hook blocks any other
+`AutoHotkey*.exe` appearing in a Bash command, so interpreter drift gets caught before
+it wastes a run.
+
+```bash
+source hooks/_harness-env.sh
+"$AHK_BIN_WSL" /ErrorStdOut "<script.ahk>"
+```
+
+Configured binary: `@AHK_BIN_WIN@`
+
+## How work is routed
+
+Three layers, in priority order:
+
+1. **Rules** (`rules/`) activate by file path — no invocation needed. Editing any `.ahk`
+   pulls in `ahk-v2-syntax` and `ahk-target`; editing under `Lib/` pulls in
+   `lib-development`; editing a GUI file pulls in `gui-work`.
+
+2. **Skills** — invoke with `/<name>`. `/ahk-gui`, `/ahk-oop`, `/ahk-text`, `/ahk-fix`,
+   `/ahk-ref`, `/ahk-com`, `/ahk-dllcall`, `/ahk-winapi`, `/ahk-versions` load a knowledge
+   module. `/ahk-run`, `/ahk-eval`, `/ahk-gui-gen`, `/ahk-convert`, `/ahk-modernize`,
+   `/ahk-new-class`, `/ahk-docs`, `/ahk-audit-errors`, `/ahk-mistakes`,
+   `/ahk-debug-dashboard` drive the tooling. **Skills are the default entry point.**
+
+3. **Agents** run in a fresh context window when a task warrants the boot cost:
+   `ahk-analysis`, `ahk-context`, `ahk-dependency-graph`, `ahk-profiler`,
+   `ahk-test-generator`, `ahk-com-explorer`, `ahk-uia-explorer`, `ahk-orchestrator-v2`,
+   `layout`.
+
+Skills and rules pull the relevant knowledge module for you.
+
+## Coding standards
+
+These are the defaults the rules enforce. Change them here if your project differs — this
+file wins over the shipped rules.
+
+- **Pure AHK v2 OOP** — instantiate by calling the class; never `new ClassName()`.
+- **Data storage** — `Map()` for runtime key-value data, created empty then assigned per
+  key. Object literals `{}` are correct for property descriptors and option bags, wrong as
+  a data dictionary.
+- **Event binding** — bind every callback with `.Bind(this)`.
+- **Resource cleanup** — release timers and handles in `__Delete()`.
+- **Variable scope** — explicit declarations. Never shadow a built-in class name: no local
+  called `Gui`, `Menu`, `Array`, `Map` or `Random`.
+- **Fat arrows** — single-expression bodies only. `=> {` is a syntax error on every build.
+- **Errors** — throw typed errors and handle them in `try`/`catch`. Never an empty catch.
+- **Comments** — no banner dividers (`; ====`, `; ----`).
+
+## Project layout
+
+<!-- Describe your own folders here. -->
+
+```
+/Lib/          - shared libraries you #Include
+/Demo/         - demo scripts (see the demo-location rule)
+/Tests/        - test scripts
+```

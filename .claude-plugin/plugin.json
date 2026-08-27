@@ -1,0 +1,20 @@
+{
+  "name": "clautohotkey",
+  "description": "AutoHotkey v2 coding companion: 23 knowledge modules, 19 skills, 9 agents, path-triggered rules, and a post-edit validator that blocks broken code before it lands.",
+  "version": "1.0.0",
+  "author": {
+    "name": "TrueCrimeDev"
+  },
+  "homepage": "https://github.com/TrueCrimeDev/ClautoHotkey",
+  "repository": "https://github.com/TrueCrimeDev/ClautoHotkey",
+  "license": "MIT",
+  "keywords": [
+    "autohotkey",
+    "ahk",
+    "ahk-v2",
+    "windows",
+    "automation",
+    "gui",
+    "scripting"
+  ]
+}

@@ -35,6 +35,56 @@ structured knowledge modules, and an MCP docs server.
 ---
 
 <div align="center">
+  <h2>Install</h2>
+  <p><em>Two routes. The plugin is the one you want.</em></p>
+</div>
+
+### As a Claude Code plugin (recommended)
+
+```
+/plugin marketplace add TrueCrimeDev/ClautoHotkey
+/plugin install clautohotkey@clautohotkey
+```
+
+That's it. The skills, agents, rules and validation hooks now apply to **your** AutoHotkey
+scripts wherever they live — you don't clone anything into your project, and there's
+nothing to configure. On first use the harness probes the standard AutoHotkey install
+locations and uses what it finds.
+
+Point it at a specific interpreter, or opt into the +Console fork's richer diagnostics, by
+dropping a `harness.env` in your own project root:
+
+```bash
+AHK_BIN_WIN="C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe"
+AHK_DIAG_JSON=0     # 1 only on the +Console fork
+```
+
+Every key is optional — see [`harness.env.example`](harness.env.example) for the full set.
+
+### As a cloned repo
+
+If you'd rather have the files in your tree — to edit the knowledge modules, work offline,
+or vendor a pinned copy:
+
+```bash
+git clone https://github.com/TrueCrimeDev/ClautoHotkey.git
+cd ClautoHotkey && ./setup.sh
+```
+
+`setup.sh` writes a `harness.env` from the example, makes the hooks executable, and tells
+you what to fill in.
+
+**Requires** WSL or Git Bash, `jq`, and AutoHotkey v2. Python 3 for the module lint.
+
+> [!NOTE]
+> The knowledge modules were written and verified against the **v2.1-alpha.30 +Console
+> fork**, so their examples use alpha and fork constructs freely. The `ahk-target` rule
+> keeps generated code on the build *you* actually have — stock v2.0 by default, with a
+> portable substitute documented for every gated construct.
+
+---
+
+<div align="center">
   <h2>The System</h2>
   <p><em>An AI-native AutoHotkey v2 development system — four parts that fit together.</em></p>
 </div>
@@ -48,7 +98,7 @@ structured knowledge modules, and an MCP docs server.
 
 | Part | What it is |
 |------|-----------|
-| **Tooling** — the harness (this repo's `.claude/`) | Claude Code hooks, rules, skills, and agents that validate every `.ahk` edit and route AHK work. **The main feature.** |
+| **Tooling** — the harness (`skills/`, `agents/`, `rules/`, `hooks/`) | Claude Code hooks, rules, skills, and agents that validate every `.ahk` edit and route AHK work. Ships as an installable plugin. **The main feature.** |
 | **Engine** — [AutoHotkey +Console fork](https://github.com/TrueCrimeDev/AutoHotkey) | Console-enabled AHK v2: real stdout, `Print`, `Eval`, JSON diagnostics, structured exit codes. |
 | **Knowledge** — this repo's `Modules/` | The structured AHK v2 instruction set the AI reads (start with `Module_Instructions.md`). |
 | **Docs server** — [ahk-mcp](https://github.com/TrueCrimeDev/ahk-mcp) | MCP server providing docs, code completion, and diagnostics. |
@@ -62,19 +112,21 @@ structured knowledge modules, and an MCP docs server.
   <p><em>The main feature — a Claude Code environment that validates every edit, loads the right knowledge, and runs the tools.</em></p>
 </div>
 
-`.claude/` ships a full Claude Code harness: it auto-validates each `.ahk` edit,
-auto-loads the relevant rule when you touch a matching file, and routes work to
-AHK-specific skills and investigation agents. Turn it on after cloning:
+The harness auto-validates each `.ahk` edit, auto-loads the relevant rule when you touch
+a matching file, and routes work to AHK-specific skills and investigation agents. See
+[Install](#install) — the plugin route needs no configuration.
 
-```bash
-cp harness.env.example harness.env   # set AHK_BIN_WIN to your AutoHotkey64.exe path
-./setup.sh                            # renders settings.json, makes hooks executable
-```
+It lives in four directories at the repo root, which is also the plugin layout:
 
-Then open this folder as the project in Claude Code. Set `AHK_DIAG_JSON=1` in
-`harness.env` if you run the v2.1-alpha.30+Console fork (richer diagnostics); leave
-`0` for stock AHK v2. Requires WSL or Git Bash and `jq`. The harness is also published
-as a standalone template: [ahk-claude-harness](https://github.com/TrueCrimeDev/ahk-claude-harness).
+| Directory | Contents |
+|-----------|----------|
+| `skills/` | 19 skills — 9 that load a knowledge module, 10 that drive the interpreter |
+| `agents/` | 9 fresh-context investigators |
+| `rules/` | 10 path-triggered rules, injected on first edit of a matching file |
+| `hooks/` | 12 lifecycle hooks, wired by `hooks/hooks.json` |
+
+A leaner, AHK-agnostic version of the same harness is published separately as
+[ahk-claude-harness](https://github.com/TrueCrimeDev/ahk-claude-harness).
 
 ### Skills
 
@@ -111,10 +163,11 @@ Fresh-context investigators — launched when a task needs its own window:
 
 ### Rules
 
-Path-scoped notes in `.claude/rules/` that auto-load when you edit a matching file:
-`ahk-v2-syntax` (any `.ahk`), `gui-work` (GUI files), `lib-development` (`Lib/`),
-`main-script`, `test-scripts`, `demo-location`, `no-banner-comments`, `ahk-interpreter`,
-and `ahk-fork-features` (the +Console fork).
+Path-scoped notes in `rules/` that auto-load when you edit a matching file:
+`ahk-v2-syntax` (any `.ahk`), `ahk-target` (keeps generated code on the build you have),
+`gui-work` (GUI files), `lib-development` (`Lib/`), `main-script`, `test-scripts`,
+`demo-location`, `no-banner-comments`, `ahk-interpreter`, and `ahk-fork-features`
+(the +Console fork).
 
 ### Hooks
 
@@ -163,7 +216,7 @@ never a silent zero. Details: `Tools/harness/CONTRACT.md`.
 
 ### Commands
 
-Slash commands in `.claude/commands/`:
+Slash commands in `commands/`:
 
 | Command | What it does |
 |---------|--------------|
