@@ -305,17 +305,6 @@ Additional modules in `Modules/Supplemental/`.
 ---
 
 <div align="center">
-  <h2>Legacy</h2>
-</div>
-
-Pre-harness prompts and helper scripts live in [`legacy/`](legacy/) — the per-LLM
-`System_Prompts/` (a shared `_Core.md` + per-model wrappers for pasting AHK v2 knowledge
-into other models), `_Context_Creator.ahk`, the Ultimate Logger, the list editor, and the
-clipboard tools. They predate the harness and aren't part of it; kept for reference.
-
----
-
-<div align="center">
   <h2>Showcase</h2>
   <p><em>GUIs built with this harness.</em></p>
   <h3>WinUI3 in AHK v2</h3>
@@ -348,7 +337,7 @@ screenshot-reviewed by the AI itself via `Tools/CaptureWindow.ahk`.
 
 <div align="center">
   <h3>Dark Mode Win32</h3>
-  <p><em>Classic Win32 controls, fully dark-themed by <a href="https://github.com/TrueCrimeDev/DarkMode">DarkMode</a> — this repo's <code>Lib/DarkModeModular_Alpha.ahk</code>.</em></p>
+  <p><em>Classic Win32 controls, fully dark-themed by <a href="https://github.com/TrueCrimeDev/DarkMode">DarkMode</a> a standalone library, not bundled here.</em></p>
 </div>
 
 <table>

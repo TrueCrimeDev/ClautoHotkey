@@ -80,16 +80,6 @@ Fresh-context investigators — launched when a task needs its own window.
 
 See [agents/README.md](agents/README.md) for descriptions.
 
-## Legacy (`legacy/`)
-
-Pre-harness artifacts kept for reference, not used by the harness: the per-LLM
-`System_Prompts/` and the older helper scripts. On 2026-08-26 the eight prompt-era files
-that were still sitting in `Modules/Supplemental/` moved here — `Module_All`,
-`Module_Basics`, the three `Module_CustomGPT` variants, `Module_InstructionStyles`,
-`Module_Thinking` and `Module_GUI_Layout`. They are personas and agent-steering
-templates, not knowledge, and several taught rules this project forbids. See
-[legacy/README.md](legacy/README.md).
-
 ## How it routes
 
 - A request matches a skill's `description` → the skill loads its module and applies the rules. No manual routing table.

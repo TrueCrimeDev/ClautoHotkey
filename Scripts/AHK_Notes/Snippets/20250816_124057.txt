@@ -1,3 +1,0 @@
-        "DefaultTitle", "Clipboard Logger"
-
---- NOTE ---

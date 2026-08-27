@@ -13,7 +13,7 @@ emits it for all tiers.
   "run":     "20260809071944-113184-482913",
   "label":   "static-3",
   "tier":    "static",
-  "script":  "C:\\Scripts\\tools\\ci-report.ahk",
+  "script":  "C:\\Scripts\\ci-report.ahk",
   "name":    "ci-report.ahk",
   "parse":   "clean",
   "status":  "pass",

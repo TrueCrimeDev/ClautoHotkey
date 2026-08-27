@@ -47,7 +47,7 @@ for prop in ["Name", "Version", "Path", "Visible", "Application"] {
 }
 ```
 
-Run with: `"C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe" /Headless /ErrorStdOut script.ahk`
+Run with: `"$AHK_BIN_WSL" /Headless /ErrorStdOut script.ahk` (source `hooks/_harness-env.sh` first)
 
 ### Wrapper Class Template
 

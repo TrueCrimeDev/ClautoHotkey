@@ -70,7 +70,7 @@ When live debugging is available, use the MCP tools:
 ## Console Error Checking
 
 ```bash
-AHK_EXE="/mnt/c/Program Files/AutoHotkey/v2/AutoHotkey64.exe"
+source "${CLAUDE_PLUGIN_ROOT}/hooks/_harness-env.sh"   # sets AHK_BIN_WSL
 WIN_PATH=$(wslpath -w "script.ahk")
 
 # Syntax check

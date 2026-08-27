@@ -87,11 +87,7 @@ Skills and rules pull the relevant knowledge module for you. Read
   `Gui()`, wrap it with `dm := _Dark(myGui)` (dark title bar, background, menus),
   then add controls through the wrapper — `dm.AddDarkButton()`, `dm.AddDarkEdit()`,
   `dm.AddDarkText()`, `dm.AddDarkComboBox()`, `dm.AddListView()`, etc.
-  `ClautoHotkey/Lib/DarkModeModular_Alpha.ahk` is a **stale snapshot** of the parent
-  repo's dark module and predates the 2026-08-14 role swap — never edit it. When
-  ClautoHotkey is opened inside the parent Autohotkey workspace, the canonical copy
-  is the parent's `Lib/DarkModeModular_Alpha.ahk`; `_Dark.ahk` above applies when
-  ClautoHotkey is opened as its own standalone project.
+  `_Dark.ahk` is self-contained — no other dark-mode library is bundled.
 
 ### Data handling
 - Arrays are 1-based. PCRE flags `i/m/s/x` only. Backtick escaping for quotes/specials.
@@ -157,14 +153,16 @@ runs automatically as a `pre-commit` hook over staged modules.
 /rules/        - 10 path-triggered rules
 /hooks/        - 12 lifecycle hooks, wired by hooks/hooks.json
 /.claude-plugin/ - plugin + marketplace manifests (this repo installs as a plugin)
-/AHK_Notes/    - Examples and patterns (Classes, Concepts, Methods, Patterns, Snippets)
-/Scripts/      - User-facing utility applications
-/Tests/        - Test scripts and validation tools
-/Lib/          - Shared libraries (_Dark.ahk, DarkModeModular_Alpha.ahk, cJSON.ahk, XHotstring.ahk, DarkListView.ahk)
-/Tools/        - Harness tools (CaptureWindow.ahk — PNG capture of a window by PID/title;
-                 lint_modules.py — corpus lint for Modules/, also wired as a pre-commit hook)
-/legacy/       - Pre-harness prompts/scripts (System_Prompts, helper tools) — reference only
+/Lib/          - Shared libraries you can #Include: _Dark.ahk (dark mode), cJSON.ahk,
+                 XHotstring.ahk, DarkListView.ahk, and the analysis harness
+                 (TreeSitter.ahk, Lint.ahk, CodeIntel.ahk + tree-sitter-ahk.dll)
+/Tools/        - lint_modules.py (corpus lint, also a pre-commit hook), verify.sh
+                 (install self-test), CaptureWindow.ahk (PNG capture by PID/title)
+/Assets/       - README diagrams and screenshots
 ```
+
+The repo ships the companion and nothing else. Personal notes, utility scripts,
+experiments and other-editor configs live in a separate private repo.
 
 ## Important notes
 
@@ -175,5 +173,3 @@ runs automatically as a `pre-commit` hook over staged modules.
 - **Targeted reading** — read files relevant to the request; avoid broad discovery scans.
 - **Skills first** — let skills/rules pull modules; don't run a multi-agent pipeline
   unless the user asks.
-- **IDE configs** — `.cursor/` and `.clinerules` hold configs for other editors; they
-  are not part of the Claude harness.

@@ -13,28 +13,33 @@ description: >
 
 ## Start with the working reference
 
-`Lib/DarkModeModular_Alpha.ahk` ships its own showcase — `class DarkModeShowcase`
-at line 6851, guarded by `if A_LineFile = A_ScriptFullPath` so it runs only when
-the library is executed directly:
+`${CLAUDE_PLUGIN_ROOT}/Lib/_Dark.ahk` is the bundled dark-mode library and its own
+worked example — `class EnhancedDarkApp` at the top of the file shows the canonical
+shape of a GUI in this project:
 
 ```bash
-"$AHK_EXE" "C:\Scripts\Lib\DarkModeModular_Alpha.ahk"
+source "${CLAUDE_PLUGIN_ROOT}/hooks/_harness-env.sh"
+"$AHK_BIN_WSL" "$(wslpath -w "${CLAUDE_PLUGIN_ROOT}/Lib/_Dark.ahk")"
 ```
 
-Read that class before writing a new GUI. It is the canonical shape of a GUI in
-this project — `__New` → `BuildMenuBar` → `BuildLayout` → `BindEvents` → `Show`,
-controls held in a `Map()`, every handler `.Bind(this)`, palette changes routed
-through `DarkTheme.OnThemeChanged`. Match it rather than inventing a structure.
+Read it before writing a new GUI: `__New` → `InitializeGui` → `SetupControls` →
+`Show`, controls held in a `Map()`, every handler bound with `.Bind(this)`. Match that
+structure rather than inventing one.
 
-The library header (lines 1–33) is the API summary: `DarkGui`, `DarkTheme`,
-`DarkTitleBar`, `DarkMenu`, `DarkMenuBar`, `DarkScrollbar`, `DarkToolTip`.
-Controls added via `DarkGui.Add()` are dark-styled automatically; `+Accent` on a
-primary button gets the blue accent.
+Usage is wrap-then-add — build a normal `Gui()`, wrap it, then add controls through
+the wrapper so they are themed on creation:
 
-`DarkModeModular_Alpha.ahk` is canonical for alpha.30 work (role swap
-2026-08-14: it absorbed the Fable revision). Classic `DarkModeModular.ahk` is
-for alpha.17–.28 scripts, `_Fable.ahk` is a compatibility shim including
-`_Alpha`, `_Fable_Gdip.ahk` an A/B experiment — not canonical.
+```ahk
+myGui := Gui()
+dm := _Dark(myGui)                    ; dark title bar, background, menus
+dm.AddDarkButton("w120", "Save")
+dm.AddDarkEdit("w200")
+dm.AddDarkComboBox("w200", ["One", "Two"])
+```
+
+For a fuller control set — themed ListView, TreeView, tabs, DatePicker, MonthCal and
+theme presets — see the standalone [DarkMode](https://github.com/TrueCrimeDev/DarkMode)
+library, which is not bundled here.
 
 ## Deeper knowledge modules
 
@@ -42,8 +47,7 @@ Read when the showcase doesn't cover what you need:
 
 1. `${CLAUDE_PLUGIN_ROOT}/Modules/Module_GUI.md` — the whole GUI domain: constructor, control types, event binding,
    the Positioning Options table, `gForm()`, dependency injection, the form-field component system and
-   field validation. (Absorbed the former `Module_GUI_Extensive.md` on 2026-08-26; `Module_GUI_Layout.md`
-   was an agent-steering prompt and moved to `legacy/System_Prompts/`.)
+   field validation. (Absorbed the former `Module_GUI_Extensive.md`.)
 
 ## Positioning — the one convention that isn't inferable
 

@@ -78,10 +78,10 @@ For each public method, create:
 After generating tests:
 ```powershell
 # Syntax check
-& "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe" check "!Tests/Test_<ClassName>.ahk"
+& "$AHK_BIN_WSL" check "!Tests/Test_<ClassName>.ahk"
 
 # Run tests headlessly
-& "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe" /Headless /ErrorStdOut "!Tests/Test_<ClassName>.ahk"
+& "$AHK_BIN_WSL" /Headless /ErrorStdOut "!Tests/Test_<ClassName>.ahk"
 ```
 
 ## Rules
