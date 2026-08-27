@@ -2,18 +2,18 @@
 name: Module_Versions
 description: >
   AHK v2 version & portability reference — which features exist on stock v2.0, on upstream
-  v2.1-alpha, and on the +Console fork, with a portable fallback for every fork-only or
-  alpha-only construct. Answers "will this run on the build my user has?"
-  TRIGGER when: the request mentions a version (v2.0 / v2.1 / alpha), the +Console fork,
+  v2.1-alpha, and on the +Console fork, the alpha.30 breaking changes, and a portable
+  fallback for every fork-only or alpha-only construct.
+  TRIGGER when the request involves: a version (v2.0 / v2.1 / alpha), the +Console fork,
   #Requires, A_AhkVersion / VerCompare, Print / Eval / #EnableEval availability, typed
-  Struct or (a?)() support, or making a script portable / "work on stock AHK".
+  Struct or (a?)() support, the repl subcommand, or making a script portable / "work on
+  stock AHK" / "will this run on the build my user has?".
 ---
 
 # Module_Versions
 
 Spans AHK v2.0 → v2.1-alpha.30 +Console. The rules live in **AHK V2 CONSTRAINTS** below;
-cross-references in **SEE ALSO**. (The old `<!-- CONSTRAINTS -->` / `<!-- CROSS-REF -->`
-header comments duplicated those body sections, so the YAML frontmatter drops them.)
+cross-references in **SEE ALSO**.
 
 ## CAPABILITY MATRIX
 
@@ -23,7 +23,7 @@ What runs where. "alpha" = upstream `v2.1-alpha` from autohotkey.com; "fork" = t
 | Feature | v2.0 (stable) | v2.1-alpha | +Console fork |
 |---------|:---:|:---:|:---:|
 | `??` null-coalescing, `?:` ternary | ✓ | ✓ | ✓ |
-| Maybe operator `var?` (suppress unset) | ✗ | ✓ | ✓ |
+| Maybe operator `var?` (suppress unset) | ✓ (v2.0: only when passing to an optional parameter, array element or object literal, or on the RHS of a direct assignment) | ✓ | ✓ |
 | Maybe-call / index `(a?)()` `(a?)[]` | ✗ | ✓ | ✓ |
 | Arrowless function expression `(params) { ... }` (multi-statement) | ✗ | ✓ | ✓ |
 | Block-body fat arrow `=> { ... }` | ✗ (syntax error on **every** v2 build) | ✗ | ✗ |
@@ -35,6 +35,7 @@ What runs where. "alpha" = upstream `v2.1-alpha` from autohotkey.com; "fork" = t
 | `SyntaxError` exception class | ✗ | ✗ | ✓ |
 | JSON diagnostics `check /Diag=json` | ✗ | ✗ | ✓ |
 | `/CrashLog`, `/StdErrFile`, exit code `130` | ✗ | ✗ | ✓ |
+| `repl` subcommand (persistent stdin/stdout eval, JSON mode) | ✗ | ✗ | ✓ |
 
 The bottom block (Print/Eval/diagnostics/CLI) is what makes the fork AI-friendly. Everything
 above it is upstream and reaches anyone on the matching build.
@@ -118,7 +119,10 @@ OutputDebug("state=" this.state["mode"])
 > COVERED: Print · Eval (#EnableEval) · when to use them · guarded usage
 
 On the fork, prefer `Print`/`Eval` in tests and demos — that's their reason to exist. Keep
-them out of code that must also run on stock AHK, or guard them.
+them out of code that must also run on stock AHK, or guard them. For evaluating a series of
+expressions from outside the script, the fork's `repl` subcommand (a persistent
+stdin/stdout evaluator with a JSON mode) is preferred over spawning one process per
+expression.
 
 ```ahk
 ; ✓ Fork-native: variadic, no Format() wrapper, goes straight to stdout
@@ -161,15 +165,30 @@ Struct POINT {
 DllCall("Sleep", "UInt", 100, "Void")
 ```
 
+alpha.30 breakage, split by when it bites:
+
+- Load-time (exit 12): unparenthesised `!a ?? b` and `b + a ?? c` are rejected — write
+  `!(a ?? b)` and `b + (a ?? c)`.
+- Runtime (exit 10, passes `/validate`): typeless typed properties (`Struct X { buf: 32 }`)
+  throw "Parameter #3 invalid." — reserve raw bytes with an `Int8` array field or a
+  `Buffer` companion.
+- FFI removals (runtime): `StructFromPtr` is gone; `ComCall` no longer takes a class as an
+  argument; `DefineProp {type:}` is primitives-only; out-arg objects must expose `.Ptr`.
+
 Behavior shifts to know on alpha (they bite silently — not load errors):
 
 - A void method/function call returns `unset`, not `0`. A fat-arrow body that is just a void
   call, or a comma-tail ending in one, now yields `unset` — wrap as `(call(), 0)` if you need
   a value.
-- A class object's `base` is read-only (alpha.27+): `ClassObj.base := X` and
-  `ObjSetBase(ClassObj, X)` both throw.
+- A class object's base was read-only on alpha.27/.28 (`ClassObj.Base := X` and
+  `ObjSetBase(ClassObj, X)` both threw); it is writable again on alpha.30. Portability note
+  only — if you must run on those older alphas, do not reassign a class object's base.
 - `GuiCtrlFromHwnd`/`GuiFromHwnd` return **no value** (not `""`) on no match — assigning the
   result throws; use `?? 0` or `IsSet`.
+- End-of-chain `.Base` returns **no value**: `while (x := x.Base)` throws when it reaches
+  the top — guard with `x := x.Base ?? 0`.
+- `FileRead` on a zero-byte file throws "No value was returned." — this fires on the
+  *success* path of any subprocess-output reader; gate with `FileGetSize(path) > 0` first.
 
 v2.0 fallbacks: replace `(a?)()` with `a ? a() : ""` or a plain if/else (`if a` →
 `result := a()`; `else` → `result := ""`) — a bare `unset` ternary branch is v2.1-only and

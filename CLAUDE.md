@@ -39,11 +39,17 @@ The harness has three layers — use them in priority order. The full tables liv
    `test-scripts`, `demo-location`, `no-banner-comments`, `ahk-interpreter`,
    `ahk-fork-features`.
 
-2. **Skills** (`.claude/skills/`) handle most routine work — invoke with `/<name>`:
-   `/ahk-gui`, `/ahk-gui-gen`, `/ahk-oop`, `/ahk-text`, `/ahk-fix`, `/ahk-run`,
-   `/ahk-eval`, `/ahk-convert`, `/ahk-modernize`, `/ahk-new-class`, `/ahk-docs`,
-   `/ahk-ref`, `/ahk-audit-errors`, `/ahk-mistakes`, `/ahk-debug-dashboard`. Cheap,
-   in-context. **Skills are the default entry point for AHK work.**
+2. **Skills** (`.claude/skills/`) handle most routine work — invoke with `/<name>`. Nineteen
+   of them, in two groups.
+
+   *Knowledge skills* load a module and apply its rules: `/ahk-gui`, `/ahk-oop`, `/ahk-text`,
+   `/ahk-fix`, `/ahk-ref`, `/ahk-com`, `/ahk-dllcall`, `/ahk-winapi`, `/ahk-versions`.
+
+   *Tool skills* drive the interpreter or the repo directly: `/ahk-run`, `/ahk-eval`,
+   `/ahk-gui-gen`, `/ahk-convert`, `/ahk-modernize`, `/ahk-new-class`, `/ahk-docs`,
+   `/ahk-audit-errors`, `/ahk-mistakes`, `/ahk-debug-dashboard`.
+
+   Cheap, in-context. **Skills are the default entry point for AHK work.**
 
 3. **Agents** (`.claude/agents/`) run in a fresh context window when a task warrants it:
    `ahk-analysis`, `ahk-context`, `ahk-dependency-graph`, `ahk-profiler`,
@@ -80,8 +86,11 @@ Skills and rules pull the relevant knowledge module for you. Read
   `Gui()`, wrap it with `dm := _Dark(myGui)` (dark title bar, background, menus),
   then add controls through the wrapper — `dm.AddDarkButton()`, `dm.AddDarkEdit()`,
   `dm.AddDarkText()`, `dm.AddDarkComboBox()`, `dm.AddListView()`, etc.
-  `Lib/DarkModeModular_Alpha.ahk` is also available — the alpha.30 modernization
-  copy (typed Struct, class-ref typed properties) of the main repo's dark module.
+  `ClautoHotkey/Lib/DarkModeModular_Alpha.ahk` is a **stale snapshot** of the parent
+  repo's dark module and predates the 2026-08-14 role swap — never edit it. When
+  ClautoHotkey is opened inside the parent Autohotkey workspace, the canonical copy
+  is the parent's `Lib/DarkModeModular_Alpha.ahk`; `_Dark.ahk` above applies when
+  ClautoHotkey is opened as its own standalone project.
 
 ### Data handling
 - Arrays are 1-based. PCRE flags `i/m/s/x` only. Backtick escaping for quotes/specials.
@@ -119,6 +128,25 @@ back to built-in AHK v2 knowledge. Each module carries YAML frontmatter (`name` 
 trigger-rich `description`) and is surfaced by a matching skill — the harness routes
 on those descriptions natively, so there is no manual routing table to maintain.
 
+`Modules/Supplemental/` holds eight specialized modules, loaded by explicit path rather
+than by a domain skill. They carry the same frontmatter contract:
+
+| Module | For |
+|--------|-----|
+| `Module_FatArrows.md` | fat-arrow limits, callbacks, closures, `.Bind()` |
+| `Module_Formatting.md` | the house formatting standard |
+| `Module_JSDOC.md` | JSDoc conventions (Nich-Cebolla dialect, thqby LSP hover) |
+| `Module_MiniExamples.md` | corpus of official-documentation examples — grep, don't read whole |
+| `Module_Testing.md` | test framework, memory management, resource-leak checks |
+| `Module_Tooltip.md` | TooltipEx (nperovic) library reference |
+| `Module_UIA.md` | UI Automation (UIA-v2), including Chromium quirks |
+| `Module_TapHold.md` | TapHoldManager library reference |
+
+A corpus lint enforces the contract: `./Tools/lint_modules.py` checks every module for
+banned patterns (Map constructor pairs, wrong fence tags, `=> {`, banner dividers,
+removed alpha.30 constructs), frontmatter validity, and dangling cross-references. It
+runs automatically as a `pre-commit` hook over staged modules.
+
 ## Directory structure
 
 ```
@@ -128,9 +156,9 @@ on those descriptions natively, so there is no manual routing table to maintain.
 /Scripts/      - User-facing utility applications
 /Tests/        - Test scripts and validation tools
 /Lib/          - Shared libraries (_Dark.ahk, DarkModeModular_Alpha.ahk, cJSON.ahk, XHotstring.ahk, DarkListView.ahk)
-/Tools/        - Harness tools (CaptureWindow.ahk — PNG capture of a window by PID/title for AI GUI observation)
+/Tools/        - Harness tools (CaptureWindow.ahk — PNG capture of a window by PID/title;
+                 lint_modules.py — corpus lint for Modules/, also wired as a pre-commit hook)
 /legacy/       - Pre-harness prompts/scripts (System_Prompts, helper tools) — reference only
-/.claude/      - The harness: rules, skills, agents, hooks
 ```
 
 ## Important notes

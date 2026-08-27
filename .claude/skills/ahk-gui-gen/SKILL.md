@@ -14,8 +14,8 @@ Generate complete, production-quality GUIs from natural language descriptions.
 ## Before Generating
 
 1. **Invoke** `/ahk-gui` skill to load GUI module knowledge
-2. **Read** `Modules/Module_GUI.md` for patterns
-3. **Read** `Modules/Supplemental/Module_GUI_Layout.md` for positioning rules
+2. **Read** `Modules/Module_GUI.md` — construction, controls, events, the Positioning Options
+   table, `gForm()`, dependency injection, the form-field component system and field validation
 
 ## Generation Workflow
 
@@ -32,7 +32,7 @@ Generate complete, production-quality GUIs from natural language descriptions.
 ## GUI Template
 
 ```autohotkey
-#Requires AutoHotkey v2.0
+#Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 
 class <AppName> {
@@ -44,7 +44,7 @@ class <AppName> {
         this.gui.BackColor := "0x1a1a2e"
         this.gui.SetFont("s10 c0xe0e0e0", "Segoe UI")
         this.BuildControls()
-        this.gui.OnEvent("Close", (*) => ExitApp())
+        this.gui.OnEvent("Close", this.GuiClose.Bind(this))
         this.gui.OnEvent("Size", this.OnSize.Bind(this))
         this.gui.Show("w<width> h<height>")
     }
@@ -55,7 +55,7 @@ class <AppName> {
         w := <width> - m * 2
         currentY := m
 
-        ; === Controls with mathematical positioning ===
+        ; Controls with mathematical positioning
         this.gui.AddText("x" . m . " y" . currentY . " w" . w . " h25", "Label")
         currentY += 25 + s
 
@@ -76,6 +76,10 @@ class <AppName> {
 
     OnOK(*) {
         ; Handle button click
+    }
+
+    GuiClose(*) {
+        ExitApp()
     }
 
     __Delete() {

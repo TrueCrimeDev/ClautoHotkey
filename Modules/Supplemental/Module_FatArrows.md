@@ -1,3 +1,13 @@
+---
+name: Module_FatArrows
+description: >
+  Fat-arrow functions, callbacks and event binding in AHK v2 - when a `=>` expression is safe, when a named
+  method is required, closures over loop variables, and `.Bind()` semantics. TRIGGER when the request
+  involves: fat arrow, =>, lambda, anonymous function, callback, closure, .Bind(), BoundFunc, event
+  handler, OnEvent, SetTimer callback, "inline function", "one-liner", currying, composition. Not covered:
+  property descriptors and meta-functions - see Module_DynamicProperties.md.
+---
+
 # AutoHotkey v2 Fat Arrows and Callbacks
 
 A practical guide to fat-arrow functions, callback binding, and event handling in
@@ -9,7 +19,7 @@ method is required.
 A fat arrow (`=>`) defines a function whose body is a **single expression**. The
 expression's result is the function's return value. There is no block form.
 
-```cpp
+```ahk
 Square := x => x * x                 ; single expression, returns x * x
 Add := (a, b) => a + b               ; parentheses required for multiple parameters
 ```
@@ -20,7 +30,7 @@ The hard rules:
    including v2.1-alpha.30. A fat-arrow body cannot be a block and cannot contain
    multiple statements.
 
-   ```cpp
+   ```ahk
    ; WRONG: load-time syntax error on all v2 builds
    handler := (a, b) => {
        total := a + b
@@ -31,7 +41,7 @@ The hard rules:
 2. **v2.1's multi-statement function expression is arrowless.** Under a v2.1 pin,
    write the parameter list followed directly by a brace block — no `=>`:
 
-   ```cpp
+   ```ahk
    handler := (a, b) {
        total := a + b
        return total
@@ -42,7 +52,7 @@ The hard rules:
    trivial one-expression adapters that return a value. Anything with real logic —
    or anything whose body is a call to a void function — belongs in a named method:
 
-   ```cpp
+   ```ahk
    this.btn.OnEvent("Click", this.HandleClick.Bind(this))
    ```
 
@@ -53,7 +63,7 @@ The hard rules:
    `v2.1-alpha.30`, so handler-position arrows that wrap void calls are written
    as named methods throughout.
 
-   ```cpp
+   ```ahk
    ; HAZARD under v2.1: Hide() is void, so the arrow returns unset
    gui.OnEvent("Escape", (*) => gui.Hide())
 
@@ -71,7 +81,7 @@ method *and* return its value.
 
 ## Core Event Handling Concepts
 
-```cpp
+```ahk
 #Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 
@@ -118,7 +128,7 @@ class EventHandlingBasics {
 
 ## Custom Event System
 
-```cpp
+```ahk
 #Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 
@@ -205,7 +215,7 @@ class CustomEventSystem {
 
 ## Event-Driven Architecture Pattern
 
-```cpp
+```ahk
 #Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 
@@ -367,7 +377,7 @@ class StatsView {
 
 ## Event Handling with Hotkeys and Hotstrings
 
-```cpp
+```ahk
 #Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 
@@ -466,7 +476,7 @@ ClearTip() {
 
 ### Binding Context Properly
 
-```cpp
+```ahk
 #Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 
@@ -517,7 +527,7 @@ class BindingContextDemo {
 
 ### Memory Management and Cleanup
 
-```cpp
+```ahk
 #Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 
@@ -574,7 +584,7 @@ class MemoryManagementDemo {
 
 ### Performance Considerations
 
-```cpp
+```ahk
 #Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 
@@ -652,7 +662,7 @@ controls are delivered only to that control's own registered handlers. The
 closest equivalent is registering one bound handler on every control and
 switching on the sender.
 
-```cpp
+```ahk
 #Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 
@@ -685,7 +695,7 @@ class SharedHandlerDemo {
 
 ## Advanced: Cross-Object Communication
 
-```cpp
+```ahk
 #Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 

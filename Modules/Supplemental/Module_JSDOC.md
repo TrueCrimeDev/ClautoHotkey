@@ -1,3 +1,13 @@
+---
+name: Module_JSDOC
+description: >
+  JSDoc documentation conventions for AHK v2 OOP scripts in the Nich-Cebolla library dialect, as rendered
+  by the thqby AHK LSP on hover - tag set, class/method/property blocks, and a decision rule for when
+  annotating is worth it. TRIGGER when the request involves: jsdoc, document, annotate, add docs,
+  docstring, comment style, api docs, @param, @returns, @throws, @example, @class, hover tooltip, LSP
+  hover, "document this class".
+---
+
 # JSDoc in AHK v2 OOP Scripts
 ## A Practical Guide Based on Nich-Cebolla's Library Style
 

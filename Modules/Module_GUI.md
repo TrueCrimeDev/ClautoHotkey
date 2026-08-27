@@ -1,11 +1,18 @@
 ---
 name: Module_GUI
-description: 'Screen graphics operations (PixelSearch, ImageSearch, screen overlays) and WebView2/IE-based
-  browser controls embedded in a Gui are not covered — use built-in AHK v2 knowledge (no dedicated graphics/screen
-  module yet). TRIGGER when the request involves: Gui(), AddText(), AddEdit(), AddButton(), AddListView(),
-  AddTreeView(), AddGroupBox(), Submit(), OnEvent(), .Bind(), GuiForm, "make a window", "add a button",
-  "create a form", "gui layout", "position controls", "dialog", "listview rows", "treeview nodes", "resizable
-  window", "modal dialog", "currentY", "padding"'
+description: 'GUI construction in AHK v2 — the Gui() object, adding and configuring controls, event
+  binding with .Bind(this), ListView and TreeView CRUD, owner/owned modal windows, margin- and
+  Section-based positioning, resize handling via OnEvent("Size"), mathematically computed layouts
+  (LayoutCalculator, GuiForm, gForm), dependency-injected GUI classes, reusable form-field
+  components (FormField, FormBuilder), and rule-based input validation (ValidationRule,
+  FieldValidator). TRIGGER when the request involves: Gui(), AddText(), AddEdit(), AddButton(),
+  AddListView(), AddTreeView(), AddGroupBox(), Submit(), OnEvent(), .Bind(), GuiForm, "make a window",
+  "add a button", "create a form", "gui layout", "position controls", "dialog", "listview rows", "treeview
+  nodes", "resizable window", "modal dialog", "currentY", "padding", gForm, FormField, FormBuilder,
+  ValidationRule, FieldValidator, "form validation", "validate input", "required field",
+  "error message", "reusable component", "dependency injection", "inject a service". Not covered: screen graphics
+  (PixelSearch, ImageSearch, screen overlays, GDI+) and WebView2/IE-based browser controls embedded in a
+  Gui — use built-in AHK v2 knowledge (no dedicated graphics/screen module yet).'
 ---
 
 # Module_GUI
@@ -48,13 +55,26 @@ description: 'Screen graphics operations (PixelSearch, ImageSearch, screen overl
 | `.AddProgress()` | `.AddProgress(options?)` | Progress bar |
 | `.AddHotkey()` | `.AddHotkey(options?, default?)` | Hotkey input control |
 
+### Positioning Options (option-string prefixes accepted by every `Add*` method)
+| Option | Meaning |
+|--------|---------|
+| `x`/`y` | Absolute client-area coordinate |
+| `x+n` / `y+n` | Offset from the previous control's right edge / bottom edge |
+| `xp` / `yp` | Reuse the previous control's x / y (`xp+n` offsets from it) |
+| `xm` / `ym` | Return to the window's left / top margin (`MarginX` / `MarginY`) |
+| `xs` / `ys` | Return to the x / y saved by the last control carrying `Section`; a bare `ys` starts a new column to the right of the section |
+| `Section` | Mark this control as the anchor that later `xs`/`ys` return to |
+| `wp` / `hp` | Reuse the previous control's width / height (`wp-20` adjusts from it) |
+
+Default flow with no positioning option: the control is placed **below** the previous one at the same x. There is no rightward accumulation.
+
 ### Control Object Methods and Properties
 | Method/Property | Signature | Notes |
 |----------------|-----------|-------|
 | `.OnEvent()` | `.OnEvent(eventName, callback)` | Bind control-level events: `"Click"`, `"Change"`, `"DoubleClick"`, `"ItemSelect"` |
 | `.Value` | `.Value` | Get or set control's current value; type varies by control |
 | `.Opt()` | `.Opt(options)` | Add/remove options on existing control: `"+Disabled"`, `"-Visible"` |
-| `.Move()` | `.Move(x?, y?, w?, h?)` | Reposition/resize control; pass `""` to leave an axis unchanged |
+| `.Move()` | `.Move(x?, y?, w?, h?)` | Reposition/resize control; **omit** a parameter (`ctrl.Move(, , w)`) to leave that axis unchanged — passing `""` throws TypeError ("requires a Number, but received an empty string") |
 | `.Enabled` | `.Enabled := true/false` | Enable/disable control |
 | `.Visible` | `.Visible := true/false` | Show/hide control without removing it |
 
@@ -65,7 +85,7 @@ description: 'Screen graphics operations (PixelSearch, ImageSearch, screen overl
 | `lv.Delete()` | `.Delete(rowNum?)` | Delete specific row (1-based) or all rows if no arg |
 | `lv.Modify()` | `.Modify(rowNum, options?, col1?, col2?, ...)` | Edit row text or options; `""` options to change text only |
 | `lv.ModifyCol()` | `.ModifyCol(col?, options?)` | Resize/configure column; no args = auto-size all to content |
-| `lv.GetNext()` | `.GetNext(startRow?, mode?)` | Find next selected/checked/focused row; mode: `"Selected"`, `"Focused"`, `"Checked"`; returns 0 at end |
+| `lv.GetNext()` | `.GetNext(startRow?, mode?)` | Find next selected/checked/focused row; mode: **omitted** = next selected (highlighted) row; `"C"`/`"Checked"`; `"F"`/`"Focused"`. `"Selected"` is NOT a valid mode — it throws ValueError. Returns 0 at end |
 | `lv.GetText()` | `.GetText(row, col?)` | Get cell text; col is 1-based — row 0 retrieves column header text; col 0 does not exist |
 | `lv.GetCount()` | `.GetCount(mode?)` | Row count; `"Col"` for column count |
 
@@ -84,21 +104,23 @@ description: 'Screen graphics operations (PixelSearch, ImageSearch, screen overl
 | Function | Signature | Notes |
 |----------|-----------|-------|
 | `GuiForm()` | `GuiForm(x, y, w, h, extraParams := "")` | Returns formatted position string `"x{} y{} w{} h{} extras"` for `gui.Add()` |
+| `gForm()` | `gForm(x := "", y := "", w := 0, h := 0, extra := "")` | Same job, but `x`/`y` also accept relative keyword strings (`"xp"`, `"y+5"`, `"x+10"`) and `w`/`h` of `0` are omitted — TIER 7 |
 
 ## AHK V2 CONSTRAINTS
 
 - **Class encapsulation is mandatory** — all GUI code must be inside a class or named function; never write bare top-level `Gui()` calls for TIER 2+ work (absence of class prevents `.Bind(this)` from resolving).
-- **Map() for all control storage** — `this.controls := Map()` is the only safe container for named control references; `{}` object literals lack `.Has()`, `.Delete()`, and safe-access semantics — using `{}` causes silent data loss on dynamic keys.
+- **Map() for all control storage** — `this.controls := Map()` is the only safe container for named control references; a plain object exposes `HasOwnProp()`/`DeleteProp()` instead of the Map API, its keys are case-insensitive strings only (no integer keys, no object keys, no case distinction), and `obj.%key%` collides with real properties and with inherited base-chain members.
 - **`.Bind(this)` is mandatory for class-method event handlers** — AHK v2 closures do not automatically capture the class instance; omitting `.Bind(this)` causes `this` to be undefined inside the handler, producing an UnsetError at call time.
 - **`gui.Close()` does not exist** — calling it throws MethodError; use `gui.Hide()` to keep the window object alive for later `Show()`, or `gui.Destroy()` to permanently remove it.
-- **Never place a width on a Section option** — `"Section w300"` causes cumulative horizontal drift in AHK v2's implicit positioning engine; use `"Section"` alone or `"xm Section"` to reset both section and left margin simultaneously.
-- **Always start each logical section's first control with `xm`** — AHK v2 accumulates the previous control's right edge by default; omitting `xm` after a Section causes every subsequent control to drift rightward.
-- **Arrow syntax is single-expression only** — `(*) => expr` is valid; `(*) => { stmt1; stmt2 }` multi-line blocks are invalid in AHK v2 and cause a syntax error; use separate named bound methods for multi-statement handlers.
+- **Know the default positioning flow** — with no positioning option each control is placed *below* the previous one at the same x (the window margin); there is no rightward accumulation. Use `x+n`/`y+n` for relative offsets, `xp`/`yp` to reuse the previous control's coordinate, `xm`/`ym` to return to the window margin, and `xs`/`ys` to return to the last `Section` anchor.
+- **Arrow syntax is single-expression only** — `(*) => expr` is valid; `=> {` is a syntax error on every build. v2.1 does provide an arrowless multi-statement function expression, `(params) { ... }`, but it is not valid inline inside an argument list — so an `OnEvent` callback with more than one statement must still be a named method bound with `.Bind(this)`.
+- **Gui coordinates are LOGICAL units; WinGetPos/WinMove are PHYSICAL pixels** — `Gui.Show()`, `Gui.Move()` and `GuiCtrl.Move()` take logical units scaled by `A_ScreenDPI/96` (×1.25 at 125% scaling), while `WinGetPos()`/`WinMove()` operate in physical pixels. Never feed a `WinGetPos` result into `Gui.Move()`, and never feed a Gui coordinate into `WinMove()`. The `width`/`height` handed to an `OnEvent("Size")` callback are already in the Gui's own units, so arithmetic on them needs no conversion.
+- **`GuiCtrlFromHwnd()` and `GuiFromHwnd()` return NO VALUE on no match** — `ctrl := GuiCtrlFromHwnd(h)` throws `UnsetError` ("No value was returned.") rather than yielding an empty string; guard every call with `?? 0`.
 - **`gui.Submit()` hides the window by default** — `Submit()` without arguments collects v-named control values AND calls `Hide()`; pass `false` to suppress the hide; never call `Hide()` after `Submit()` — it is redundant.
 - **Build controls once, guard with `_built`** — calling `CreateControls()` on every `Show()` duplicates controls; set `_built := true` after the first build and check before rebuilding (TIER 4+).
 - **Owner window sequencing is order-sensitive** — call `ownerGui.Opt("+Disabled")` BEFORE showing the owned window; call `ownerGui.Opt("-Disabled")` BEFORE destroying or hiding the owned window — never after; the owner stays permanently disabled if it is still disabled when the owned window closes.
 - **ListView and TreeView indices are 1-based** — `lv.GetText(1, 1)` is the first cell; col 0 does not exist; row 0 retrieves column header text; `lv.GetNext()` returns 0 only as an end-of-list sentinel.
-- **Forward-loop ListView delete shifts row numbers** — deleting `A_Index` inside a `Loop GetCount()` skips rows because deletion shifts all indices; use a `while (rowNum := lv.GetNext(rowNum, "Selected"))` pattern and reset `rowNum := 0` after each delete.
+- **Forward-loop ListView delete shifts row numbers** — deleting `A_Index` inside a `Loop GetCount()` skips rows because deletion shifts all indices; use a `while (rowNum := lv.GetNext(rowNum))` pattern and reset `rowNum := 0` after each delete.
 - **HandleSize must guard against minimized state** — `minMax = -1` means minimized; calling `ctrl.Move()` while minimized causes controls to vanish on restore; always `return` early when `minMax = -1`.
 
 Safe-access priority order for GUI control data:
@@ -239,9 +261,9 @@ class ListViewCrudDemo {
     DeleteRow(*) {
         lv     := this.controls["lv"]
         rowNum := 0
-        ; ✓ GetNext(start, "Selected") finds the next selected row; reset to 0 after each
-        ; delete because row numbers shift downward after removal
-        while (rowNum := lv.GetNext(rowNum, "Selected")) {
+        ; ✓ GetNext(start) with the mode omitted finds the next SELECTED row; reset to 0
+        ; after each delete because row numbers shift downward after removal
+        while (rowNum := lv.GetNext(rowNum)) {
             lv.Delete(rowNum)
             rowNum := 0
         }
@@ -249,7 +271,7 @@ class ListViewCrudDemo {
 
     EditRow(*) {
         lv     := this.controls["lv"]
-        rowNum := lv.GetNext(0, "Selected")    ; ✓ GetNext(0, ...) = start from row 1
+        rowNum := lv.GetNext(0)      ; ✓ GetNext(0) = first selected row, searching from row 1
         if !rowNum
             return
         ; ✓ GetText(row, col): both row and col are 1-based integers
@@ -455,27 +477,27 @@ class OwnedSettingsDialog {
 ```
 
 ## TIER 3 — Layout and Positioning Management
-> METHODS COVERED: AddText() · AddEdit() · AddCheckBox() · AddButton() · Section · xm · ctrl.Move() · OnEvent("Size") · PositionValidator.ValidatePositioning() · PositionValidator.ValidateObjectLiterals() · RegExMatch()
+> METHODS COVERED: AddText() · AddEdit() · AddCheckBox() · AddButton() · Section · xm · xs/ys · ctrl.Move() · OnEvent("Size") · PositionValidator.ValidatePositioning() · PositionValidator.ValidateArrowBlocks() · RegExMatch()
 
-Covers AHK v2's cumulative positioning system: `xm`/`ym` margin resets, Section grouping, multi-column layouts with `x+n` relative offsets, the PositionValidator class for pre-output error detection, and responsive window resizing via `OnEvent("Size")`. Use this tier for any GUI with more than one logical section, more than five controls, or inline multi-column button rows. Always run PositionValidator mentally before outputting code at this tier.
+Covers AHK v2's relative positioning system: `xm`/`ym` margin resets, `Section` anchors with `xs`/`ys`, multi-column layouts with `x+n` relative offsets, the PositionValidator class for pre-output error detection, and responsive window resizing via `OnEvent("Size")`. Use this tier for any GUI with more than one logical section, more than five controls, or inline multi-column button rows. Always run PositionValidator mentally before outputting code at this tier.
 ```ahk
 ; POSITIONING RULES — apply before writing any multi-section GUI:
 ;
-; ✓ Correct: Section header always uses xm to reset left margin
+; ✓ Default flow: with no positioning option a control lands directly BELOW the
+;   previous one at the same x. Nothing drifts rightward on its own.
+;
+; ✓ Correct: Section header uses xm to sit at the left margin and marks the anchor
 ;   this.gui.AddText("xm Section", "Section Header")
 ;
-; ✓ Correct: First control in each section resets with xm
+; ✓ Correct: First control in each section restates xm so the section is left-aligned
 ;   this.controls["ctrl"] := this.gui.AddEdit("xm w200")
 ;
 ; ✓ Correct: Sibling controls in same row use relative x+n offset
 ;   this.controls["btn1"] := this.gui.AddButton("xm w100",  "Save")
 ;   this.controls["btn2"] := this.gui.AddButton("x+10 w100", "Cancel")
 ;
-; ✗ Width on Section tag causes cumulative drift
-;   this.gui.AddText("Section w300", "Header")    ; → NEVER put w### on Section
-;
-; ✗ Missing xm on first control after section header
-;   this.controls["ctrl"] := this.gui.AddEdit("w200")  ; → inherits wrong position
+; ✓ Correct: xs/ys return to the last Section anchor — this is what Section is FOR
+;   this.controls["col2"] := this.gui.AddEdit("ys w200")   ; new column beside the section
 
 MultiSectionGui()
 
@@ -520,29 +542,27 @@ class MultiSectionGui {
 class PositionValidator {
     static ValidatePositioning(guiCode) {
         errors := []
-        if RegExMatch(guiCode, "Section\s+w\d+")
-            errors.Push("CRITICAL: Never use 'Section w###' — use 'Section' alone")
         sectionCount := 0
-        xmResetCount := 0
+        anchorRefCount := 0
         pos := 1
-        while (pos := RegExMatch(guiCode, "Section", &m, pos)) {
+        while (pos := RegExMatch(guiCode, "\bSection\b", &m, pos)) {
             sectionCount++
             pos := m.Pos + m.Len
         }
         pos := 1
-        while (pos := RegExMatch(guiCode, "\bxm\b", &m, pos)) {
-            xmResetCount++
+        while (pos := RegExMatch(guiCode, "\b(?:xm|xs|ys)\b", &m, pos)) {
+            anchorRefCount++
             pos := m.Pos + m.Len
         }
-        if (sectionCount > 0 && xmResetCount < sectionCount)
-            errors.Push("WARNING: Sections without xm reset may cause positioning drift")
+        if (sectionCount > 0 && anchorRefCount = 0)
+            errors.Push("WARNING: Section declared but no xm/xs/ys ever returns to an anchor")
         return errors
     }
 
-    static ValidateObjectLiterals(code) {
+    static ValidateArrowBlocks(code) {
         errors := []
-        if RegExMatch(code, "=>\s*\{[^}]*\n[^}]*\}")
-            errors.Push("CRITICAL: Never use arrow syntax (=>) with multi-line blocks")
+        if RegExMatch(code, "=>\s*\{")
+            errors.Push("CRITICAL: '=> {' is a syntax error — use a named method + .Bind(this)")
         return errors
     }
 }
@@ -556,7 +576,9 @@ class PositionValidator {
 ;     width, height: new client-area size (title bar and borders excluded)
 ;
 ; Use ctrl.Move(x, y, w, h) to reposition or resize controls.
-; Pass "" for any axis you want to leave unchanged.
+; OMIT any parameter you want to leave unchanged — ctrl.Move(, , w) resizes width only.
+; Passing "" instead throws TypeError ("requires a Number, but received an empty string").
+; width/height arrive in the Gui's own logical units — no A_ScreenDPI conversion needed.
 ; Always check (minMax = -1) first and return early — moving controls while the
 ; window is minimized causes them to disappear on restore.
 
@@ -602,7 +624,8 @@ class ResizableLogGui {
         statusY := pad + logH + pad
         btnX    := width - pad - 80
         btnY    := statusY + 20 + pad
-        ; ✓ Move(x, y, w, h): all four axes explicit; pass "" to leave one unchanged
+        ; ✓ Move(x, y, w, h): all four axes explicit; omit a parameter — Move(, , w) —
+        ;   to leave that axis unchanged; never pass "" for an axis
         this.controls["log"].Move(pad, pad, logW, logH)
         this.controls["status"].Move(pad, statusY, logW, 20)
         this.controls["clearBtn"].Move(btnX, btnY, 80, 28)
@@ -629,7 +652,7 @@ class ResizableLogGui {
 ## TIER 4 — Mathematical Layout System
 > METHODS COVERED: LayoutCalculator.Calculate() · LayoutCalculator.Validate() · LayoutCalculator.FormatReport() · LayoutAwareGui.__New() · AddElement() · ParseDimension() · CalculateLayout() · CreateControls() · ShowLayoutReport() · Show() · MsgBox()
 
-Introduces the `LayoutCalculator` static class and `LayoutAwareGui` base class for data-driven, mathematically validated GUI construction. Every element's x, y, width, and height is computed from window dimensions and padding; overlap and boundary checks run automatically; a layout report can be displayed on demand. Use this tier for forms with dynamic element lists, settings panels requiring pixel-perfect alignment, or any scenario where positions must be auditable and reproducible.
+Introduces the `LayoutCalculator` static class and `LayoutAwareGui` base class for data-driven, mathematically validated GUI construction. Every element's x, y, width, and height is computed from window dimensions and padding; boundary checks run automatically and accumulate every violation; a layout report can be displayed on demand. Use this tier for forms with dynamic element lists, settings panels requiring pixel-perfect alignment, or any scenario where positions must be auditable and reproducible.
 ```ahk
 ; LayoutCalculator — static utility for coordinate calculation and validation
 class LayoutCalculator {
@@ -640,7 +663,7 @@ class LayoutCalculator {
         for element in elements {
             elementResult := Map()
             elementResult["x"]            := padding
-            elementResult["xReason"]      := "Reset to margin (xm) — prevents drift"
+            elementResult["xReason"]      := "Left margin (xm)"
             elementResult["y"]            := currentY
             elementResult["yReason"]      := "Accumulated from previous elements + padding"
             elementResult["width"]        := element.Has("width")
@@ -658,21 +681,23 @@ class LayoutCalculator {
         return result
     }
 
+    ; ✓ Accumulate EVERY violation — overwriting a single string loses all but the last
     static Validate(layout, windowWidth, windowHeight) {
-        overlapCheck  := "No overlaps detected"
-        boundaryCheck := "All elements within boundaries"
+        violations := []
         for elementId, element in layout {
             if (element["x"] + element["width"] > windowWidth)
-                boundaryCheck := "Element " elementId " exceeds right boundary"
+                violations.Push("Element " elementId " exceeds right boundary")
             if (element["y"] + element["height"] > windowHeight)
-                boundaryCheck := "Element " elementId " exceeds bottom boundary"
+                violations.Push("Element " elementId " exceeds bottom boundary")
         }
-        return Map("overlap", overlapCheck, "boundary", boundaryCheck)
+        ; ✓ Map() built empty then keyed — never the banned constructor-with-pairs form
+        result := Map()
+        result["boundary"] := violations
+        return result
     }
 
     static FormatReport(layout, validation) {
-        sep    := "=================================================="
-        report := "GUI Layout Analysis`n" sep "`n`n"
+        report := "GUI Layout Analysis`n`n"
         for elementId, element in layout {
             report .= "Element: " elementId "`n"
             report .= "  X:      " element["x"]      " px (" element["xReason"]      ")`n"
@@ -681,8 +706,12 @@ class LayoutCalculator {
             report .= "  Height: " element["height"] " px (" element["heightReason"] ")`n`n"
         }
         report .= "Validation:`n"
-        report .= "  Overlap:  " validation["overlap"]  "`n"
-        report .= "  Boundary: " validation["boundary"] "`n"
+        if (validation["boundary"].Length) {
+            for violation in validation["boundary"]
+                report .= "  Boundary: " violation "`n"
+        } else {
+            report .= "  Boundary: All elements within boundaries`n"
+        }
         return report
     }
 }
@@ -707,14 +736,15 @@ class LayoutAwareGui {
     AddElement(id, type, options := "", text := "") {
         width  := this.ParseDimension(options, "w", this.windowWidth - (this.padding * 2))
         height := this.ParseDimension(options, "h", 25)
-        this.elements.Push(Map(
-            "id",      id,
-            "type",    type,
-            "width",   width,
-            "height",  height,
-            "options", options,
-            "text",    text
-        ))
+        ; ✓ empty Map() then per-key assignment — the constructor-with-pairs form is banned
+        elementDef := Map()
+        elementDef["id"]      := id
+        elementDef["type"]    := type
+        elementDef["width"]   := width
+        elementDef["height"]  := height
+        elementDef["options"] := options
+        elementDef["text"]    := text
+        this.elements.Push(elementDef)
         return this
     }
 
@@ -805,7 +835,13 @@ GuiForm(x, y, w, h, extraParams := "") {
 }
 
 ; ✓ Correct: TIER 5 layout foundation — single pad, currentY tracking
-;   Never name the local "gui" — it shadows the Gui class and throws UnsetError
+;   Never name a local or a parameter "gui" — identifiers shadow built-in class names
+;   case-insensitively. If the shadowing name is still unassigned when the class is
+;   called — including the canonical `gui := Gui()`, where the right-hand side resolves
+;   to the not-yet-assigned local — you get UnsetError ("This local variable has not
+;   been assigned a value"). If it already holds a value, you get MethodError instead
+;   (This value of type "Gui" has no method named "Call"). Same trap for "menu",
+;   "array", "map".
 CreateSettingsGui() {
     g := Gui("+Resize", "Settings")
     g.OnEvent("Close",  (*) => g.Hide())
@@ -984,7 +1020,7 @@ ThreeColumnDemo() {
 }
 
 ; PATTERN 3: Right-aligned button row
-RightAlignedButtons(gui, currentY, windowWidth, pad) {
+RightAlignedButtons(g, currentY, windowWidth, pad) {
     labels  := ["OK", "Cancel", "Apply"]
     btnW    := 100
     btnH    := 30
@@ -993,13 +1029,13 @@ RightAlignedButtons(gui, currentY, windowWidth, pad) {
 
     for idx, label in labels {
         x := startX + (idx - 1) * (btnW + pad)
-        gui.Add("Button", GuiForm(x, currentY, btnW, btnH), label)
+        g.Add("Button", GuiForm(x, currentY, btnW, btnH), label)
     }
     return currentY + btnH + pad
 }
 
 ; PATTERN 4: Centered button row
-CenteredButtons(gui, currentY, windowWidth, pad) {
+CenteredButtons(g, currentY, windowWidth, pad) {
     labels := ["Save", "Cancel"]
     btnW   := 110
     btnH   := 30
@@ -1008,13 +1044,13 @@ CenteredButtons(gui, currentY, windowWidth, pad) {
 
     for idx, label in labels {
         x := startX + (idx - 1) * (btnW + pad)
-        gui.Add("Button", GuiForm(x, currentY, btnW, btnH), label)
+        g.Add("Button", GuiForm(x, currentY, btnW, btnH), label)
     }
     return currentY + btnH + pad
 }
 
 ; PATTERN 5: Distributed button row (equal widths, full content width)
-DistributedButtons(gui, currentY, windowWidth, pad) {
+DistributedButtons(g, currentY, windowWidth, pad) {
     labels      := ["Back", "Next", "Finish"]
     btnH        := 30
     contentWidth := windowWidth - (pad * 2)
@@ -1022,7 +1058,7 @@ DistributedButtons(gui, currentY, windowWidth, pad) {
 
     for idx, label in labels {
         x := pad + (idx - 1) * (btnW + pad)
-        gui.Add("Button", GuiForm(x, currentY, btnW, btnH), label)
+        g.Add("Button", GuiForm(x, currentY, btnW, btnH), label)
     }
     return currentY + btnH + pad
 }
@@ -1079,8 +1115,14 @@ CreateProductionGui() {
 
     ; Label + edit pairs
     labelWidth := 80
-    for idx, fieldDef in [Map("label", "Name:",  "vname", "vName"),
-                           Map("label", "Email:", "vname", "vEmail")] {
+    ; ✓ each field def built as an empty Map() plus per-key assignment
+    nameField := Map()
+    nameField["label"] := "Name:"
+    nameField["vname"] := "vName"
+    emailField := Map()
+    emailField["label"] := "Email:"
+    emailField["vname"] := "vEmail"
+    for idx, fieldDef in [nameField, emailField] {
         g.Add("Text", GuiForm(pad, currentY, labelWidth, 23), fieldDef["label"])
         g.Add("Edit", GuiForm(pad + labelWidth + pad, currentY,
                 contentWidth - labelWidth - pad, 23, fieldDef["vname"]), "")
@@ -1136,6 +1178,487 @@ CreateProductionGui()
 ; Check: for-loop button rows use (idx - 1) * (btnW + pad) formula
 ```
 
+## TIER 7 — gForm Relative/Absolute Option Builder
+> METHODS COVERED: gForm() · IsNumber() · gui.AddText() · gui.AddEdit() · gui.AddButton() · gui.Submit() · OnEvent() · Bind()
+
+`GuiForm()` (TIER 5) assumes every coordinate is a number computed from `pad`/`currentY`. `gForm()` is the mixed-mode variant: `x` and `y` accept either a number (emitted as `x100`/`y200`) or a string that already carries its own prefix (`"xp"`, `"y+5"`, `"x+10"`, `"ys"`), and `w`/`h` of `0` are dropped from the option string entirely. Use it for layouts that flow relatively from control to control but pin a few coordinates absolutely — a login panel, a toolbar strip, a small settings block. Use `GuiForm()` instead when the layout is fully computed and every value is numeric; do not mix the two helpers inside one window.
+```ahk
+; x and y accept a number or a string that already carries its own prefix.
+; w and h are numbers only — pass 0 (the default) to omit that dimension.
+gForm(x := "", y := "", w := 0, h := 0, extra := "") {
+    result := ""
+    if (x != "")
+        result .= (IsNumber(x) ? "x" : "") x
+    if (y != "")
+        result .= (result ? " " : "") ((IsNumber(y) ? "y" : "") y)
+    if (w > 0)
+        result .= (result ? " " : "") "w" w
+    if (h > 0)
+        result .= (result ? " " : "") "h" h
+    if (extra != "")
+        result .= (result ? " " : "") extra
+    return result
+}
+
+LoginGui()
+
+class LoginGui {
+    __New() {
+        this.gui      := Gui("+Resize", "gForm Example")
+        this.controls := Map()
+        this.gui.SetFont("s10")
+        this.gui.OnEvent("Close",  (*) => this.gui.Hide())
+        this.gui.OnEvent("Escape", (*) => this.gui.Hide())
+        this.CreateControls()
+        this.gui.Show()
+    }
+
+    CreateControls() {
+        ; ✓ a LOCAL alias named "gu" is safe; a local named "gui" would shadow the
+        ;   built-in Gui class. this.gui is member access and shadows nothing.
+        gu := this.gui
+        gu.AddText(gForm(10, 10, 200, 30), "Name:")
+        this.controls["user"] := gu.AddEdit(gForm("xp", "y+5", 200, 25, "vUserName"))
+        gu.AddText(gForm(10, "y+15", 200, 30), "Password:")
+        this.controls["pass"] := gu.AddEdit(gForm("xp", "y+5", 200, 25, "Password vUserPass"))
+
+        this.controls["login"] := gu.AddButton(gForm(10, "y+20", 100, 30, "Default"), "Login")
+        this.controls["login"].OnEvent("Click", this.HandleLogin.Bind(this))
+        this.controls["cancel"] := gu.AddButton(gForm("x+10", "yp", 100, 30), "Cancel")
+        this.controls["cancel"].OnEvent("Click", (*) => this.gui.Hide())
+        this.controls["status"] := gu.AddText(gForm(10, "y+20", 210, 20, "Center"), "Ready")
+    }
+
+    HandleLogin(*) {
+        saved := this.gui.Submit(false)
+        this.controls["status"].Value := "Login attempted with: " saved.UserName
+    }
+}
+```
+
+## TIER 8 — Dependency Injection for GUI Classes
+> METHODS COVERED: __New() · Map() · Map.Clone() · Map.Get() · Map.Has() · RegExMatch() · OnEvent() · Bind() · try/catch · OutputDebug()
+
+A GUI class that constructs its own data store, validator and logger cannot be exercised without those exact collaborators, and swapping one means editing the window. Pass them in through `__New()` instead: the GUI keeps the window and the wiring, the collaborators keep the behaviour, and a single composition root at the bottom of the script is the only place that names concrete classes. Optional collaborators default to `""` and are guarded once, in a private `Log()`-style wrapper, rather than at every call site. Use this tier whenever a window persists data, validates it, or reports to anything outside itself.
+```ahk
+; Collaborators are plain classes with no knowledge of the GUI.
+class UserRecordService {
+    __New() {
+        this.records := Map()
+        this.nextId  := 1
+    }
+
+    Save(userData) {
+        if !(userData is Map)
+            throw TypeError("Save expects a Map of field values, got " Type(userData))
+        id := this.nextId++
+        this.records[id] := userData.Clone()
+        return id
+    }
+
+    Load(id) {
+        if !this.records.Has(id)
+            throw ValueError("No record with id " id)
+        return this.records[id].Clone()
+    }
+}
+
+class UserValidator {
+    Validate(userData) {
+        errors := []
+        if (userData.Get("name", "") = "")
+            errors.Push("Name is required")
+        if !RegExMatch(userData.Get("email", ""), "^[^\s@]+@[^\s@]+\.[^\s@]+$")
+            errors.Push("Email is not a valid address")
+        return errors
+    }
+}
+
+class DebugLogger {
+    Log(message) {
+        OutputDebug("[UserGui] " message)
+    }
+}
+
+class UserGui {
+    ; ✓ every collaborator arrives through the constructor; none is created inside
+    __New(dataService, validator, logger := "") {
+        this.dataService := dataService
+        this.validator   := validator
+        this.logger      := logger          ; "" = no logger injected
+        this.controls    := Map()
+        this.gui         := Gui(, "User Management")
+        this.gui.SetFont("s10")
+        this.gui.OnEvent("Close",  (*) => this.gui.Hide())
+        this.gui.OnEvent("Escape", (*) => this.gui.Hide())
+        this.CreateControls()
+        this.Log("UserGui initialized")
+    }
+
+    CreateControls() {
+        this.gui.AddText("xm", "Name:")
+        this.controls["name"]  := this.gui.AddEdit("xm w220 vName")
+        this.gui.AddText("xm", "Email:")
+        this.controls["email"] := this.gui.AddEdit("xm w220 vEmail")
+        this.controls["save"]  := this.gui.AddButton("xm w220 Default", "Save")
+        this.controls["save"].OnEvent("Click", this.HandleSave.Bind(this))
+    }
+
+    HandleSave(*) {
+        userData := Map()
+        userData["name"]  := this.controls["name"].Value
+        userData["email"] := this.controls["email"].Value
+
+        errors := this.validator.Validate(userData)
+        if errors.Length {
+            MsgBox("Cannot save:`n" this.JoinLines(errors), "Validation", "Icon!")
+            return
+        }
+        try {
+            id := this.dataService.Save(userData)
+            this.Log("Saved record " id)
+            MsgBox("Saved as record " id)
+        } catch Error as e {
+            this.Log("Save failed: " e.Message)
+            MsgBox("Save failed: " e.Message, "Error", "Icon!")
+        }
+    }
+
+    JoinLines(items) {
+        out := ""
+        for item in items
+            out .= item "`n"
+        return out
+    }
+
+    ; ✓ the optional collaborator is guarded once, here — not at every call site
+    Log(message) {
+        if this.logger
+            this.logger.Log(message)
+    }
+
+    Show() {
+        this.gui.Show()
+    }
+}
+
+; ✓ the composition root is the only place that names the concrete classes;
+;   swapping UserRecordService for an in-memory fake needs no change to UserGui
+app := UserGui(UserRecordService(), UserValidator(), DebugLogger())
+app.Show()
+```
+
+## TIER 9 — Form-Field Component System
+> METHODS COVERED: FormField.CreateField() · FormField.GetValue() · FormField.SetValue() · FormField.AddItems() · FormField.SetEnabled() · FormBuilder.AddField() · FormBuilder.GetField() · FormBuilder.GetFieldValue() · FormBuilder.GetAllValues() · FormBuilder.SetAllValues() · AddText() · AddEdit() · AddComboBox() · AddCheckBox() · switch · RegExMatch()
+
+Wraps label + input + error slot into one `FormField` object, and the collection of them into a `FormBuilder` that offers per-field and bulk get/set. A ten-field registration form becomes ten `AddField()` calls, and reading it back is one `GetAllValues()` returning a `Map()`. Use this tier when a window has more than about four input fields, when the same field set appears in more than one window, or when a validation layer (TIER 10) needs a uniform handle on every input. For a handful of controls, the plain `Map()` of controls from TIER 2 is less machinery for the same result.
+```ahk
+; FormField — one label + one input + one error slot, created as a unit.
+class FormField {
+    __New(parentGui, label, type := "Edit", options := "") {
+        this.parent  := parentGui
+        this.label   := label
+        this.type    := type
+        this.options := options
+        this.CreateField()
+    }
+
+    ; ✓ read-only accessors so collaborators never reach into the internals
+    Control   => this.inputCtrl
+    ErrorCtrl => this.errorCtrl
+
+    CreateField() {
+        width := this.ParseWidth(this.options, 200)
+        this.labelCtrl := this.parent.AddText("xm Section", this.label . ":")
+        switch this.type {
+            case "Edit":
+                this.inputCtrl := this.parent.AddEdit("xs y+2 " this.options)
+            case "ComboBox":
+                this.inputCtrl := this.parent.AddComboBox("xs y+2 " this.options)
+            case "CheckBox":
+                ; the checkbox carries its own caption, so the separate label is redundant
+                this.inputCtrl := this.parent.AddCheckBox("xs y+2 " this.options, this.label)
+                this.labelCtrl.Visible := false
+            default:
+                ; ✓ never leave inputCtrl unset — an unknown type must fail loudly here,
+                ;   not with an UnsetError the first time GetValue() is called
+                throw ValueError('Unsupported FormField type "' this.type '"')
+        }
+        ; ✓ the error slot is created NOW, in document order. Adding it lazily at
+        ;   validation time would place it after whatever control was added last.
+        ;   An empty Text needs an explicit w and h or it collapses to nothing.
+        this.errorCtrl := this.parent.AddText("xs y+2 h16 cRed w" width, "")
+    }
+
+    ParseWidth(options, defaultW) {
+        if RegExMatch(options, "i)\bw(\d+)\b", &m)
+            return Integer(m[1])
+        return defaultW
+    }
+
+    GetValue() => this.inputCtrl.Value
+
+    SetValue(value) {
+        this.inputCtrl.Value := value
+    }
+
+    AddItems(items) {
+        if (this.type != "ComboBox")
+            throw ValueError("AddItems is only valid on a ComboBox field")
+        this.inputCtrl.Add(items)
+        return this                      ; ✓ returns this so AddField(...).AddItems(...) chains
+    }
+
+    SetEnabled(enabled) {
+        this.inputCtrl.Enabled := enabled
+    }
+
+    OnEvent(eventName, callback) {
+        this.inputCtrl.OnEvent(eventName, callback)
+    }
+}
+
+; FormBuilder — owns the field collection and the bulk get/set operations.
+class FormBuilder {
+    __New(parentGui) {
+        this.gui    := parentGui
+        this.fields := Map()
+    }
+
+    AddField(name, label, type := "Edit", options := "") {
+        if this.fields.Has(name)
+            throw ValueError('Duplicate field name "' name '"')
+        field := FormField(this.gui, label, type, options)
+        this.fields[name] := field
+        return field
+    }
+
+    ; ✓ one lookup guard, reused — this.fields[name] on a missing key throws a bare
+    ;   UnsetItemError that names nothing useful
+    GetField(name) {
+        if !this.fields.Has(name)
+            throw ValueError('No field named "' name '"')
+        return this.fields[name]
+    }
+
+    GetFieldValue(name) => this.GetField(name).GetValue()
+
+    SetFieldValue(name, value) {
+        this.GetField(name).SetValue(value)
+    }
+
+    GetAllValues() {
+        values := Map()
+        for name, field in this.fields
+            values[name] := field.GetValue()
+        return values
+    }
+
+    SetAllValues(values) {
+        for name, value in values {
+            if this.fields.Has(name)
+                this.fields[name].SetValue(value)
+        }
+    }
+}
+
+UserForm()
+
+class UserForm {
+    __New() {
+        this.gui := Gui(, "User Registration")
+        this.gui.SetFont("s10")
+        this.gui.OnEvent("Close",  (*) => this.gui.Hide())
+        this.gui.OnEvent("Escape", (*) => this.gui.Hide())
+        this.builder := FormBuilder(this.gui)
+        this.CreateForm()
+        this.gui.Show()
+    }
+
+    CreateForm() {
+        this.builder.AddField("firstName",  "First Name", "Edit", "w200")
+        this.builder.AddField("lastName",   "Last Name",  "Edit", "w200")
+        this.builder.AddField("email",      "Email",      "Edit", "w200")
+        this.builder.AddField("age",        "Age",        "Edit", "w100 Number")
+        this.builder.AddField("gender",     "Gender",     "ComboBox", "w200")
+                    .AddItems(["Male", "Female", "Other"])
+        this.builder.AddField("newsletter", "Subscribe to newsletter", "CheckBox")
+
+        this.submitBtn := this.gui.AddButton("xm w120 Default", "Submit")
+        this.submitBtn.OnEvent("Click", this.SubmitForm.Bind(this))
+    }
+
+    SubmitForm(*) {
+        formData := this.builder.GetAllValues()
+        MsgBox("Form submitted with data:`n" this.FormatData(formData))
+    }
+
+    FormatData(data) {
+        result := ""
+        for key, value in data
+            result .= key ": " value "`n"
+        return result
+    }
+}
+```
+
+## TIER 10 — Field Validation System
+> METHODS COVERED: ValidationRule.Validate() · FieldValidator.AddRule() · Required() · MinLength() · Email() · Number() · FieldValidator.Validate() · FieldValidator.ShowErrors() · StrLen() · IsNumber() · RegExMatch() · Bind()
+
+A `ValidationRule` is a name, a predicate `Func`, and the message shown when the predicate fails. A `FieldValidator` holds an ordered list of them against one input control plus the Text control that displays its error, and exposes chainable shorthands — `.Required().MinLength(2)`. Validation runs on `Change` for live feedback and again over every field on submit. Use this tier for any form where a bad value must be caught before it reaches a data service; wire it to TIER 9 fields with `FieldValidator(field.Control, field.ErrorCtrl)`.
+```ahk
+; ValidationRule — a name, a predicate Func, and the message shown when it fails.
+class ValidationRule {
+    __New(name, validator, message) {
+        this.name      := name
+        this.validator := validator      ; a Func/closure held in a VALUE property
+        this.message   := message
+    }
+
+    Validate(value) {
+        ; ✓ pull the Func into a variable, then call the variable.
+        fn := this.validator
+        return fn(value)
+        ; ✗ return this.validator(value)
+        ;   AHK treats that as a METHOD call and prepends the instance as the first
+        ;   argument. A one-parameter validator then dies with
+        ;   "Error: Too many parameters passed to function"; a two-parameter one
+        ;   silently receives the ValidationRule object as its first argument.
+    }
+}
+
+; FieldValidator — an ordered rule list bound to one input control plus the Text
+; control that displays its error. Taking the two controls directly (rather than a
+; FormField) keeps it usable with hand-built controls; with the TIER 9 component
+; system it is simply FieldValidator(field.Control, field.ErrorCtrl).
+class FieldValidator {
+    __New(inputCtrl, errorCtrl := "") {
+        this.inputCtrl := inputCtrl
+        this.errorCtrl := errorCtrl
+        this.rules     := []
+        this.isValid   := true
+    }
+
+    AddRule(name, validator, message) {
+        this.rules.Push(ValidationRule(name, validator, message))
+        return this                       ; ✓ returns this so rules chain
+    }
+
+    Required(message := "This field is required") {
+        return this.AddRule("required", (value) => value != "", message)
+    }
+
+    MinLength(length, message := "") {
+        if (message = "")
+            message := "Minimum length is " length " characters"
+        ; the fat arrow closes over `length` — each rule keeps its own bound value
+        return this.AddRule("minLength", (value) => StrLen(value) >= length, message)
+    }
+
+    Email(message := "Please enter a valid email address") {
+        return this.AddRule("email",
+            (value) => RegExMatch(value, "^[^\s@]+@[^\s@]+\.[^\s@]+$") > 0,
+            message)
+    }
+
+    ; ✓ A METHOD may be named Number. Built-in shadowing bites variables, parameters,
+    ;   loop variables and function names — never a class member, which is resolved
+    ;   by member access. Inside the body, Number() would still be the built-in.
+    Number(message := "Please enter a valid number") {
+        return this.AddRule("number", (value) => IsNumber(value), message)
+    }
+
+    Validate() {
+        value  := this.inputCtrl.Value
+        errors := []
+        for rule in this.rules {
+            if !rule.Validate(value)
+                errors.Push(rule.message)
+        }
+        this.isValid := errors.Length = 0
+        this.ShowErrors(errors)
+        return this.isValid
+    }
+
+    ; Only the first failure is shown — a stack of messages reflows the whole form.
+    ShowErrors(errors) {
+        if !this.errorCtrl
+            return
+        this.errorCtrl.Value := errors.Length ? errors[1] : ""
+    }
+}
+
+ValidatedForm()
+
+class ValidatedForm {
+    __New() {
+        this.gui := Gui(, "Validated Form")
+        this.gui.SetFont("s10")
+        this.gui.OnEvent("Close",  (*) => this.gui.Hide())
+        this.gui.OnEvent("Escape", (*) => this.gui.Hide())
+        this.controls   := Map()
+        this.validators := Map()
+        this.CreateForm()
+        this.SetupValidation()
+        this.gui.Show()
+    }
+
+    ; label, input and error slot are added together so the error text sits under
+    ; its own field no matter how many fields follow
+    AddValidatedField(key, label, options) {
+        this.gui.AddText("xm", label . ":")
+        this.controls[key]         := this.gui.AddEdit("xm " options)
+        this.controls[key "Error"] := this.gui.AddText("xm h16 w220 cRed", "")
+    }
+
+    CreateForm() {
+        this.AddValidatedField("name",  "Name",  "w220")
+        this.AddValidatedField("email", "Email", "w220")
+        this.AddValidatedField("age",   "Age",   "w120")
+        this.controls["submit"] := this.gui.AddButton("xm w120 Default", "Submit")
+        this.controls["submit"].OnEvent("Click", this.SubmitForm.Bind(this))
+    }
+
+    SetupValidation() {
+        this.validators["name"] := FieldValidator(this.controls["name"], this.controls["nameError"])
+            .Required()
+            .MinLength(2)
+
+        this.validators["email"] := FieldValidator(this.controls["email"], this.controls["emailError"])
+            .Required()
+            .Email()
+
+        this.validators["age"] := FieldValidator(this.controls["age"], this.controls["ageError"])
+            .Required()
+            .Number()
+
+        ; ✓ .Bind(this, validator) freezes THIS validator into the callback. A fat-arrow
+        ;   closure over the loop variable would re-read it at call time and validate
+        ;   whichever field the loop happened to finish on.
+        for key, validator in this.validators
+            this.controls[key].OnEvent("Change", this.ValidateOne.Bind(this, validator))
+    }
+
+    ValidateOne(validator, *) {
+        validator.Validate()
+    }
+
+    SubmitForm(*) {
+        allValid := true
+        for key, validator in this.validators {
+            ; ✓ validate every field — an early return would leave later fields
+            ;   showing stale (or no) error text
+            if !validator.Validate()
+                allValid := false
+        }
+        if allValid
+            MsgBox("Form is valid — submitting.")
+        else
+            MsgBox("Please correct the marked fields and try again.", "Validation", "Icon!")
+    }
+}
+```
+
 ## ANTI-PATTERNS
 
 | Pattern | Wrong | Correct | LLM Common Cause |
@@ -1148,9 +1671,11 @@ CreateProductionGui()
 | Multi-line arrow handler | `(*) => { saved := ...; MsgBox(...) }` | Separate named method + `.Bind(this)` | JavaScript/C# lambdas allow multi-statement bodies; LLM assumes same in AHK |
 | Hard-coded Y coordinates | `gui.Add("Edit", "x10 y74 w380 h23")` | `currentY` tracking + `GuiForm()` | LLM doesn't know the GuiForm pattern; emulates raw pixel positioning from other toolkits |
 | Zero-based column index in ListView | `lv.GetText(1, 0)` | `lv.GetText(1, 1)` (col is 1-based; row 0 retrieves column headers, not a data row) | Dominant 0-based indexing habit from most language training data |
-| Width on Section option | `"Section w300"` | `"Section"` or `"xm Section"` | LLM confuses Section with a positioned control that accepts a width dimension |
 | Re-enable owner after Destroy | `ownedGui.Destroy(); ownerGui.Opt("-Disabled")` | `ownerGui.Opt("-Disabled")` then `ownedGui.Destroy()` | Linear "close then cleanup" ordering from other modal dialog APIs (WinForms, Qt) |
-| Forward-loop ListView delete | `Loop lv.GetCount() { lv.Delete(A_Index) }` | `while (rowNum := lv.GetNext(rowNum, "Selected")) { lv.Delete(rowNum); rowNum := 0 }` | LLM doesn't model row-number shifting after each delete in indexed collections |
+| Forward-loop ListView delete | `Loop lv.GetCount() { lv.Delete(A_Index) }` | `while (rowNum := lv.GetNext(rowNum)) { lv.Delete(rowNum); rowNum := 0 }` | LLM doesn't model row-number shifting after each delete in indexed collections |
+| `"Selected"` as a GetNext mode | `lv.GetNext(row, "Selected")` | `lv.GetNext(row)` — mode omitted already means "next selected"; only `"C"`/`"Checked"` and `"F"`/`"Focused"` are accepted | The word reads like a valid enum value; the real API spells selection as the default, not a mode |
+| `""` to leave a Move axis unchanged | `ctrl.Move(x, y, "", "")` | `ctrl.Move(x, y)` — omit the parameter | `""` means "unset" in many APIs; AHK v2 type-checks it as a Number and throws |
+| Mixing Gui and Win coordinate spaces | `WinGetPos(&x, &y, , , hwnd)` then `gui.Move(x, y)` | Keep Gui math in logical units; use `WinMove()` only with `WinGetPos()` values | Both look like "pixels"; DPI scaling makes them differ by `A_ScreenDPI/96` |
 | Rebuilding controls on every Show() | `CreateControls()` called in `Show()` each time | Guard with `if !this._built` flag; build once in `__New()` | LLM follows a "setup → display" pattern without considering re-entrant calls |
 
 ## SEE ALSO
@@ -1164,3 +1689,4 @@ CreateProductionGui()
 - Hotkey(), HotIf(), HotIfWinActive/Exist(), Send(), and global keyboard/mouse input outside the GUI event system — use built-in AHK v2 knowledge (no dedicated input/hotkeys module yet).
 - `Module_Classes.md` — Full OOP patterns for extending LayoutAwareGui, meta-function design (`__Get`/`__Set`/`__Call`), and class property declarations.
 - `Module_Errors.md` — try/catch patterns for FileOpen, Gui creation failure, and catching MethodError from invalid control access.
+- Dark mode and theming — see `.claude/skills/ahk-gui/SKILL.md`, `Lib/_Dark.ahk` (build a normal `Gui()`, wrap it with `dm := _Dark(myGui)`, then add controls via `dm.AddDarkButton()` / `dm.AddDarkEdit()` / `dm.AddDarkComboBox()`), and `Lib/DarkModeModular_Alpha.ahk` (canonical for alpha.30). The DWM title-bar DllCall lives in those libraries — do not duplicate it here.

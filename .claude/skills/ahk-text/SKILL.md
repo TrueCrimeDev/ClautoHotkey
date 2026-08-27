@@ -13,10 +13,10 @@ description: >
 
 When this skill is invoked, load the following module files:
 
-1. **Read** `Modules/Module_TextProcessing.md` — String operations, concatenation, text manipulation
-2. **Read** `Modules/Module_Escapes.md` — Escape sequences, quote handling, special characters
-3. **Read** `Modules/Supplemental/Module_Regex.md` — PCRE regex patterns for AHK v2
-4. **Read** `Modules/Supplemental/Module_Strings.md` — String method reference
+1. **Read** `Modules/Module_TextProcessing.md` — string operations, `Format()`, and the whole
+   regex domain: quote-in-pattern escaping, backslash levels, `~=`, global-match iteration, the anchored-
+   validator trap, and a pre-escaped PCRE pattern table. (Absorbed the former `Module_Regex.md` on 2026-08-26.)
+2. **Read** `Modules/Module_Escapes.md` — escape sequences, quote handling, special characters
 
 ## Critical Text Rules (Always Apply)
 
@@ -24,7 +24,8 @@ When this skill is invoked, load the following module files:
 ESCAPES:          Backtick ` — NEVER backslash \ for escapes
 NEWLINE:          `n (backtick-n) — NOT \n
 TAB:              `t (backtick-t) — NOT \t
-QUOTE IN STRING:  "He said ""hello""" — double the quote inside
+QUOTE IN STRING:  "He said `"hello`"" — backtick-escape the quote
+ALT DELIMITER:    'He said "hello"' — single quotes are full string delimiters in v2
 CONCATENATION:    result := "hello " . "world" — dot operator with spaces
 APPEND:           result .= "more text" — dot-equals for append
 REGEX ENGINE:     PCRE (Perl Compatible Regular Expressions)
@@ -44,7 +45,7 @@ WRONG                                RIGHT
 "line1\nline2"                       "line1`nline2"
 str += "text"                        str .= "text"
 RegExMatch(str, pat, match)          RegExMatch(str, pat, &match)
-'string' (single quotes)            "string" (double quotes — single quotes are literals in v2)
+"He said ""hi"""  (v1 doubled "")    "He said `"hi`"" — or 'He said "hi"'
 ```
 
 ## Continuation Sections (Multiline Strings)

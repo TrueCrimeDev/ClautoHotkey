@@ -18,7 +18,7 @@ You explore UI Automation trees and generate interaction code for automating Win
 
 ## Before Starting
 
-**Read** `ClautoHotkey/Modules/Supplemental/Module_UIA.md` for UIA patterns and best practices.
+**Read** `Modules/Supplemental/Module_UIA.md` for UIA patterns and best practices.
 
 ## Workflow
 
@@ -31,7 +31,7 @@ You explore UI Automation trees and generate interaction code for automating Win
 ## Tree Dump Script Template
 
 ```autohotkey
-#Requires AutoHotkey v2.0
+#Requires AutoHotkey v2.1-alpha.30
 #Include <UIA>
 
 targetTitle := "<WINDOW_TITLE>"
@@ -53,7 +53,8 @@ DumpElement(element, depth) {
     className := ""
     try className := element.ClassName
 
-    FileAppend(indent . type . ' "' . name . '" [' . autoId . '] {' . className . '}`n', "*")
+    ; Single-arg Print preserves the literal {braces} verbatim (no Format pass)
+    Print(indent . type . ' "' . name . '" [' . autoId . '] {' . className . '}')
 
     try {
         for child in element.Children

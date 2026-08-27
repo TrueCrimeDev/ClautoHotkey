@@ -1,9 +1,16 @@
 ---
 name: Module_Instructions
-description: 'Foundational AHK v2 engineering standards, OOP design principles, syntax rules, and the
-  diagnostic checklist that govern every script in this project. Read first when working outside a domain
-  skill, or as the baseline the domain modules build on. TRIGGER when: starting any AHK v2 task, establishing
-  coding standards, or when no domain-specific module applies.'
+description: 'Foundational AHK v2 engineering standards covering OOP design principles, thinking tiers
+  and the PLAN block, response modes, syntax rules, data-structure and purity enforcement, error-handling
+  rules, the diagnostic checklist, and the v2-only keyword and directive reference that govern every
+  script in this project. TRIGGER when the request involves: starting any AHK v2 task, establishing
+  coding standards, working outside a domain skill, looking up an AHK v2 keyword, reserved word,
+  control-flow statement (if, else, loop, while, for, until, break, continue, switch, case, try, catch,
+  finally, throw, goto), word operator (and, or, not, is, in, unset, this, super) or directive
+  (#Requires, #Include, #IncludeAgain, #SingleInstance, #HotIf, #Warn, #ErrorStdOut, #EnableEval,
+  #CrashLog), checking whether an identifier is v2 or v1-only, or when no domain-specific module
+  applies. Not covered: domain specifics such as GUI, classes and objects,
+  text and regex, and error diagnosis - see the Module_*.md domain modules.'
 ---
 
 <role>
@@ -130,8 +137,9 @@ description: 'Foundational AHK v2 engineering standards, OOP design principles, 
       · Ensure all declared variables are used, and all used variables are declared.
       · Check all GUI components have event handlers (Button, Edit, Escape).
       · Confirm all class instances are initialized and accessible.
-      · Validate proper Map() usage — do not use JavaScript object literal syntax for Maps.
-        Map("Key1", "Value1") constructor syntax is fully permitted and encouraged.
+      · Validate proper Map() usage — no object literals for data, and no constructor pairs.
+        Create the Map empty and assign entries individually: m := Map() then
+        m["Key1"] := "Value1". Statics initialize in static __New().
       · Ensure no fat arrow functions use multiline blocks.
       · Verify all event handlers use .Bind(this), not fat arrow callbacks.
       · Verify all error handling follows proper patterns (no empty catch blocks).
@@ -245,14 +253,23 @@ description: 'Foundational AHK v2 engineering standards, OOP design principles, 
       for the remainder of the script. Always use `instance := ClassName()`.
     - Initialize class instances at the top of the script, before class definitions.
     - Maintain proper variable scope. Do not shadow global variables with local names.
+      Identifiers are case-insensitive, so a variable, parameter, loop variable, or function
+      named `gui`, `menu`, `array`, or `random` shadows the built-in class/function of that
+      name and breaks calls like `x := Menu()` or `Random()` elsewhere in scope. Object
+      properties are member access and shadow nothing — `this.gui := Gui(...)` is safe.
     - Use semicolons (;) for comments. C-style (//) comments are not valid in AHK v2.
+    - Never write banner-style comment dividers. Any line whose payload is a long run of
+      repeated `=`, `-`, `*`, `#`, or `_` is forbidden in every file and every language.
+      Use a plain one-line prose section comment instead.
     - Prefer class-based GUIs over standalone functions for any non-trivial UI.
     - Apply OOP patterns for any complex logic.
   </core_rules>
 
   <data_structures>
     - Use Map() for all key-value data storage — it provides true associative array semantics.
-      Initialize via Map("Key1", "Value1", "Key2", "Value2") or map["Key"] := "Value".
+      Always create it empty and assign entries individually: cfg := Map() then
+      cfg["Key1"] := "Value1". Never pass key-value pairs to the Map() constructor —
+      the pair form is banned project-wide.
     - Reserve object literals ({}) for OOP-style configurations, property descriptors,
       and static structures only. Do not use {} for runtime key-value data storage.
     - Use arrays for sequential data.
@@ -274,6 +291,11 @@ description: 'Foundational AHK v2 engineering standards, OOP design principles, 
     Cross-Language Contamination Prevention:
     - No syntax or patterns from other languages: no const, let, ===,
       template literals, or addEventListener.
+    - `&&` and `||` used purely for side effects are illegal at statement level
+      (`cond && this.Method()` is a load-time syntax error, exit 12). They are legal only
+      inside a `=>` body. Use a normal `if` statement. A statement-level ternary
+      (`cond ? this.Method() : 0`) does parse and run, but project style still prefers
+      `if`/`else` for side effects — that is a readability rule, not a legality one.
     - No arrow functions with multi-line blocks.
     - All event handlers use .Bind(this) — never inline arrow functions with blocks.
     - Multi-line callbacks belong in separate named methods, not as inline functions.
@@ -302,7 +324,8 @@ description: 'Foundational AHK v2 engineering standards, OOP design principles, 
   Before finalizing any code output, verify all of the following:
 
   1. DATA STRUCTURES
-     - Map() used for all key-value data (via Map("K","V") or map["K"] := "V").
+     - Map() used for all key-value data, built empty and populated by individual
+       assignment (cfg["K"] := "V"). No Map("K","V") constructor pairs.
      - Object literals ({}) used only for OOP-style configurations and property descriptors,
        not for runtime key-value data storage.
      - Arrays used for sequential data.
@@ -315,6 +338,9 @@ description: 'Foundational AHK v2 engineering standards, OOP design principles, 
   2.5. CROSS-LANGUAGE CONTAMINATION
      - No arrow functions with multi-line blocks (=> { multiple lines }).
      - No patterns from other languages (const, let, ===, addEventListener, etc.).
+     - No `&&` or `||` used purely for side effects at statement level — that is a
+       load-time syntax error. Use an `if` statement instead. (A statement-level ternary
+       is legal but still discouraged for side effects; prefer `if`/`else`.)
      - All event handlers use .Bind(this) — not inline arrow functions with blocks.
      - Multi-line callbacks are separate named methods.
 
@@ -337,7 +363,8 @@ description: 'Foundational AHK v2 engineering standards, OOP design principles, 
      - Error handling follows Module_Errors.md standards.
 
   6. API CORRECTNESS — verify every method and property before use:
-     - Map objects have no .Keys() method — use `for key, value in map` to iterate.
+     - Map objects have no .Keys() method — use `for key, value in cfg` to iterate. Never name the
+       variable `map` — it shadows the built-in Map class case-insensitively.
      - Always define class methods before referencing them in event handlers or callbacks.
      - GUI control properties: .Opt() applies option strings at runtime; .Enabled gets/sets
        whether the control is enabled; .Text gets/sets caption or display text; .Value gets/sets
@@ -378,3 +405,136 @@ Ensure all code adheres to ethical use:
 - Include "Demo/Educational purposes only" comment for practice GUIs
 - Reject requests for surveillance, unauthorized scraping, or data harvesting tools
 </safety_compliance>
+
+<keyword_reference>
+  Compact AHK v2-only keyword tier. Every identifier below exists in v2. If a command-looking
+  identifier is absent from this list, treat it as v1 and do not emit it — `setbatchlines`,
+  `gosub`, `byref`, `errorlevel`, `comobjcreate`, `stringsplit`, `#ifwinactive` and the rest of
+  the v1 vocabulary have no v2 equivalent under those names.
+
+  <flow_control>
+    - `if` / `else`
+    - `loop` — plus the clause forms `Loop Files`, `Loop Parse`, `Loop Read`, `Loop Reg`
+    - `while`
+    - `for` ... `in`
+    - `until` — trailing clause on `Loop` / `While`, never a statement on its own
+    - `break` / `continue`
+    - `return`
+    - `switch` / `case` / `default`
+    - `try` / `catch` / `finally` / `throw`
+    - `goto`
+  </flow_control>
+
+  <declarations>
+    - `class` / `extends`
+    - `static`
+    - `global` / `local`
+    - `get` / `set` — property accessor bodies; `value` is the implicit setter parameter
+  </declarations>
+
+  <word_operators_and_tokens>
+    - `and` / `or` / `not` — word forms of `&&` / `||` / `!`. The word spelling gets no
+      exemption from the statement-level rule in <purity_enforcement>: `x and Foo()` is the
+      same load-time syntax error (exit 12) as `x && Foo()`.
+    - `is` — type check, `x is Integer`. The right operand is a class reference, so a
+      variable or parameter named after that class shadows it case-insensitively and the
+      check throws "Expected a Class but got a ...". See <core_rules>.
+    - `in` — for-loop enumeration only. `if x in list` is v1 and does not parse.
+    - `unset` — the absent-value token; test with the `IsSet()` operator-function.
+    - `this` / `super` — inside class bodies only.
+    - `true` / `false`
+  </word_operators_and_tokens>
+
+  <directives>
+    - `#Requires` — pins the interpreter. This project pins `v2.1-alpha.30`; see
+      <required_headers>. A `v2.0` pin is only for code that must run on stock builds.
+    - `#Include` / `#IncludeAgain`
+    - `#SingleInstance`
+    - `#HotIf` — replaces the entire v1 `#IfWinActive` family
+    - `#Warn`
+    - `#ErrorStdOut`
+    - Fork-only (+Console): `#EnableEval`, `#CrashLog`
+  </directives>
+
+  <keywords_in_context>
+    One pass over the tier above, validated on the fork:
+
+    ```ahk
+    #Requires AutoHotkey v2.1-alpha.30
+    #SingleInstance Force
+
+    class Shape {
+        static Count := 0
+        __New(name) {
+            this.name := name
+            Shape.Count++
+        }
+        Describe => "shape " . this.name
+    }
+
+    class Circle extends Shape {
+        __New(name, r) {
+            super.__New(name)
+            this.r := r
+        }
+        Area {
+            get => 3.14159 * this.r ** 2
+            set => this.r := Sqrt(value / 3.14159)
+        }
+    }
+
+    demo := Circle("c1", 2)
+    Report(demo)
+
+    Report(item) {
+        local counts := Map()
+        counts["a"] := 1
+        counts["b"] := 2
+
+        local total := 0
+        for key, val in counts {
+            if (key = "a" and val > 0)
+                total += val
+            else if (key = "b" or not IsSet(key))
+                total += val
+            else
+                continue
+        }
+
+        local i := 0
+        while i < 3 {
+            i++
+            if i = 2
+                break
+        }
+
+        loop parse "x,y,z", ","
+            total += StrLen(A_LoopField)
+
+        switch Type(item) {
+            case "Circle": total += 1
+            default: total += 0
+        }
+
+        local pending := unset
+        if !IsSet(pending)
+            pending := 0
+
+        try {
+            if !(item is Shape)
+                throw ValueError("not a shape")
+        } catch ValueError as err {
+            OutputDebug(err.Message)
+        } finally {
+            total += pending
+        }
+
+        OutputDebug(item.Describe . " " . total . " " . Shape.Count . " " . item.Area)
+        return total
+    }
+    ```
+
+    Note the parameter name: `Report(shape)` would shadow the `Shape` class, and
+    `item is Shape` would then throw at runtime while still passing /validate.
+  </keywords_in_context>
+</keyword_reference>

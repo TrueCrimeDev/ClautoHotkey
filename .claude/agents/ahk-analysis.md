@@ -79,11 +79,14 @@ result := ""
 Loop 10000
     result .= "text"  ; Creates new string each iteration
 
-; Optimized approach using array
+; Joining an array: plain loop (stock Array has no .Join() method)
 arr := []
 Loop 10000
     arr.Push("text")
-result := arr.Join("")
+out := ""
+VarSetStrCapacity(&out, 40000)  ; Optional: preallocate for large joins
+for s in arr
+    out .= s
 ; Reference: /docs/howto/ManageStrings.md
 ```
 
@@ -168,7 +171,7 @@ class MainWindow extends Gui {
     
     SetupControls() {
         ; Organized control creation
-        this.AddButton("Submit").OnEvent("Click", (*) => this.Submit())
+        this.AddButton("w100", "Submit").OnEvent("Click", (*) => this.Submit())
     }
 }
 ; Reference: /docs/lib/Gui.md, /docs/objects/GuiOnEvent.md
@@ -201,17 +204,16 @@ class DataManager {
 ; Array for ordered data
 items := ["first", "second", "third"]
 
-; Map for key-value pairs
-lookup := Map(
-    "name", "value",
-    "type", "example"
-)
+; Map for key-value pairs — entries assigned individually
+lookup := Map()
+lookup["name"] := "value"
+lookup["type"] := "example"
 
-; Object for structured data
-config := {
-    setting1: true,
-    setting2: 100
-}
+; Data storage is always Map(). Object literals {} are reserved for
+; DefineProp descriptors and API option bags — never for data records.
+config := Map()
+config["setting1"] := true
+config["setting2"] := 100
 ; Reference: /docs/objects/Array.md, /docs/objects/Map.md
 ```
 

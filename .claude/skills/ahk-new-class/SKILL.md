@@ -21,7 +21,7 @@ Optional arguments:
 ## Template (Standard)
 
 ```autohotkey
-#Requires AutoHotkey v2.0
+#Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 
 class <ClassName> {
@@ -40,7 +40,7 @@ class <ClassName> {
 ## Template (GUI)
 
 ```autohotkey
-#Requires AutoHotkey v2.0
+#Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 
 class <ClassName> {
@@ -50,7 +50,7 @@ class <ClassName> {
     __New() {
         this.gui := Gui("+Resize", "<ClassName>")
         this.BuildControls()
-        this.gui.OnEvent("Close", (*) => ExitApp())
+        this.gui.OnEvent("Close", this.GuiClose.Bind(this))
         this.gui.Show("w500 h400")
     }
 
@@ -59,6 +59,10 @@ class <ClassName> {
         s := <ClassName>.spacing
         currentY := m
         w := 500 - m * 2
+    }
+
+    GuiClose(*) {
+        ExitApp()
     }
 
     __Delete() {
@@ -73,7 +77,7 @@ class <ClassName> {
 ## Template (Inheritance)
 
 ```autohotkey
-#Requires AutoHotkey v2.0
+#Requires AutoHotkey v2.1-alpha.30
 
 class <ClassName> extends <ParentClass> {
     __New() {

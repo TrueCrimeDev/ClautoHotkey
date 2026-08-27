@@ -1,11 +1,12 @@
 ---
 name: Module_Classes
-description: 'Prototype chain manipulation, raw ObjPtr arithmetic, and GUI control subclassing belong
-  in Module_ClassPrototyping.md and Module_GUI.md — this module covers class definition, inheritance,
-  meta-functions, factory patterns, resource lifecycle, and observer patterns only. TRIGGER when the request
+description: 'Class definition, inheritance, meta-functions, factory patterns, resource lifecycle, and
+  observer patterns in AHK v2. TRIGGER when the request
   involves: class, extends, __New, __Delete, __Get, __Set, __Call, __Enum, super, static, inheritance,
   "create object", "object-oriented", "instantiate", "constructor", "destructor", "method chaining", "factory
-  pattern", "observer pattern", "resource cleanup", "weak reference"'
+  pattern", "observer pattern", "resource cleanup", "weak reference". Not covered: prototype chain
+  manipulation, raw ObjPtr arithmetic, and GUI control subclassing — see Module_ClassPrototyping.md and
+  Module_GUI.md.'
 ---
 
 # Module_Classes
@@ -44,7 +45,7 @@ description: 'Prototype chain manipulation, raw ObjPtr arithmetic, and GUI contr
 ### Map (preferred class state container)
 | Method/Property | Signature | Notes |
 |----------------|-----------|-------|
-| `Map()` | `Map(k, v, ...)` | Preferred key-value container for class state; never use `{k: v}` object literals |
+| `Map()` | `Map()` | Preferred key-value container for class state; construct empty, then assign each key individually (`m := Map()` then `m["k"] := v`) — the constructor-with-pairs form is banned in this project, as are `{k: v}` object literals |
 | `.Has()` | `.Has(key)` | Existence check — always use before direct `[key]` access |
 | `.Get()` | `.Get(key, default)` | Safe access — `default` must be a concrete value, never `unset` |
 | `.Clear()` | `.Clear()` | Remove all entries; call in `__Delete()` or `dispose()` |
@@ -73,6 +74,12 @@ description: 'Prototype chain manipulation, raw ObjPtr arithmetic, and GUI contr
 
 - ✗ `Map.Get(key, unset)` as a "safe optional return" — passing `unset` removes the default, making Get throw on absent keys
 - ✓ `if map.Has(key) { return map[key] }` — use an explicit `.Has()` guard when the absent case should return unset
+
+- ✗ Naming a variable, parameter, or loop variable `gui`, `menu`, `array`, `map`, or `random` — identifiers match built-in class and function names **case-insensitively**, so the name shadows the built-in for the rest of the scope and `Gui()` / `Array()` / `Random()` stop resolving inside that body. The same applies to any script-defined class or function name: `processData := ProcessData` is the load-time error "This Func cannot be used as an output variable." Object fields are the exception — `this.gui` and `this.array` are property access, not variables, and shadow nothing: `Array()` still resolves inside a method that also uses `this.array`.
+- ✓ Qualify the identifier — `targetGui`, `contextMenu`, `items`, `handler` — so nothing in scope is shadowed
+
+- ✗ A class that defines `__Set` initialising its own backing fields with plain `:=` — on alpha.30 class-body initializers and `__New` assignments both dispatch through `__Set`, so the meta-function fires on `_settings` before the object is usable (and re-enters itself if it assigns an undefined property)
+- ✓ Define internals with `this.DefineProp("_settings", {value: Map()})` inside `__New` — DefineProp writes the own property directly and bypasses `__Set`
 
 Safe-access priority order for class state Maps:
   1. `.Get(key, default)` — optional key, one-line resolution, never throws when default is a concrete value
@@ -182,15 +189,23 @@ displayText := john.displayName
 ; callback holds this — so __Delete can never fire on its own. Stop() is the real
 ; teardown; __Delete is only a safety net once the timer is already stopped.
 class TooltipTimer {
-    static Config := Map(
-        "interval",    1000,
-        "startDelay",  0,
-        "initialText", "Timer started",
-        "format",      "Time elapsed: {1} seconds"
-    )
+    ; ✓ Static Map built empty, then one key per line — the constructor-with-pairs
+    ;   form Map("k", v, ...) is banned project-wide
+    static Config := TooltipTimer._BuildConfig()
+
+    static _BuildConfig() {
+        cfg := Map()
+        cfg["interval"]    := 1000
+        cfg["startDelay"]  := 0
+        cfg["initialText"] := "Timer started"
+        cfg["format"]      := "Time elapsed: {1} seconds"
+        return cfg
+    }
 
     __New() {
-        this.state         := Map("seconds", 0, "isActive", true)
+        this.state := Map()
+        this.state["seconds"]  := 0
+        this.state["isActive"] := true
         this.timerCallback := this.UpdateDisplay.Bind(this)  ; .Bind(this) stores context — mandatory for all callbacks
         this.Start()
     }
@@ -312,10 +327,13 @@ vehicles := [
     Motorcycle("Harley", "Sportster", 2023, false)
 ]
 
-for vehicle in vehicles {
-    vehicle.start()
-    speed := vehicle.getMaxSpeed()
-    MsgBox(vehicle.getDescription() " - Max Speed: " speed " mph")
+; Never name the loop variable "vehicle" — it matches the class name Vehicle
+; case-insensitively, which is the load-time error "This Class cannot be used as
+; an output variable."
+for ride in vehicles {
+    ride.start()
+    speed := ride.getMaxSpeed()
+    MsgBox(ride.getDescription() " - Max Speed: " speed " mph")
 }
 
 ; ✗ super() is not a constructor call in AHK v2 — only super.__New(args*) is valid
@@ -329,10 +347,19 @@ Meta-functions intercept property/method access at the prototype level. `__Get(n
 ```ahk
 ; ✓ Meta-functions intercept undefined access — always handle or throw a named error
 class ConfigManager {
-    _settings := Map()
-    _defaults := Map("theme", "dark", "language", "en", "autoSave", true)
-
+    ; ✓ A class that defines __Set must never initialise its own backing fields with a
+    ;   plain `:=`. On alpha.30 both class-body initializers and __New assignments
+    ;   dispatch through __Set, so `_settings := Map()` in the class body would fire the
+    ;   validator below on the name "_settings" before the object is even constructed.
+    ;   DefineProp writes the own property directly and bypasses __Set.
     __New() {
+        this.DefineProp("_settings", {value: Map()})
+        this.DefineProp("_defaults", {value: Map()})
+
+        this._defaults["theme"]    := "dark"
+        this._defaults["language"] := "en"
+        this._defaults["autoSave"] := true
+
         for key, value in this._defaults
             this._settings[key] := value
     }
@@ -461,9 +488,11 @@ class QueryBuilder {
         return query
     }
 
-    _joinArray(array, separator) {
+    ; ✓ Parameter named items, not array — `array` shadows the built-in Array class
+    ;   case-insensitively for the whole method body
+    _joinArray(items, separator) {
         result := ""
-        for i, item in array {
+        for i, item in items {
             if i > 1
                 result .= separator
             result .= item
@@ -513,9 +542,11 @@ class UIComponentFactory {
             this.height := height
         }
 
-        render(gui) {
+        ; ✓ Parameter named targetGui, not gui — a parameter named `gui` shadows the
+        ;   built-in Gui class case-insensitively for the whole method body
+        render(targetGui) {
             options := "x" this.x " y" this.y " w" this.width " h" this.height
-            return gui.AddButton(options, this.text)
+            return targetGui.AddButton(options, this.text)
         }
 
         ; ✓ Access outer class config via ClassName.StaticProp — never via this
@@ -543,9 +574,9 @@ class UIComponentFactory {
             this.height      := height
         }
 
-        render(gui) {
+        render(targetGui) {
             options := "x" this.x " y" this.y " w" this.width " h" this.height
-            return gui.AddEdit(options, this.placeholder)
+            return targetGui.AddEdit(options, this.placeholder)
         }
     }
 
@@ -580,12 +611,29 @@ class UIComponentFactory {
 
 UIComponentFactory.setTheme("dark")
 
-; ✓ Component specs as Map() — .Has() remains reliable for optional width/height keys
-formSpec := [
-    Map("type", "input",  "placeholder", "Enter name",  "x", 10, "y", 10),
-    Map("type", "input",  "placeholder", "Enter email", "x", 10, "y", 40),
-    Map("type", "button", "text",        "Submit",      "x", 10, "y", 70, "width", 80)
-]
+; ✓ Component specs as Map() — .Has() remains reliable for optional width/height keys.
+;   Each Map is constructed empty and filled one key per line; the constructor-with-pairs
+;   form Map("type", "input", ...) is banned project-wide.
+nameSpec := Map()
+nameSpec["type"]        := "input"
+nameSpec["placeholder"] := "Enter name"
+nameSpec["x"]           := 10
+nameSpec["y"]           := 10
+
+emailSpec := Map()
+emailSpec["type"]        := "input"
+emailSpec["placeholder"] := "Enter email"
+emailSpec["x"]           := 10
+emailSpec["y"]           := 40
+
+submitSpec := Map()
+submitSpec["type"]  := "button"
+submitSpec["text"]  := "Submit"
+submitSpec["x"]     := 10
+submitSpec["y"]     := 70
+submitSpec["width"] := 80
+
+formSpec := [nameSpec, emailSpec, submitSpec]
 
 components := UIComponentFactory.createForm(formSpec)
 

@@ -1,10 +1,21 @@
 ---
 name: Module_Errors
-description: 'COM-specific error propagation, HRESULT codes, and deep GUI event-binding diagnostics are
-  not covered — see Module_GUI.md and Module_COM.md. TRIGGER when the request involves: error, exception,
-  try, catch, throw, OnError, debug, crash, "syntax error", "runtime error", "not working", "script won''t
-  run", "unknown command", "variable not assigned", ErrorLevel, UnsetError, "old script broken",
-  "unexpected behavior", "throws exception"'
+description: >
+  AHK v2 error and diagnostic reference — the built-in Error class hierarchy, try/catch/finally
+  ordering, custom exception classes, OnError crash handling, and load-time vs runtime failure
+  signatures on v2.1-alpha.30+Console.
+  TRIGGER when the request involves: error, exception, try, catch, throw, OnError, debug, crash,
+  "syntax error", "runtime error", "not working", "script won't run", "unknown command",
+  "variable not assigned", ErrorLevel, UnsetError, "old script broken", "unexpected behavior",
+  "throws exception", TypeError, ValueError, OSError, PropertyError, MethodError, MemberError,
+  UnsetItemError, TargetError, ZeroDivisionError, SyntaxError, "No value was returned",
+  "stack trace", "exit code", "catch Any", "try else", "else clause", finally,
+  "parameter validation", A_ThisFunc, IsObject, "error inspection", Print, OutputDebug,
+  ToolTip, DebugView, trace, "symptom triage", "intermittent", "isolate the bug",
+  "GUI freezes", "unresponsive", "high CPU", "memory leak", "timer keeps firing",
+  "hotkey not working", "hotkey blocked", A_IsAdmin, "elevated window", __Delete.
+  Not covered: COM/HRESULT error propagation — see Module_COM.md; GUI event-binding diagnostics —
+  see Module_GUI.md.
 ---
 
 # Module_Errors
@@ -19,7 +30,7 @@ description: 'COM-specific error propagation, HRESULT codes, and deep GUI event-
 | `TypeError` | `TypeError(message, what?, extra?)` | Wrong object type passed to a function or operator |
 | `OSError` | `OSError(code?)` | OS-level I/O failure; `code` is a numeric Windows error code (defaults to `A_LastError`); sets `.Number` and `.Message` automatically |
 | `MemoryError` | `MemoryError(message?)` | Memory allocation failure |
-| `UnsetError` | `UnsetError(message, what?)` | Uninitialized variable or unset function parameter |
+| `UnsetError` | `UnsetError(message, what?)` | An attempt was made to read the value of a variable, property or item, but there was no value — covers uninitialized variables, unset parameters, and the alpha.30 "No value was returned." family |
 | `UnsetItemError` | `UnsetItemError(message, what?)` | Array index or Map key not found — thrown by direct `m[k]` access on an absent key |
 | `MemberError` | `MemberError(message, what?)` | Property or method does not exist on an object |
 | `PropertyError` | `PropertyError(message, what?)` | Subclass of MemberError — property missing or not readable/writable |
@@ -29,6 +40,18 @@ description: 'COM-specific error propagation, HRESULT codes, and deep GUI event-
 | `TimeoutError` | `TimeoutError(message, what?)` | Operation timed out — e.g. `SendMessage` exceeding its timeout |
 | `ZeroDivisionError` | `ZeroDivisionError(message, what?)` | Divisor was zero in `/`, `//`, or `Mod()` |
 | `SyntaxError` | `SyntaxError(message, what?)` | +Console fork only — thrown by `Eval(expr)` on parse failure |
+
+Inheritance links that decide `catch` ordering (the table above is flat; the hierarchy is not):
+
+- `Error` is the root of every class listed above.
+- `UnsetError` is the parent of `MemberError` — and therefore of `PropertyError` and `MethodError` — and of `UnsetItemError`.
+- `MemberError` is the parent of `PropertyError` and `MethodError`.
+- `ValueError` is the parent of `IndexError`.
+
+Two ordering traps follow directly from those links:
+
+- `catch UnsetError` placed before `catch PropertyError` swallows every missing-property and missing-method error.
+- `catch ValueError` placed before `catch IndexError` swallows every out-of-bounds index error.
 
 ### Error Object Properties
 | Property | Type | Notes |
@@ -45,7 +68,8 @@ description: 'COM-specific error propagation, HRESULT codes, and deep GUI event-
 |-------------------|--------|-------|
 | `throw` | `throw ExpressionOrObject` | Throws any value; `Error`-derived objects gain `.File`/`.Line` automatically |
 | `try` | `try { ... }` | Guards the block; jumps to matching `catch` on exception |
-| `catch` | `catch [ErrorClass] as varName { }` | Type clause is optional; most-specific subclass must come **first** |
+| `catch` | `catch [ErrorClass] as varName { }` | Type clause is optional; when omitted the default class is `Error`, **not** every value — use `catch Any` to catch a thrown non-Error. Most-specific subclass must come **first** |
+| `else` | `else { }` | Runs only when the `try` block completed without throwing; a throw inside `else` is **not** caught by the sibling `catch` clauses. Must sit after every `catch` and before `finally` |
 | `finally` | `finally { }` | Always runs after try/catch regardless of outcome — use for guaranteed cleanup |
 | `OnError()` | `OnError(callback, addRemove?)` | Register global uncaught-exception handler; call before any throwable code |
 
@@ -70,10 +94,12 @@ description: 'COM-specific error propagation, HRESULT codes, and deep GUI event-
 - All built-ins are functions in v2 taking expression arguments — strings must be quoted: `MsgBox("text")` (or the statement form `MsgBox "text"`). Unquoted text is read as a variable name, not a literal.
 - `%Var%` inside a quoted string is never variable expansion in v2 — it stays literal text. In expressions, `%name%` is a dynamic (double-deref) variable reference, not interpolation. Use `Var` directly in expressions or concatenate with `.`.
 - All functions and hotkeys have **local scope by default** — global variables referenced inside them must be declared with `global varName`; omitting this causes UnsetError at runtime.
-- `ErrorLevel` is removed in v2 — it is never set by built-in functions. Checking it produces UnsetError or always-false logic. Use `try/catch as err` exclusively.
+- `ErrorLevel` is removed in v2 — it is never set by built-in functions and is never assigned. Reading it always throws `UnsetError` at runtime ("This global variable has not been assigned a value"), preceded by a load-time never-assigned warning; it is never silently false. Use `try/catch as err` exclusively.
 - Fat-arrow functions `=>` accept exactly one expression, never a brace-enclosed block of statements — using `() => { multiple; lines }` is a parse error.
+- `&&` and `||` used purely for side effects are illegal at statement level — `x && Foo()` fails at **load** time with `Syntax error.  Specifically: && Foo())` (exit code 12). The short-circuit form is legal only inside a `=>` body. A statement-level **ternary** (`x ? Foo() : 0`) does parse and run, but if the branch actually evaluated is a void call it throws `UnsetError: No value was returned.` at **runtime** (exit code 10) — it validates clean, so that failure ships. Use `if`/`else` at statement level for all three: `if (x)` on one line and `Foo()` on the next.
 - `new ClassName()` is invalid in AHK v2 under any circumstances — instantiate by calling the class: `obj := MyClass()`.
 - `catch` clauses must be ordered **most-specific subclass first** — a broad `catch Error` placed before `catch NetworkError` swallows all typed exceptions, preventing targeted recovery.
+- If no classes are specified, the default class of a `catch` is `Error` — a bare `catch` and `catch Error` behave identically and let any thrown non-`Error` value (`throw "oops"`, `throw 42`) escape. To catch anything at all, use `catch Any as err`.
 - `OnError()` must be registered **before** any throwable code — exceptions thrown during initialization are not captured by a handler registered afterward.
 - `return` and its value must appear on the **same physical line** — a line break between them is parsed as a bare `return` followed by a stray expression (parse error or dead code).
 - `#HotIf` replaces `#If` — the old directive fails at load time ("This line does not contain a recognized action", exit code 12); the script never starts.
@@ -87,7 +113,7 @@ Safe-access priority order for exception handling:
 Pair every prohibition with its positive alternative:
 - ✗ `x = 5` — silent case-insensitive comparison, not assignment
 - ✓ `x := 5` — unambiguous assignment in all contexts
-- ✗ `if (ErrorLevel)` — variable never set in v2; always UnsetError or wrong
+- ✗ `if (ErrorLevel)` — variable never assigned in v2; the read always throws UnsetError
 - ✓ `try { risky() } catch as err { handle(err) }` — explicit, typed exception capture
 - ✗ `obj := new MyClass()` — `new` keyword invalid in v2
 - ✓ `obj := MyClass()` — direct class call invokes `__New` correctly
@@ -141,6 +167,17 @@ MsgBox("Progress: 50%")
 ; ✗ Unnecessary comma escape inside expression strings
 ; MsgBox("Hello`, World")    ; → commas never need escaping in v2 strings
 
+; SEMICOLON INSIDE A STRING LITERAL
+; ✓ A semicolon preceded by whitespace must be escaped as `; inside a quoted string
+s1 := "a `; b"
+
+; ✓ A semicolon flush against a non-space character is safe unescaped
+s2 := "a; b"
+
+; ✗ Whitespace-preceded ; inside a "..." literal is consumed as a comment, so the
+;   string is never closed — load-time failure, exit code 12
+; s := "a ; b"   → ==> Missing """  Specifically: s := "a
+
 ; A_ PREFIX ON BUILT-IN VARIABLES
 ; ✓ All built-in variables require the A_ prefix in v2
 A_Clipboard := "Hello"
@@ -190,6 +227,24 @@ if (x > 10) {
 ; if (x > 10)
 ;     MsgBox("High")
 ;     MsgBox("Done")   ; → always executes regardless of condition
+
+; ✗ A bare Loop as an unbraced if-body absorbs the trailing else — Loop has its own
+;   else clause, taken only when the loop body runs zero times. This validates clean
+;   and exits 0: the loop body prints twice and the else branch never runs, because
+;   the else belongs to the Loop, not to the if.
+; if (x > 0)
+;     Loop 2
+;         Print("in loop")
+; else
+;     Print("ELSE branch")   → never printed
+
+; ✓ Brace the if-body so the else binds to the if
+if (x > 0) {
+    Loop 2
+        Print("in loop")
+} else {
+    Print("ELSE branch")
+}
 
 ; RETURN STATEMENT SYNTAX
 ; ✓ return and its value must be on the same physical line
@@ -252,9 +307,10 @@ Loop Read, "myfile.txt" {
 ; ✗ The legacy comma-command form of parsing loops does not exist in v2 — use
 ;   StrSplit() as above, or v2's expression form: Loop Parse, Str, ","
 
-; ✗ FileOpen does not support for-in line iteration
-; for lineNum, lineText in FileOpen("myfile.txt")
-;     MsgBox(lineText)   ; → MemberError: no __Enum on file object
+; ✗ FileOpen does not support for-in line iteration — the Flags argument is also
+;   mandatory, so the one-argument form dies before enumeration is ever reached
+; for lineNum, lineText in FileOpen("myfile.txt", "r")
+;     MsgBox(lineText)   ; → TypeError: "Value not enumerable." 
 
 ; CALLBACK BINDING
 ; ✓ .Bind(this) propagates the instance reference into the callback context
@@ -264,9 +320,19 @@ SetTimer(MyClass.TimerMethod.Bind(MyClass), 1000)
 ; ✓ Inside a method, bind to the current instance
 button.OnEvent("Click", this.ButtonHandler.Bind(this))
 
-; ✗ Unbound method reference — this is unset when the callback fires
-; button.OnEvent("Click", MyGui.ButtonHandler)       ; → UnsetError: "this has not been assigned"
-; SetTimer(MyClass.TimerMethod, 1000)                ; → same UnsetError on first fire
+; ✗ Unbound method reference — three distinct failures, only two of them loud
+;   1. Class-object access: PropertyError raised on THIS line, before registration
+; button.OnEvent("Click", MyGui.ButtonHandler)   ; → PropertyError: This value of type
+;                                                ;   "Class" has no property named ...
+;   2. Instance method with mandatory parameters: rejected AT registration
+; button.OnEvent("Click", inst.ButtonHandler)    ; ButtonHandler(ctrl, info)
+;                                                ; → ValueError "Invalid callback function."
+;   3. Instance method declared (*): registers silently, then fires with `this` bound to
+;      the control/event source — instance state reads back blank. Silent corruption.
+; button.OnEvent("Click", inst.Handler)          ; Handler(*) — no error anywhere;
+;                                                ; this.Name is the Control's blank Name
+; SetTimer(MyClass.TimerMethod, 1000)            ; → same three cases at the SetTimer call
+;   .Bind(this) is the single fix for all three
 
 ; SEND MODE AND WINDOW TARGETING
 ; ✓ Choose Send variant based on target application requirements
@@ -342,7 +408,7 @@ MonitorProcess(targetPid) {
         SetTimer(, 0)   ; Stop this timer — no more checks needed
 }
 SetTimer(MonitorProcess.Bind(pid), 100)   ; Poll every 100 ms
-; <!-- CONVERTED: replaced multi-line fat-arrow callback `() => { if (!ProcessExist(pid)) { SetTimer(, 0) } }` with named function + .Bind(pid); multi-line fat-arrow block bodies are invalid in AHK v2 -->
+; multi-line callbacks use a named function + .Bind(), never a fat-arrow block body
 
 ; ✓ Auto-closing MsgBox for non-blocking user notification
 MsgBox("Process started", "Info", "T3")   ; Auto-closes after 3 seconds
@@ -444,7 +510,10 @@ try {
 } catch AppError as err {
     MsgBox("App error (code " . err.Code . "): " . err.Message)
 } catch Error as err {
-    MsgBox("Unexpected error: " . err.Message)   ; fallback for all others
+    MsgBox("Unexpected error: " . err.Message)   ; fallback for all Error-derived exceptions only
+} catch Any as err {
+    ; last resort — reached only by a thrown non-Error value, e.g. throw "oops" or throw 42
+    MsgBox("Thrown non-Error value: " . String(err))
 }
 
 ; ✗ Generic throw loses all context — caller cannot distinguish failure categories
@@ -470,10 +539,14 @@ GlobalCrashHandler(err, mode) {
     MsgBox("An unexpected error occurred.`n"
          . "Details saved to: " . logPath, "Error", 16)
 
-    return 1   ; 1 = suppress default AHK crash dialog; 0 = show it afterward
+    ; return values: 0/""/none = normal handling; 1 = suppress the default dialog AND all
+    ;   remaining OnError callbacks; -1 = same, but the thread continues if Mode contains "Return"
+    return 1
 }
 
-; ✓ OnError stacks — multiple handlers can coexist; pass 0 to unregister
+; ✓ OnError stacks — but a handler returning 1 or -1 short-circuits the remaining
+;   callbacks; pass 0 as the second argument to unregister, -1 to register ahead of
+;   the callbacks already installed
 ; OnError(GlobalCrashHandler, 0)   ; remove when no longer needed
 
 ; ✗ Registering OnError after startup code — early throws are missed entirely
@@ -494,8 +567,6 @@ GlobalCrashHandler(err, mode) {
 ## TIER 6 — Version, Compatibility and Diagnostic Patterns
 > METHODS COVERED: `#Requires` · `Map()` · `FileOpen()` · `.Read()` · `.Close()` · `ProcessExist()`
 
-<!-- merged: TIER 6+7, reason: TIER_7 "Advanced Diagnostic Patterns" (object literals, comma errors, infinite loops) are peer severity to TIER_6 version/compatibility patterns; the former TIER 8 (Library and Method Errors) is renumbered TIER 7 -->
-
 LOW-to-MEDIUM severity errors relating to version pinning, removed globals (`ErrorLevel`), the `new` keyword, object literal misuse, comma placement, and infinite-loop patterns. These errors are especially common in scripts ported from legacy AutoHotkey or generated by AI tools trained on mixed-version data.
 ```ahk
 ; #REQUIRES DIRECTIVE
@@ -505,6 +576,47 @@ LOW-to-MEDIUM severity errors relating to version pinning, removed globals (`Err
 ; ✗ No directive — an older interpreter may pick the script up and fail with
 ;   confusing parse errors instead of a clear version-requirement message
 
+; ALPHA.30 BREAKING-CHANGE SIGNATURES (all are load-time failures, exit code 12)
+; ✗ r := f?.()   → ==> Syntax error.  Specifically: .()
+; ✓ r := (f?)()                        ; same for (f?)[] in place of f?.[]
+;   (at statement level the same construct reports "This line does not contain a
+;    recognized action" instead — same removal, different message)
+
+; ✗ c := !a ?? b   → ==> Unexpected "?"
+; ✓ c := !(a ?? b)                     ; and b + (a ?? c) for the additive form
+
+; ✗ Property type STRINGS were removed: {Type: "u32"}, "i32", "f64", "uptr", "u8", "u16"
+; ✓ Use class refs: Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, Float32,
+;   Float64, IntPtr — there is no UInt64 class; use Int64 and handle the sign yourself
+; ✗ Typeless typed properties are rejected — a size with no class (buf: 32) is a
+;   load-time error; reserve raw bytes with a typed array field or a Buffer companion
+
+; THE alpha.30 "No value was returned." UnsetError FAMILY
+; ✓ FileRead on a zero-byte file throws UnsetError — check the size first
+if (FileExist("data.txt") && FileGetSize("data.txt") > 0)
+    content := FileRead("data.txt")
+
+; ✓ GuiCtrlFromHwnd / GuiFromHwnd return NO VALUE when nothing matches — coalesce
+ctrl := GuiCtrlFromHwnd(hwnd) ?? 0
+if (ctrl)
+    ProcessControl(ctrl)
+
+; ✓ An end-of-chain .Base returns no value — guard the walk or it throws mid-loop
+cursor := SomeObject
+while (cursor := cursor.Base ?? 0)
+    InspectBase(cursor)
+
+; ✗ A fat-arrow body (or a comma tail) that ends in a void call propagates the void;
+;   the UnsetError surfaces where the result is consumed, not at the arrow itself
+; DoWork() {          ; no return statement — the call yields no value
+;     Print("working")
+; }
+; f := () => DoWork()
+; v := f()            ; → UnsetError: "No value was returned." (exit code 10)
+
+; ✓ Wrap it so the expression always yields a value
+f := () => (DoWork(), 0)
+
 ; ERRORLEVEL (REMOVED IN v2)
 ; ✓ Use try/catch — the only exception mechanism in v2
 try {
@@ -513,9 +625,11 @@ try {
     MsgBox("Error: " . err.Message)
 }
 
-; ✗ ErrorLevel check — variable is never set by v2 functions; logic is always wrong
+; ✗ ErrorLevel check — the variable is never assigned by v2 functions, so the read
+;   itself throws; it is never silently false
 ; FileRead("nonexistent.txt")
-; if (ErrorLevel) { }   ; → ErrorLevel is unset; condition is always false or throws
+; if (ErrorLevel) { }   ; → UnsetError at runtime:
+;                       ;   "This global variable has not been assigned a value"
 
 ; INSTANTIATION WITHOUT new
 ; ✓ Class instantiation is a direct function call in v2 — no new keyword
@@ -527,7 +641,10 @@ obj := MyClass()
 
 ; OBJECT LITERALS vs MAP
 ; ✓ Map() for dynamic key-value storage — supports .Has(), .Get(), .Delete()
-appSettings := Map("theme", "dark", "volume", 80)
+;   Construct empty, then assign each key on its own line
+appSettings := Map()
+appSettings["theme"]  := "dark"
+appSettings["volume"] := 80
 
 ; ✓ Dedicated class for structured data with fixed, named properties
 ;   The variable must not be named "settings" — assigning to a variable that
@@ -544,17 +661,18 @@ appSettings := Settings()
 ; appSettings := {theme: "dark", volume: 80}   ; → no .Has()/.Get()/.Delete() support
 
 ; RESOURCE MANAGEMENT (OOP UNFAMILIARITY)
-; ✓ Explicit try/finally guarantees file handle is closed even on exception
+; ✓ Explicit try/finally guarantees the file handle is closed even on exception —
+;   same shape as the FileOpen/try/finally pattern in TIER 5
 file := FileOpen("data.txt", "r", "UTF-8")
 try {
     content := file.Read()
     ProcessContent(content)
 } finally {
-    file.Close()   ; Always runs — handle is never leaked
+    file.Close()   ; Always executes — handle is never leaked
 }
 
 ; ✗ Chaining .Read() on a bare FileOpen result — handle is never closed
-; content := FileOpen("data.txt").Read()   ; → handle leaks; __Delete timing not guaranteed
+; content := FileOpen("data.txt", "r").Read()   ; → handle leaks; __Delete timing not guaranteed
 
 ; OBJECT LITERAL SYNTAX
 ; ✓ The legitimate {} role: property descriptors and option bags — never data storage
@@ -601,6 +719,226 @@ MsgBox("Hello")
 ;   load time; validate generated code with the interpreter before trusting it
 ```
 
+Validate before trusting generated code. Resolve the binary from `harness.env`
+(`AHK_BIN_WIN` → `AHK_BIN_WSL`) rather than hardcoding a path:
+
+```bash
+"$AHK_BIN_WSL" /ErrorStdOut /validate "<script.ahk>"
+"$AHK_BIN_WSL" check "<script.ahk>"          # fork subcommand, same load-time check
+```
+
+Fork exit codes worth recognising:
+
+| Code | Reason | When |
+|------|--------|------|
+| `10` | `Error` | Uncaught script-level exception |
+| `11` | `Critical`/`Fatal` | Internal error or SEH fault |
+| `12` | `Parse` | Parse / load failure — nothing ran |
+| `130` | `ExternalSignal` | Ctrl+C / Ctrl+Break / close / logoff / shutdown |
+
+`/CrashLog=<path>` and `/StdErrFile=<path>` are owned by `Module_Versions.md`.
+
+## TIER 7 — Library and Method Errors
+> METHODS COVERED: `#Include <Array>` · `#Include <JSON>` · `.Join()` · `.Filter()` · `.Map()` · `JSON.Load()` · `JSON.Dump()` · `Map.Prototype.DefineProp()`
+
+Library-dependent methods are among the most common sources of LLM-generated errors. AHK v2 arrays have no built-in `.Join()`, `.Filter()`, or `.Map()` — these require `#Include <Array>`. JSON methods use `JSON.Load()` / `JSON.Dump()`, not JavaScript's `.parse()` / `.stringify()`. Map objects have no `.Keys()` method — use a `for` loop instead.
+
+```ahk
+; ✗ Missing library include — Array has no built-in .Join()
+arr := [1, 2, 3]
+result := arr.Join(",")  ; → MethodError: no method named 'Join'
+
+; ✓ Include the library first
+#Include <Array>
+arr := [1, 2, 3]
+result := arr.Join(",")  ; Works with Array.ahk loaded
+
+; ✓ Method names are case-insensitive in AHK v2 — arr.join(",") and arr.Join(",")
+;   call the same method; PascalCase is a style convention, not a correctness rule.
+;   The real hazard is a wrong NAME, e.g. JSON.parse() instead of JSON.Load().
+
+; ✗ Map.Keys() does not exist
+myMap := Map()
+myMap["a"] := 1
+myMap["b"] := 2
+keys := myMap.Keys()  ; → MethodError
+
+; ✓ Use for-loop iteration
+keys := []
+for key in myMap
+    keys.Push(key)
+
+; ✓ Or extend the prototype under a distinct name — naming it "Keys" would
+;   contradict the rule above; requires v2.1 (function-definition expression)
+Map.Prototype.DefineProp("KeysArray", {
+    Call: (this) {
+        arr := []
+        for k in this
+            arr.Push(k)
+        return arr
+    }
+})
+keys := myMap.KeysArray()
+
+; ✗ JavaScript JSON method names
+data := JSON.parse(jsonString)     ; → wrong method name
+output := JSON.stringify(obj)      ; → wrong method name
+
+; ✓ AHK v2 JSON library methods
+#Include <JSON>
+data := JSON.Load(jsonString)      ; Parse JSON string to object
+output := JSON.Dump(obj)           ; Convert object to JSON string
+```
+
+## TIER 8 — Clause Ordering, Error Inspection and Parameter Validation
+> METHODS COVERED: `try/catch/else/finally` · `A_ThisFunc` · `IsSet()` · `IsObject()` · `Type()` · `OSError.Number` · `.Stack`
+
+MEDIUM-severity architecture errors inside otherwise correct exception handling: putting the success path inside `try` so the guard is wider than intended, closing a handle that was never opened, throwing without naming the failing function, and reporting a caught error with half its context missing. The `else` clause is the least-used part of the construct and the one that fixes the first of those directly.
+```ahk
+; TRY / CATCH / ELSE / FINALLY — THE FULL CLAUSE ORDER
+; ✓ Order is fixed: try → catch (any number) → else → finally.
+;   else runs only when the try block finished without throwing; finally always runs.
+try {
+    settings := LoadConfig()
+} catch OSError as err {
+    ; OSError is the one built-in carrying .Number — the Windows error code
+    Print("config unreadable [{}]: {}", err.Number, err.Message)
+    settings := Map()
+} else {
+    ; success-only path — an exception thrown HERE is NOT seen by the catch above;
+    ; it propagates to the caller, and finally still runs on the way out
+    ValidateConfig(settings)
+} finally {
+    Print("config load attempted")
+}
+
+; ✗ Putting the success path inside try widens the guard — ValidateConfig's own
+;   failure is swallowed by the catch that was meant for the file read
+; try {
+;     settings := LoadConfig()
+;     ValidateConfig(settings)
+; } catch OSError as err { ... }
+
+; CLEANUP WHEN THE HANDLE MAY NEVER HAVE BEEN ACQUIRED
+; ✓ FileOpen itself can throw, so it belongs inside try — seed the variable first
+;   and guard the close, or finally calls .Close() on a non-object
+file := 0
+try {
+    file := FileOpen(path, "r", "UTF-8")
+    ProcessContent(file.Read())
+} catch OSError as err {
+    Print("open failed: {}", err.Message)
+} finally {
+    if IsObject(file)
+        file.Close()
+}
+
+; PARAMETER VALIDATION AT THE FUNCTION BOUNDARY
+; ✓ Typed throw with A_ThisFunc as What — names the failing function without
+;   hard-coding it; Extra carries the offending value for the log
+ProcessUserData(data, options := unset) {
+    if !IsObject(data)
+        throw TypeError("data must be an object", A_ThisFunc, Type(data))
+    if (IsSet(options) && !IsObject(options))
+        throw TypeError("options must be an object", A_ThisFunc, Type(options))
+
+    opts := IsSet(options) ? options : Map()
+    return opts
+}
+
+; INSPECTING A CAUGHT ERROR
+; ✓ Type() gives the class name; What/Extra/File/Line/Stack give the context —
+;   a report that omits .Extra loses the offending value
+DescribeError(err) {
+    detail := Type(err) . ": " . err.Message
+            . "`n  what:  " . err.What
+            . "`n  extra: " . err.Extra
+            . "`n  at:    " . err.File . ":" . err.Line
+            . "`n" . err.Stack
+    return detail
+}
+```
+
+## TIER 9 — Symptom Triage and Diagnostic Instrumentation
+> METHODS COVERED: `Print()` · `OutputDebug()` · `ToolTip()` · `SetTimer()` · `ObjBindMethod()` · `A_IsAdmin` · `__Delete()`
+
+This tier is the entry point when there is no error message to read — the script runs and misbehaves. Severity is whatever the underlying defect turns out to be; the cost of skipping triage is hours spent reading the wrong file. Answer the five questions, place the symptom in a category, then jump to the tier that owns it.
+
+Triage questions, in order:
+
+1. What is the exact symptom — an error dialog, a wrong value, nothing at all, or a hang?
+2. When does it occur — at load, at one specific action, or at random intervals?
+3. Is it consistent or intermittent? Intermittent means timing, not syntax.
+4. What is the environment — interpreter build, elevation, and which other scripts are running?
+5. What changed last? Bisect against the previous working revision before reading anything else.
+
+| Symptom | Category | Tier that owns it |
+|---------|----------|-------------------|
+| Script never starts; the dialog names a line | Load-time / parse (exit code 12) | TIER 1, TIER 6 |
+| Runs, then dies at one specific action | Runtime exception (exit code 10) | TIER 5 — catch it and read `.What` / `.Line` |
+| Runs to completion, values are wrong | Logic | TIER 3 operators, TIER 2 scope |
+| Works here, fails on another file / window / machine | Resource | TIER 4 — `OSError`, `TargetError`, hard-coded paths |
+| Freezes, pegs a core, or fires after the window closed | Blocking / lifetime | TIER 4 blocking calls, TIER 6 busy-wait, and below |
+| Intermittent and timing-dependent | Re-entrancy | timers and hotkeys re-entering a handler mid-run |
+
+Isolate before fixing: comment out sections until the symptom disappears, then reintroduce them one at a time. A defect that only reproduces in the full script is a timing or re-entrancy defect, not a syntax one.
+```ahk
+; TRACE CHANNEL CHOICE
+; ✓ Print() writes one line to stdout — the primary trace on the +Console fork and
+;   the only channel that survives a /Headless run
+Print("handler enter: index={}", A_Index)
+
+; ✓ OutputDebug works on stock v2 as well — read the stream in DebugView
+OutputDebug("handler enter`n")
+
+; ✓ ToolTip is a non-blocking on-screen probe for interactive runs; clear it with a
+;   negative (one-shot) timer so it cannot outlive the step being traced
+ToolTip("step 3")
+SetTimer(ClearTrace, -1500)
+
+ClearTrace() {
+    ToolTip()
+}
+
+; ✗ MsgBox as a probe blocks the thread — it changes the timing of the bug being
+;   hunted and holds a hotkey's input hook open while it waits
+; MsgBox("step 3")
+
+; HOTKEY THAT WORKS EVERYWHERE EXCEPT ONE WINDOW
+; ✓ An unelevated script cannot send input to an elevated window — report it instead
+;   of letting the hotkey look broken
+if !A_IsAdmin
+    Print("not elevated — hotkeys are inert over admin windows")
+
+; ✓ A key the interpreter reports as blocked is bound by ANOTHER running script, not
+;   by this one; the tell is that the same key with a different modifier still works.
+;   Grep every running .ahk for the key before editing this script.
+
+; TIMERS OUTLIVING THE OBJECT THAT OWNS THEM
+; ✓ A timer bound to an instance holds a reference to it, and storing that bound
+;   method on the instance closes a reference cycle — __Delete then never runs.
+;   Stop the timer from an explicit Close() the owner calls.
+class Poller {
+    __New() {
+        this.Tick := ObjBindMethod(this, "OnTick")
+        SetTimer(this.Tick, 250)
+    }
+
+    OnTick() {
+        Print("tick")
+    }
+
+    Close() {
+        SetTimer(this.Tick, 0)
+        this.Tick := 0
+    }
+}
+
+; ✗ Relying on __Delete to stop the timer — the timer's own reference plus the
+;   this.Tick cycle keep the object alive, so __Delete is never reached and the
+;   callback keeps firing after the window is gone
+```
+
 ## ANTI-PATTERNS
 
 | Pattern | Wrong | Correct | LLM Common Cause |
@@ -629,6 +967,8 @@ MsgBox("Hello")
 - `Module_DataStructures.md` — Map vs Object decision guide and `.Has()`/`.Get()` safe-access patterns referenced in TIER 6.
 - `Module_COM.md` — COM object lifecycle, `ComCall`/HRESULT error handling, and exception propagation from automation objects.
 - `Module_DllCall.md` — `OSError`/`A_LastError` patterns for failed native calls.
+- `Module_Versions.md` — the owner of alpha.30 breaking-change signatures, fork-only diagnostics (`/CrashLog`, `/StdErrFile`), and portability decisions across v2.0 / v2.1-alpha / +Console.
+- `Module_Escapes.md` — backtick escaping rules behind the semicolon-in-string and comma-escape traps in TIER 1.
 - FileOpen/FileRead exception patterns, encoding errors, and file-handle lifecycle — use built-in AHK v2 knowledge (no dedicated file-system module yet).
 
 ## ERROR DIAGNOSTIC CHECKLIST
@@ -662,53 +1002,3 @@ MsgBox("Hello")
 3. Confirm proper loop syntax
 4. Verify hotkey context syntax (`#HotIf` not `#If`)
 5. Check GUI object syntax (not legacy commands)
-
-## TIER 7 — Library and Method Errors
-> METHODS COVERED: `#Include <Array>` · `#Include <JSON>` · `.Join()` · `.Filter()` · `.Map()` · `JSON.Load()` · `JSON.Dump()` · `Map.Prototype.DefineProp()`
-
-Library-dependent methods are among the most common sources of LLM-generated errors. AHK v2 arrays have no built-in `.Join()`, `.Filter()`, or `.Map()` — these require `#Include <Array>`. JSON methods use `JSON.Load()` / `JSON.Dump()`, not JavaScript's `.parse()` / `.stringify()`. Map objects have no `.Keys()` method — use a `for` loop instead.
-
-```ahk
-; ✗ Missing library include — Array has no built-in .Join()
-arr := [1, 2, 3]
-result := arr.Join(",")  ; → MethodError: no method named 'Join'
-
-; ✓ Include the library first
-#Include <Array>
-arr := [1, 2, 3]
-result := arr.Join(",")  ; Works with Array.ahk loaded
-
-; ✓ Method names are case-insensitive in AHK v2 — arr.join(",") and arr.Join(",")
-;   call the same method; PascalCase is a style convention, not a correctness rule.
-;   The real hazard is a wrong NAME, e.g. JSON.parse() instead of JSON.Load().
-
-; ✗ Map.Keys() does not exist
-myMap := Map("a", 1, "b", 2)
-keys := myMap.Keys()  ; → MethodError
-
-; ✓ Use for-loop iteration
-keys := []
-for key in myMap
-    keys.Push(key)
-
-; ✓ Or extend the prototype under a distinct name — naming it "Keys" would
-;   contradict the rule above; requires v2.1 (function-definition expression)
-Map.Prototype.DefineProp("KeysArray", {
-    Call: (this) {
-        arr := []
-        for k in this
-            arr.Push(k)
-        return arr
-    }
-})
-keys := myMap.KeysArray()
-
-; ✗ JavaScript JSON method names
-data := JSON.parse(jsonString)     ; → wrong method name
-output := JSON.stringify(obj)      ; → wrong method name
-
-; ✓ AHK v2 JSON library methods
-#Include <JSON>
-data := JSON.Load(jsonString)      ; Parse JSON string to object
-output := JSON.Dump(obj)           ; Convert object to JSON string
-```

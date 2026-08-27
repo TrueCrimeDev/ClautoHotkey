@@ -17,7 +17,7 @@ Apply these transformations in order:
 
 ### 1. Missing `#Requires`
 ```diff
-+ #Requires AutoHotkey v2.0
++ #Requires AutoHotkey v2.1-alpha.30
   #SingleInstance Force
 ```
 Add as first line if missing.
@@ -43,7 +43,9 @@ Add as first line if missing.
 ### 5. Object literals for data → `Map()`
 ```diff
 - config := {theme: "dark", fontSize: 14}
-+ config := Map("theme", "dark", "fontSize", 14)
++ config := Map()
++ config["theme"] := "dark"
++ config["fontSize"] := 14
 ```
 Only when used as key-value storage, NOT for passing options to functions.
 

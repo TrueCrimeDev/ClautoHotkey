@@ -13,7 +13,8 @@ set -u
 
 input=$(cat)
 
-tool_name=$(echo "$input"  | jq -r '.tool_name  // empty' 2>/dev/null)
+tool_name=$(echo "$input"  | jq -r '.tool_name  // empty'     2>/dev/null)
+session=$(echo "$input"    | jq -r '.session_id // "default"' 2>/dev/null)
 tool_input=$(echo "$input" | jq -r '.tool_input // empty' 2>/dev/null)
 tool_output=$(echo "$input"| jq -r '.tool_output// empty' 2>/dev/null)
 err_field=$(echo "$input"  | jq -r '.error      // empty' 2>/dev/null)
@@ -72,7 +73,8 @@ jq -nc \
     --arg line "$line" \
     --arg type "$err_type" \
     --arg msg "$err_msg" \
-    '{timestamp: $ts, tool: $tool, file: $file, line: ($line | tonumber? // 0), type: $type, message: $msg}' \
+    --arg session "$session" \
+    '{timestamp: $ts, session: $session, tool: $tool, file: $file, line: ($line | tonumber? // 0), type: $type, message: $msg}' \
     >> "$log_file" 2>/dev/null || true
 
 D="\x1b[90m"

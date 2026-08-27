@@ -44,7 +44,7 @@ MyMethod(param) {
     ; ... original method body ...
 
     _totalMs += A_TickCount - _start
-    FileAppend("PROFILE|MyMethod|" . _callCount . "|" . _totalMs . "|" . (A_TickCount - _start) . "`n", "*")
+    Print("PROFILE|MyMethod|{}|{}|{}", _callCount, _totalMs, A_TickCount - _start)
     return result
 }
 ```

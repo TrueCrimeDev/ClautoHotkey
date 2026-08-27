@@ -32,7 +32,7 @@ You generate Yunit-style test suites for AutoHotkey v2 classes and scripts.
 ## Test Template
 
 ```autohotkey
-#Requires AutoHotkey v2.0
+#Requires AutoHotkey v2.1-alpha.30
 #Include <Yunit>
 #Include "../<TargetFile>.ahk"
 
@@ -78,10 +78,10 @@ For each public method, create:
 After generating tests:
 ```powershell
 # Syntax check
-bin\AutoHotkey64.exe check "!Tests/Test_<ClassName>.ahk"
+& "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe" check "!Tests/Test_<ClassName>.ahk"
 
 # Run tests headlessly
-bin\AutoHotkey64.exe /Headless /ErrorStdOut "!Tests/Test_<ClassName>.ahk"
+& "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe" /Headless /ErrorStdOut "!Tests/Test_<ClassName>.ahk"
 ```
 
 ## Rules

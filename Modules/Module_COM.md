@@ -1,14 +1,18 @@
 ---
 name: Module_COM
-description: 'Raw DllCall, Buffer, and Struct marshalling belong in Module_DllCall.md; WinRT activation
-  and the IInspectable ABI belong in Module_WinAPI.md (WinRT section). This module covers classic COM:
-  IDispatch automation, events, SafeArrays, and direct vtable ComCall. TRIGGER when the request involves:
-  COM, ComObject, ComObjGet, ComCall, ComValue, ComObjArray, ComObjConnect, ComObjQuery, ComObjFromPtr,
-  IDispatch, IUnknown, vtable, "Excel automation", "Word automation", "WMI", "Internet Explorer", "Shell.Application",
-  "COM event", "SafeArray", "VARIANT", "automation object", "CLSID", "ProgID", "QueryInterface"'
+description: 'Classic COM in AHK v2 — IDispatch late-binding automation (Excel, Word, WMI, Shell),
+  ComObjConnect event sinks, ComValue/VARIANT typing, SafeArrays, and direct vtable ComCall.
+  TRIGGER when the request involves: COM, ComObject, ComObjGet, ComCall, ComValue, ComObjArray,
+  ComObjConnect, ComObjQuery, ComObjFromPtr, IDispatch, IUnknown, vtable, "Excel automation",
+  "Word automation", "WMI", "Shell.Application", "Internet Explorer", "COM event", "SafeArray", "VARIANT",
+  "automation object", "CLSID", "ProgID", "QueryInterface". Not covered: raw DllCall, Buffer and
+  Struct marshalling - see Module_DllCall.md; WinRT activation and the IInspectable ABI -
+  see Module_WinAPI.md.'
 ---
 
 # Module_COM
+
+_AHK v2.0+ (the `"Void"` ComCall return type requires v2.1-alpha.30 — upstream or the +Console fork)_
 
 ## API QUICK-REFERENCE
 
@@ -52,6 +56,13 @@ description: 'Raw DllCall, Buffer, and Struct marshalling belong in Module_DllCa
 - Iterate COM collections with a normal `for` loop — AHK uses the collection's `_NewEnum`.
 - Quit/close the application object explicitly (`obj.Quit()`) for apps like Excel that
   otherwise leave an orphaned process.
+- alpha.30: passing a class object as a `ComCall` argument is removed — pass a `Buffer`, a
+  `Struct`, or an explicit `.Ptr`.
+- alpha.30 adds the `"Void"` return type for `ComCall` (as for `DllCall`/`CallbackCreate`):
+  the call runs but yields blank-unset instead of a fabricated numeric return. Omitting
+  `RetType` still means HRESULT, which throws on a failing HRESULT.
+- An output `&var` passed to `ComCall` must already hold a value — write `"Ptr*", &p := 0`.
+  On alpha.30 an unassigned VarRef throws before the call runs.
 
 ✗ / ✓ pairs:
 
@@ -99,23 +110,32 @@ for proc in wmi.ExecQuery("SELECT Name, ProcessId FROM Win32_Process")
 Connect the object's outgoing interface to a sink object whose **method names match the
 event names**. Each handler receives the event's documented parameters **plus the COM
 object itself as a trailing final parameter** — declare that extra parameter (or make the
-handler variadic) or the dispatch throws when the event fires. Disconnect by calling
+handler variadic) or the dispatch throws when the event fires. An event parameter the host
+passes ByRef (documented `ByRef`/`out`, e.g. Excel's `Cancel`) is declared `&Param` in the
+sink method; writing to it is how you answer the host. Disconnect by calling
 `ComObjConnect(obj)` with no sink.
 
+Pick a host that still exists. `InternetExplorer.Application` was retired in 2023 and no
+longer activates reliably, so it is not a usable automation target — Excel's `Application`
+and `Workbook` sinks, or `Shell.Application`, are the live equivalents.
+
 ```ahk
-; ✓ Internet Explorer navigation events routed to a sink class
-class BrowserEvents {
+; ✓ Excel workbook events routed to a sink class
+class WorkbookEvents {
     __New() {
-        this.ie := ComObject("InternetExplorer.Application")
-        this.ie.Visible := true
-        ComObjConnect(this.ie, this)        ; methods below are the event handlers
-        this.ie.Navigate("https://example.com")
+        this.xl := ComObject("Excel.Application")
+        this.xl.Visible := true
+        this.wb := this.xl.Workbooks.Add()
+        ComObjConnect(this.wb, this)         ; methods below are the event handlers
     }
-    DocumentComplete(pDisp, &url, ieObj) {   ; event params + the COM object as final param
-        ToolTip("loaded: " url)
+    SheetChange(sh, rng, wbObj) {            ; event params + the COM object as final param
+        ToolTip("changed: " rng.Address)
+    }
+    BeforeClose(&Cancel, wbObj) {            ; ByRef out-param + the COM object as final param
+        Cancel := true                       ; write back through the ref to veto the close
     }
     __Delete() {
-        ComObjConnect(this.ie)               ; detach the sink before release
+        ComObjConnect(this.wb)               ; detach the sink before release
     }
 }
 ```
@@ -152,8 +172,8 @@ interface methods follow in IDL order. `ComCall` is `DllCall` for COM — same t
 ;   (indices come from the interface's IDL/header — see Module_WinAPI.md for WinRT)
 riid := Buffer(16)                            ; fill with the target IID bytes
 DllCall("ole32\IIDFromString", "Str", "{....}", "Ptr", riid)
-if ComCall(0, baseObj, "Ptr", riid, "Ptr*", &pNext, "Int") = 0 {   ; QueryInterface
-    result := ComCall(7, pNext, "Ptr*", &out, "Int")              ; some method @ slot 7
+if ComCall(0, baseObj, "Ptr", riid, "Ptr*", &pNext := 0, "Int") = 0 {   ; QueryInterface
+    result := ComCall(7, pNext, "Ptr*", &out := 0, "Int")         ; some method @ slot 7
     ObjRelease(pNext)                          ; you own this reference
 }
 ```

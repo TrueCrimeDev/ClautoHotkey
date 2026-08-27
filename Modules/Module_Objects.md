@@ -1,10 +1,12 @@
 ---
 name: Module_Objects
-description: 'Advanced meta-functions (__Get/__Set/__Call/__Delete/__Enum), mixin patterns, and deep class
-  hierarchies are not covered — see Module_Classes.md. TRIGGER when the request involves: object, class,
+description: 'Objects in AHK v2 — the Any root and type introspection (Type, is, HasProp, HasMethod,
+  HasBase, GetMethod), property descriptors via DefineProp and class-body get/set, prototype extension,
+  BoundFunc callback binding, and object composition. TRIGGER when the request involves: object, class,
   property, method, inheritance, extends, descriptor, prototype, DefineProp, HasProp, HasMethod, HasBase,
   GetMethod, ObjBindMethod, BoundFunc, "create object", "property validation", "method binding", "computed
-  property", "callback context", "check object type", "read-only property"'
+  property", "callback context", "check object type", "read-only property". Not covered: meta-functions
+  (__Get/__Set/__Call/__Delete/__Enum), mixin patterns, and deep class hierarchies — see Module_Classes.md.'
 ---
 
 # Module_Objects
@@ -18,7 +20,7 @@ description: 'Advanced meta-functions (__Get/__Set/__Call/__Delete/__Enum), mixi
 | `.HasMethod()` | `.HasMethod(name, paramCount?)` | Returns 1 if a callable method exists; optionally validates expected arity |
 | `.HasBase()` | `.HasBase(baseObj)` | Returns 1 if `baseObj` appears anywhere in the prototype chain |
 | `.GetMethod()` | `.GetMethod(name, paramCount?)` | Returns the method Func object; throws MethodError if not found |
-| `.Base` | `.Base` | Reference to the object's direct prototype — readable and writable on instances; a Class object's base is read-only on alpha.27+ (`ClassObj.Base := X` and `ObjSetBase(ClassObj, X)` both throw) |
+| `.Base` | `.Base` | Reference to the object's direct prototype — instance bases are freely writable; a Class object's base was read-only on alpha.27/.28 (both `ClassObj.Base := X` and `ObjSetBase(ClassObj, X)` threw) but is writable again on alpha.30 — verified on 2.1-alpha.30+Console |
 
 ### Object (instance methods — available on plain objects and class instances)
 | Method / Property | Signature | Notes |
@@ -32,7 +34,7 @@ description: 'Advanced meta-functions (__Get/__Set/__Call/__Delete/__Enum), mixi
 | Method / Property | Signature | Notes |
 |-------------------|-----------|-------|
 | `.Bind()` | `.Bind(args*)` | Returns a BoundFunc with leading arguments pre-filled; primary tool for capturing `this` in callbacks |
-| `ObjBindMethod()` | `ObjBindMethod(obj, methodName, args*)` | Returns a BoundFunc that calls `obj.methodName`; preferred over `.Bind()` for SetTimer and GUI events |
+| `ObjBindMethod()` | `ObjBindMethod(obj, methodName, args*)` | Returns a BoundFunc that calls `obj.methodName`; equivalent alternative when the method is selected by name string — project canon for timer/GUI callbacks is `.Bind(this)` |
 
 ### Type Introspection
 | Function / Operator | Signature | Notes |
@@ -112,9 +114,11 @@ john := Person("John", 30)   ; Correct v2 form — no 'new'
 john.Greet()
 
 ; ✓ Map for data records — build empty, assign each field individually
-person := Map()
-person["name"] := "John"
-person["age"]  := 30
+;   Not `person := Map()` — that name matches the `Person` class above case-insensitively
+;   and fails at load time: "This Class cannot be used as an output variable"
+personRecord := Map()
+personRecord["name"] := "John"
+personRecord["age"]  := 30
 
 ; ✓ Same pattern for key-value settings — Map provides .Has(), .Get(), .Delete()
 settings := Map()
@@ -225,6 +229,14 @@ result := calc.Add(10, 5)   ; 15
 ; Width {
 ;     set => { this._width := value }   ; → Parse error inside class body
 ; }
+
+; ✓ Descriptor inspection — GetOwnPropDesc reads the descriptor, OwnProps enumerates
+;   own properties, DeleteProp removes one and returns its last value
+desc := obj.GetOwnPropDesc("age")
+MsgBox(desc.HasProp("set") ? "age has a setter" : "age is get-only")
+for propName, propValue in obj.OwnProps()
+    MsgBox(propName)
+obj.DeleteProp("complex")   ; returns the property's last value
 ```
 
 ## TIER 3 — Class Inheritance and Prototype Extension
@@ -310,8 +322,11 @@ class Timer {
     }
 }
 
-timer := Timer("MyTimer")
-timer.Start()
+; ✗ Never name the variable `timer` here — an identifier that matches a script-defined
+;   class case-insensitively is a load-time error: "This Class cannot be used as an
+;   output variable. Specifically: Timer" (exit 12)
+tickTimer := Timer("MyTimer")
+tickTimer.Start()
 
 ; ✗ Unbound method — SetTimer fires the raw Func with zero arguments, so the method's
 ;   hidden 'this' parameter goes unfilled; the call fails before the body ever runs
@@ -533,7 +548,7 @@ try {
 | Object literal as data container | `{key: val}` for dynamic storage | `m := Map()` then `m["key"] := val` per key | Older AutoHotkey used object literals for all key-value data; v2 Map() is the designated replacement with full API |
 | Arrow + block in DefineProp descriptor | `set: (this, v) => { if v < 0 ... }` | Named function reference for any multi-line body | JS/Python lambda syntax allows multi-line bodies; AHK v2 arrow syntax does not — mixed-language training data causes this |
 | Unbound method as callback | `SetTimer(this.Tick, 1000)` | `SetTimer(this.Tick.Bind(this), 1000)` | Legacy AutoHotkey percent-expression syntax obscured binding mechanics; older training data omits `.Bind()` entirely |
-| `IsObject()` for type checking | `if IsObject(x)` | `if x is Object` or `Type(x) != "Integer"` | `IsObject()` still exists in v2; however `is Object` offers chain-aware type checking and `Type()` returns the exact class name, making them more precise alternatives for new v2 code |
+| `IsObject()` for type checking | `if IsObject(x)` | `if x is Object` | `IsObject()` still exists in v2, but `is Object` offers chain-aware type checking. `Type(x)` is for reading the exact class name — it is not an object test, so never substitute a `Type(x) != "Integer"` comparison for `IsObject()` |
 | Wrong prototype extension site | `Object().DefineProp(String.Prototype, "x", d)` | `ObjDefineProp(String.Prototype, "x", d)` where `ObjDefineProp := Object.Prototype.DefineProp` | `String` is not a subclass of `Object` — `String.Prototype` has no `DefineProp` instance method; the underlying implementation must be extracted from `Object.Prototype.DefineProp` and called with `String.Prototype` as the explicit receiver |
 | `set => { }` block in class body | `Width { set => { this._w := value } }` | `Width { set { this._w := value } }` | Conflating DefineProp arrow descriptor syntax with class body `set` block syntax — two different parse contexts |
 

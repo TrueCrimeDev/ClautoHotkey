@@ -13,10 +13,11 @@ description: >
 
 When this skill is invoked, load the following module files:
 
-1. **Read** `Modules/Module_Errors.md` — V1→V2 breaking changes, error class hierarchy, API quick-reference, anti-patterns, diagnostic checklist
-2. **Read** `Modules/Supplemental/Module_ErrorHandling.md` — Additional error types, try/catch patterns, prevention strategies
-3. **Read** `Modules/Supplemental/Module_Debug.md` — Systematic debugging process, code inspection, resolution strategies
-4. **Read** `Modules/Supplemental/Module_Components.md` — Common component patterns to validate against
+1. **Read** `Modules/Module_Errors.md` — the whole error domain: class hierarchy, clause
+   ordering, symptom triage, diagnostic instrumentation, anti-patterns, and the diagnostic checklist.
+   (Absorbed the former `Module_ErrorHandling.md` and `Module_Debug.md` on 2026-08-26.)
+2. **Read** `Modules/Module_Versions.md` when the symptom looks version-dependent — a
+   construct that works on one build and not another.
 
 ## Diagnosis Workflow
 
@@ -68,13 +69,16 @@ When live debugging is available, use the MCP tools:
 
 ## Console Error Checking
 
-```powershell
+```bash
+AHK_EXE="/mnt/c/Program Files/AutoHotkey/v2/AutoHotkey64.exe"
+WIN_PATH=$(wslpath -w "script.ahk")
+
 # Syntax check
-bin\AutoHotkey64.exe check script.ahk
+"$AHK_EXE" check /Diag=json "$WIN_PATH"
 
 # Runtime check (headless, 2s timeout)
-timeout 2 bin\AutoHotkey64.exe /ErrorStdOut /Headless script.ahk
+timeout 2 "$AHK_EXE" /Headless /ErrorStdOut "$WIN_PATH"
 
 # Capture stderr
-bin\AutoHotkey64.exe /ErrorStdOut script.ahk 2>err.txt
+"$AHK_EXE" /ErrorStdOut "$WIN_PATH" 2>"$CLAUDE_JOB_DIR/ahk_fix_err.txt"
 ```

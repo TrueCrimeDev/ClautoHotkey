@@ -1,12 +1,13 @@
 ---
 name: Module_DynamicProperties
-description: 'Block-body arrow syntax (`=> { }`) is a syntax error on every AHK v2 build — multi-statement
-  function expressions use the arrowless v2.1 `(params) { }` form or a named function; async/concurrent
-  callback scheduling is not covered here (no dedicated async/timers module yet). TRIGGER when the request
+description: 'Fat-arrow functions, closures and variable capture, computed and parameterised properties,
+  __Get / __Set / __Call interception, DefineProp descriptors, and functional patterns (composition,
+  currying, partial application) in AHK v2. TRIGGER when the request
   involves: =>, fat arrow, arrow function, lambda,
   closure, __Get, __Set, __Call, DefineProp, dynamic property, meta-function, functional programming,
   currying, composition, "short function syntax", "inline callback", "computed property", "property that
-  calculates", "function remembers variables", "factory function"'
+  calculates", "function remembers variables", "factory function". Not covered: async/concurrent callback
+  scheduling — use built-in AHK v2 knowledge (no dedicated async/timers module yet).'
 ---
 
 # Module_DynamicProperties
@@ -62,6 +63,8 @@ description: 'Block-body arrow syntax (`=> { }`) is a syntax error on every AHK 
 - Fat arrow **properties are getter-only** — a bare `propName => expr` in a class body defines no setter; assignment always throws a plain `Error` ("Property is read-only") — it never fails silently — consequence: use `propName { get => expr  set { ... } }` syntax when write access is required.
 - Lambdas **stored as object properties and called as methods receive the object as the first argument** — always declare a leading parameter (e.g., `this`) to absorb the implicit argument — consequence: without the parameter, the implicit object argument over-fills the lambda's parameter list and every method-style call throws `Error: Too many parameters passed to function`.
 - Variables captured in closures are captured **by reference, not by value** — the closure sees the current value of the outer variable at call time, not its value at closure-creation time — consequence: closures created inside a loop all share the same loop variable, a classic bug where every closure sees the loop's final value.
+- On v2.1-alpha.30, **class-body initializers and `__New` assignments both dispatch through `__Set`** — `_store := Map()` in a class body, and `this._store := Map()` in `__New`, each fire the class's own `__Set`. If that `__Set` then assigns an undefined property it re-enters itself until `Error: Function recursion limit exceeded`; if it validates names it rejects its own backing field — consequence: a class that defines `__Set` must define its internals with `this.DefineProp("_store", {value: Map()})` inside `__New`, which writes the own property directly and bypasses the meta-function.
+- **`&&` and `||` used purely for side effects are illegal at statement level** in AHK v2 — `cond && DoThing()` is the load-time `==> Syntax error.  Specifically: && DoThing())`. The side-effect short-circuit is legal only as the single expression of a `=>` body (e.g. `Flush() => this.ready && this.Send()`) — consequence: at statement level use `if`. A statement-level **ternary is legal and does run** — `cond ? DoThing() : 0` executes `DoThing()`; prefer `if` there for readability, not for legality. The real trap is a statement that *begins* with a bare comparison: `n > 1 ? A() : B()` is a syntax error, while `(n > 1) ? A() : B()` loads and runs.
 
 Safe-access priority order for dynamic properties:
   1. `obj.HasOwnProp(name)` — check own-property existence without triggering `__Get`
@@ -103,15 +106,18 @@ addBlock := (a, b) {
     return c
 }
 
-; ✓ Traditional function for multi-statement logic — reference by bare name
-Add(a, b) {
+; ✓ Traditional function for multi-statement logic — reference by bare name.
+;   Note the distinct names: `add := ...` alongside a function named `Add` is the
+;   load-time error "This Func cannot be used as an output variable", because
+;   identifiers match case-insensitively.
+AddNumbers(a, b) {
     return a + b
 }
 
-add := (a, b) => a + b   ; single-expression equivalent
+add := (a, b) => a + b        ; single-expression equivalent
 
-result1 := Add(5, 3)     ; 8 — traditional call
-result2 := add(5, 3)     ; 8 — arrow call, identical semantics
+result1 := AddNumbers(5, 3)   ; 8 — traditional call
+result2 := add(5, 3)          ; 8 — arrow call, identical semantics
 ```
 
 ## TIER 2 — Named Arrow Functions and Recursion
@@ -141,7 +147,11 @@ ProcessData(input) {
     LogOperation("Process", input, result)
     return result
 }
-processData := ProcessData   ; processData holds the function reference; no () here
+; ✓ Reference the function by its bare name to hold it as a value — no () here.
+;   The holding variable must NOT be a case-insensitive match for the function name:
+;   `processData := ProcessData` is the load-time error "This Func cannot be used as
+;   an output variable."
+handler := ProcessData
 ```
 
 ## TIER 3 — Closures and Variable Capture
@@ -252,7 +262,13 @@ class Counter {
 ```ahk
 ; ✓ Both meta-functions include the required `params` parameter
 class DynamicObject {
-    _props := Map()
+    ; ✓ Backing store defined with DefineProp inside __New. A class-body initializer
+    ;   `_props := Map()` would dispatch through this class's own __Set, which then
+    ;   assigns into the not-yet-existing _props and re-enters __Set until
+    ;   "Error: Function recursion limit exceeded". DefineProp bypasses __Set.
+    __New() {
+        this.DefineProp("_props", {value: Map()})
+    }
 
     __Get(name, params) {
         if (this._props.Has(name))
@@ -276,10 +292,15 @@ MsgBox obj.color   ; "blue"
 ; ✗ Legacy short signature — the runtime still passes (name, params), over-filling the method
 ; __Get(name) { return this._props[name] }   ; → Error: Too many parameters passed to function
 
-; ✓ Advanced: meta-functions with per-key validation
-class ConfigManager {
-    _config     := Map()
-    _validators := Map()
+; ✓ Advanced: meta-functions with per-key validation.
+;   Module_Classes.md owns the wider meta-function lesson (__Call, __Enum, __Item);
+;   this class is deliberately named differently so the two examples stay distinct.
+class ValidatedSettings {
+    ; ✓ Same rule as DynamicObject — internals defined via DefineProp, never `:=`
+    __New() {
+        this.DefineProp("_config",     {value: Map()})
+        this.DefineProp("_validators", {value: Map()})
+    }
 
     __Get(key, params) {
         if (!this._config.Has(key))
@@ -301,9 +322,9 @@ class ConfigManager {
     }
 }
 
-config := ConfigManager()
-config.SetValidator("port", (v) => IsInteger(v) && v > 0 && v <= 65535)
-config.port := 8080   ; passes validation — IsInteger(8080) true, 8080 in range
+settings := ValidatedSettings()
+settings.SetValidator("port", (v) => IsInteger(v) && v > 0 && v <= 65535)
+settings.port := 8080   ; passes validation — IsInteger(8080) true, 8080 in range
 ```
 
 ### Performance Notes
@@ -410,6 +431,7 @@ sum     := numbers.Reduce((a, b) => a + b)      ; 15
 | Block-body fat arrow | `` fn := x => { a := x*2 ; return a } `` | Named nested function, or arrowless `(x) { ... }` (v2.1) | JavaScript allows arrow block bodies; no AHK v2 build does — v2.1's multi-statement form is the arrowless `(params) { }` |
 | `__Get` missing `params` | `__Get(name) { return this._store[name] }` | `__Get(name, params) { return this._store[name] }` | Legacy `__Get` took only `name`; v2 adds `params` — the short signature now throws "Too many parameters passed to function" instead of running |
 | `__Set` missing `params` | `__Set(name, value) { this._store[name] := value }` | `__Set(name, params, value) { this._store[name] := value }` | Same legacy regression — the three-argument dispatch over-fills the two-parameter method and throws "Too many parameters passed to function" |
+| Backing store initialised with `:=` in a class that defines `__Set` | `class Bag { _store := Map()  __Set(n, p, v) { this._store[n] := v } }` — construction throws "Function recursion limit exceeded" on alpha.30 | `__New() { this.DefineProp("_store", {value: Map()}) }`, then the same `__Set` | Every other OOP language initialises fields without touching the property-interception hook; on alpha.30 class-body initializers and `__New` assignments both route through `__Set` |
 | Lambda property without leading param | `increment: () => ++count` stored in `{}` | `increment: (this) => ++count` — better: named closures in a Map (TIER 3) | LLMs model AHK like JavaScript, where arrow functions do not receive an implicit `this`; AHK v2 passes the object as first positional arg, and the over-filled call throws "Too many parameters" |
 | Anonymous self-reference (style) | `` fact := (n) => n <= 1 ? 1 : n * fact(n-1) `` — works, but breaks if `fact` is reassigned or shadowed | `` fact := Fact(n) => n <= 1 ? 1 : n * Fact(n-1) `` — the name travels with the function | The variable is read at call time, so the recursion runs; the named form is preferred for robustness, not necessity |
 | Assigning to fat arrow property | `obj.version := "3.0"` where `version => expr` | `version { get => expr  set { ... } }` combined block | Python `@property` is read-write by default; LLMs assume AHK fat arrow properties behave identically |

@@ -81,18 +81,18 @@ Get-WmiObject Win32_Process | Where-Object { $_.Name -like 'AutoHotkey*' } | For
 - **ahk-dependency-graph**: Use to determine if a file is a dependency
 - **autohotkey-debug MCP**: Scripts launched with `/Debug` connect to the MCP server
 
-## Entry Points
-
-Build the script registry from the project's own entry scripts (the `MAIN_SCRIPT`
-in `harness.env` plus any standalone `.ahk` scripts launched directly). Example shape:
+## Known Entry Points
 
 | Script | Role |
 |--------|------|
-| `main.ahk` | Main entry — loads Lib/, menus, hotkeys |
-| `clipboard-history.ahk` | Standalone helper |
-| `text-transformer.ahk` | Standalone helper |
+| `_.ahk` | Main entry — loads Lib/, DarkMode, Clip, menus |
+| `_ClipboardHistory.ahk` | Clipboard history standalone |
+| `_Transformer.ahk` | Text transformation |
+| `_UHQ_Bambu.ahk` | Bambu automation |
+| `_UHQ_Snipping.ahk` | Screen capture |
+| `_UHQ_Fusion.ahk` | Fusion automation |
 
-## Interpreter Path
+## Custom Engine Path
 
-The interpreter is configured in `harness.env` (`AHK_BIN_WIN`, with the WSL path
-derived as `AHK_BIN_WSL`). Do not hardcode user-specific paths.
+The custom AHK engine path is defined in `CLAUDE.md` and available via the `AHK_EXE` environment
+variable. Do not hardcode user-specific paths.

@@ -88,8 +88,10 @@ Invoke with `/<name>`:
 | `/ahk-text` | Strings, regex, escaping, parsing | `/ahk-docs` | Search the AHK v2 docs |
 | `/ahk-fix` | Diagnose errors, debug, fix | `/ahk-ref` | Broad multi-domain reference |
 | `/ahk-run` | Run headlessly, capture output | `/ahk-audit-errors` | Find silent failures / empty catches |
-| `/ahk-eval` | Live REPL via the fork's `Eval()` | `/ahk-mistakes` | Recurring mistakes from the log |
-| `/ahk-debug-dashboard` | Live debug state in a session | | |
+| `/ahk-eval` | Live REPL via the fork's `repl` subcommand | `/ahk-mistakes` | Recurring mistakes from the log |
+| `/ahk-com` | COM automation (Excel / WMI / events) | `/ahk-debug-dashboard` | Live debug state in a session |
+| `/ahk-dllcall` | DllCall, Buffer, Struct, callbacks | `/ahk-winapi` | Messages, subclassing, DWM, WinRT |
+| `/ahk-versions` | Version / portability, fork features | | |
 
 ### Agents
 
@@ -102,6 +104,10 @@ Fresh-context investigators — launched when a task needs its own window:
 | `ahk-dependency-graph` | Parse `#Include` chains into a dependency map ("what breaks if I edit X?") |
 | `ahk-uia-explorer` | Dump a window's UI Automation tree and generate interaction code |
 | `ahk-orchestrator-v2` | Launch / stop / restart multiple scripts as one system |
+| `ahk-profiler` | Instrument a script with timing and report the slowest methods |
+| `ahk-test-generator` | Extract classes/methods and generate a test suite |
+| `ahk-com-explorer` | Introspect a COM object's members; generate typed wrappers |
+| `layout` | GUI layout enforcement — overlap-free mathematical positioning |
 
 ### Rules
 
@@ -175,7 +181,8 @@ The harness is built around the **[AutoHotkey v2 +Console fork](https://github.c
 a console-enabled build that makes AHK far more AI-friendly:
 
 - **Real stdout/stderr + `Print(fmt, vals*)`** — scripts emit output an AI reads directly, no GUI round-trip.
-- **`Eval(expr)`** — runtime expression evaluator for REPL-style testing (the `/ahk-eval` skill).
+- **`Eval(expr)`** — runtime expression evaluator; the fork's `repl` subcommand wraps it in a
+  persistent stdin/stdout session, which is what the `/ahk-eval` skill drives.
 - **JSON diagnostics** (`check /Diag=json`) — structured syntax errors the post-edit hook parses.
 - **Structured crash logs + exit codes** — `/CrashLog`, exit `130` on Ctrl+C, and more.
 
@@ -234,6 +241,11 @@ Then follow **[GETTING-STARTED.md](GETTING-STARTED.md)** for the full zero-to-co
 | property, DefineProp | `Module_DynamicProperties.md` | Descriptors, closures, computed properties |
 | prototype, ObjSetBase | `Module_ClassPrototyping.md` | Runtime class creation, decorators |
 | escape, backtick | `Module_Escapes.md` | Quote/regex/path escaping rules |
+| dllcall, buffer, struct | `Module_DllCall.md` | Native calls, marshalling, CallbackCreate |
+| com, Excel, WMI | `Module_COM.md` | IDispatch automation, events, SafeArrays, ComCall |
+| onmessage, subclass, WinRT | `Module_WinAPI.md` | Messages, subclassing, owner-draw, DWM, WinRT |
+| version, fork, portable | `Module_Versions.md` | v2.0 / alpha / fork matrix + portable fallbacks |
+| standards, syntax, keywords | `Module_Instructions.md` | Baseline standards and the keyword reference |
 
 Additional modules in `Modules/Supplemental/`.
 

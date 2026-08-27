@@ -1,13 +1,14 @@
 ---
 name: Module_WinAPI
-description: 'Raw DllCall/Buffer/Struct mechanics belong in Module_DllCall.md; classic IDispatch/automation
-  COM belongs in Module_COM.md. This module applies those primitives to the Windows message system, window
-  subclassing, custom drawing, and the WinRT (Windows Runtime) ABI. TRIGGER when the request involves:
+description: 'The Windows message system and modern Windows ABI in AHK v2 — OnMessage/SendMessage/PostMessage,
+  window and control subclassing, owner-draw and custom paint, DWM frame styling (dark title bar, Mica,
+  rounded corners), and WinRT activation via ComCall. TRIGGER when the request involves:
   OnMessage, SendMessage, PostMessage, PostThreadMessage, WM_, subclass, SetWindowSubclass, DefSubclassProc,
   WNDPROC, owner-draw, WM_PAINT, WM_DRAWITEM, NM_CUSTOMDRAW, WinRT, "Windows Runtime", IInspectable, RoActivateInstance,
   RoGetActivationFactory, HSTRING, "clipboard history", "modern Windows API", "intercept a message", "custom
   paint", "dark control", DWM, DwmSetWindowAttribute, Mica, Acrylic, "rounded corners", "title bar color",
-  "dark title bar", "immersive dark mode", backdrop'
+  "dark title bar", "immersive dark mode", backdrop. Not covered: raw DllCall/Buffer/Struct mechanics -
+  see Module_DllCall.md; classic IDispatch automation COM - see Module_COM.md.'
 ---
 
 # Module_WinAPI
@@ -64,6 +65,10 @@ _AHK v2.0+ (typed Struct in WinRT helpers requires v2.1-alpha.30 — upstream or
   what you obtain from a `"Ptr*"` output; every `HSTRING` you create needs `WindowsDeleteString`.
 - WinRT vtable indices: 0-2 `IUnknown` (QueryInterface/AddRef/Release), 3-5 `IInspectable`
   (GetIids/GetRuntimeClassName/GetTrustLevel), 6+ interface methods in IDL order.
+- Resolving an hwnd inside a handler: `GuiCtrlFromHwnd(h)` and `GuiFromHwnd(h)` return
+  **no value** (not `""`) when there is no match, and assigning that result throws
+  "No value was returned." Write `ctrl := GuiCtrlFromHwnd(h) ?? 0` and test `if ctrl`.
+  (Also in Module_Versions.md.)
 
 ✗ / ✓ pairs:
 
@@ -181,7 +186,7 @@ RoInit()
 statics := GetActivationFactory(
     "Windows.ApplicationModel.DataTransfer.Clipboard",
     "{d2ac1b6a-d29f-554b-b303-f0452345fe02}")
-ComCall(10, statics, "Int*", &enabled := 0)          ; IClipboardStatics2::IsHistoryEnabled
+ComCall(10, statics, "uchar*", &enabled := 0)        ; IClipboardStatics2::IsHistoryEnabled
 ObjRelease(statics)
 MsgBox("clipboard history enabled: " enabled)
 ```

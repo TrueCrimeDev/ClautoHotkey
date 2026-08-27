@@ -88,19 +88,18 @@ class ScopeManager {
     
     ; Enter a new scope
     static EnterScope(type, name := "") {
-        scope := {
-            type: type,  ; "global", "function", "class", "method"
-            name: name,
-            variables: Map(),
-            parent: this.scopes.Length ? this.scopes[-1] : "",
-            children: [],
-            created: A_TickCount
-        }
+        scope := Map()
+        scope["type"] := type  ; "global", "function", "class", "method"
+        scope["name"] := name
+        scope["variables"] := Map()
+        scope["parent"] := this.scopes.Length ? this.scopes[-1] : ""
+        scope["children"] := []
+        scope["created"] := A_TickCount
         
         this.scopes.Push(scope)
         
-        if (scope.parent) {
-            scope.parent.children.Push(scope)
+        if (scope["parent"]) {
+            scope["parent"]["children"].Push(scope)
         }
         
         return scope
@@ -117,27 +116,29 @@ class ScopeManager {
     
     ; Resolve variable in scope chain
     static ResolveVariable(varName) {
-        ; Search from current scope up to global
-        for i := this.scopes.Length; i > 0; i-- {
+        ; Search from current scope up to global (AHK has no C-style for loop)
+        i := this.scopes.Length
+        while i > 0 {
             scope := this.scopes[i]
-            if (scope.variables.Has(varName)) {
-                return {
-                    value: scope.variables[varName],
-                    scope: scope,
-                    scopeLevel: i,
-                    type: scope.type
-                }
+            if (scope["variables"].Has(varName)) {
+                result := Map()
+                result["value"] := scope["variables"][varName]
+                result["scope"] := scope
+                result["scopeLevel"] := i
+                result["type"] := scope["type"]
+                return result
             }
+            i--
         }
         
         ; Check global scope
         if (AHKContextManager.globalState.Has(varName)) {
-            return {
-                value: AHKContextManager.globalState[varName],
-                scope: "global",
-                scopeLevel: 0,
-                type: "global"
-            }
+            result := Map()
+            result["value"] := AHKContextManager.globalState[varName]
+            result["scope"] := "global"
+            result["scopeLevel"] := 0
+            result["type"] := "global"
+            return result
         }
         
         return ""  ; Variable not found
@@ -147,12 +148,12 @@ class ScopeManager {
     static CreateClosure(fn, capturedVars) {
         closureId := "closure_" . A_TickCount . "_" . Random(1000, 9999)
         
-        this.closures[closureId] := {
-            function: fn,
-            capturedScope: this.CaptureCurrentScope(),
-            capturedVars: capturedVars,
-            created: A_TickCount
-        }
+        closure := Map()
+        closure["function"] := fn
+        closure["capturedScope"] := this.CaptureCurrentScope()
+        closure["capturedVars"] := capturedVars
+        closure["created"] := A_TickCount
+        this.closures[closureId] := closure
         
         return closureId
     }
@@ -172,15 +173,15 @@ class ObjectLifecycleTracker {
         this.objectId++
         id := "obj_" . this.objectId
         
-        this.objects[id] := {
-            object: obj,
-            type: type || Type(obj),
-            name: name,
-            created: A_TickCount,
-            references: [],
-            properties: this.ExtractProperties(obj),
-            methods: this.ExtractMethods(obj)
-        }
+        entry := Map()
+        entry["object"] := obj
+        entry["type"] := type || Type(obj)
+        entry["name"] := name
+        entry["created"] := A_TickCount
+        entry["references"] := []
+        entry["properties"] := this.ExtractProperties(obj)
+        entry["methods"] := this.ExtractMethods(obj)
+        this.objects[id] := entry
         
         ; Track in appropriate context
         if (type = "Gui") {
@@ -198,15 +199,15 @@ class ObjectLifecycleTracker {
             this.references[fromId] := []
         }
         
-        this.references[fromId].Push({
-            to: toId,
-            type: refType,
-            created: A_TickCount
-        })
+        ref := Map()
+        ref["to"] := toId
+        ref["type"] := refType
+        ref["created"] := A_TickCount
+        this.references[fromId].Push(ref)
         
         ; Update reference count
         if (this.objects.Has(toId)) {
-            this.objects[toId].references.Push(fromId)
+            this.objects[toId]["references"].Push(fromId)
         }
     }
     
@@ -230,14 +231,14 @@ class ObjectLifecycleTracker {
         threshold := 60000  ; 1 minute old objects
         
         for id, objInfo in this.objects {
-            age := A_TickCount - objInfo.created
-            if (age > threshold && objInfo.references.Length = 0) {
-                leaks.Push({
-                    id: id,
-                    type: objInfo.type,
-                    age: age,
-                    size: this.EstimateSize(objInfo.object)
-                })
+            age := A_TickCount - objInfo["created"]
+            if (age > threshold && objInfo["references"].Length = 0) {
+                leak := Map()
+                leak["id"] := id
+                leak["type"] := objInfo["type"]
+                leak["age"] := age
+                leak["size"] := this.EstimateSize(objInfo["object"])
+                leaks.Push(leak)
             }
         }
         
@@ -318,11 +319,13 @@ class StateManager {
         this.listeners[path].Push(callback)
     }
     
-    ; Save state to file
+    ; Save state to file (overwrite — FileAppend would stack JSON documents)
     static SaveState() {
         try {
             json := this.MapToJSON(this.appState)
-            FileAppend(json, this.stateFile)
+            f := FileOpen(this.stateFile, "w", "UTF-8")
+            f.Write(json)
+            f.Close()
         } catch Error as e {
             this.LogError("Failed to save state: " . e.Message)
         }
@@ -401,13 +404,13 @@ class ContextRetrieval {
         for file, context in AHKContextManager.fileContexts {
             fileRefs := this.FindInContext(identifier, context)
             for ref in fileRefs {
-                references.Push({
-                    file: file,
-                    line: ref.line,
-                    column: ref.column,
-                    type: ref.type,
-                    context: ref.context
-                })
+                entry := Map()
+                entry["file"] := file
+                entry["line"] := ref["line"]
+                entry["column"] := ref["column"]
+                entry["type"] := ref["type"]
+                entry["context"] := ref["context"]
+                references.Push(entry)
             }
         }
         
@@ -416,14 +419,14 @@ class ContextRetrieval {
     
     ; Get usage statistics
     static GetUsageStats(identifier) {
-        return {
-            declarations: this.CountDeclarations(identifier),
-            references: this.CountReferences(identifier),
-            modifications: this.CountModifications(identifier),
-            reads: this.CountReads(identifier),
-            scope: this.DetermineScope(identifier),
-            lastModified: this.GetLastModified(identifier)
-        }
+        stats := Map()
+        stats["declarations"] := this.CountDeclarations(identifier)
+        stats["references"] := this.CountReferences(identifier)
+        stats["modifications"] := this.CountModifications(identifier)
+        stats["reads"] := this.CountReads(identifier)
+        stats["scope"] := this.DetermineScope(identifier)
+        stats["lastModified"] := this.GetLastModified(identifier)
+        return stats
     }
 }
 ```
@@ -462,11 +465,11 @@ class ProjectContextMapper {
                     includes[file] := []
                 }
                 
-                includes[file].Push({
-                    path: includePath,
-                    resolved: this.ResolveIncludePath(includePath, file),
-                    line: this.GetLineNumber(content, pos)
-                })
+                inc := Map()
+                inc["path"] := includePath
+                inc["resolved"] := this.ResolveIncludePath(includePath, file)
+                inc["line"] := this.GetLineNumber(content, pos)
+                includes[file].Push(inc)
                 
                 pos += StrLen(match[0])
             }
@@ -482,23 +485,23 @@ class ProjectContextMapper {
         ; Add file dependencies
         for file, includes in this.project["includes"] {
             if (!graph.Has(file)) {
-                graph[file] := {
-                    depends: [],
-                    dependents: []
-                }
+                node := Map()
+                node["depends"] := []
+                node["dependents"] := []
+                graph[file] := node
             }
             
             for include in includes {
-                if (include.resolved) {
-                    graph[file].depends.Push(include.resolved)
+                if (include["resolved"]) {
+                    graph[file]["depends"].Push(include["resolved"])
                     
-                    if (!graph.Has(include.resolved)) {
-                        graph[include.resolved] := {
-                            depends: [],
-                            dependents: []
-                        }
+                    if (!graph.Has(include["resolved"])) {
+                        node := Map()
+                        node["depends"] := []
+                        node["dependents"] := []
+                        graph[include["resolved"]] := node
                     }
-                    graph[include.resolved].dependents.Push(file)
+                    graph[include["resolved"]]["dependents"].Push(file)
                 }
             }
         }
@@ -520,14 +523,14 @@ class GUIContextManager {
     static RegisterGUI(gui, name := "") {
         id := "gui_" . gui.Hwnd
         
-        this.guis[id] := {
-            gui: gui,
-            name: name || gui.Title,
-            controls: Map(),
-            events: Map(),
-            state: Map(),
-            created: A_TickCount
-        }
+        entry := Map()
+        entry["gui"] := gui
+        entry["name"] := name || gui.Title
+        entry["controls"] := Map()
+        entry["events"] := Map()
+        entry["state"] := Map()
+        entry["created"] := A_TickCount
+        this.guis[id] := entry
         
         ; Hook into GUI events
         this.HookGUIEvents(gui, id)
@@ -542,19 +545,19 @@ class GUIContextManager {
     static TrackControl(control, guiId) {
         controlId := "ctrl_" . control.Hwnd
         
-        this.controls[controlId] := {
-            control: control,
-            gui: guiId,
-            type: Type(control),
-            name: control.Name || "",
-            value: this.GetControlValue(control),
-            events: Map(),
-            state: Map()
-        }
+        entry := Map()
+        entry["control"] := control
+        entry["gui"] := guiId
+        entry["type"] := Type(control)
+        entry["name"] := control.Name || ""
+        entry["value"] := this.GetControlValue(control)
+        entry["events"] := Map()
+        entry["state"] := Map()
+        this.controls[controlId] := entry
         
         ; Track in GUI context
         if (this.guis.Has(guiId)) {
-            this.guis[guiId].controls[controlId] := control
+            this.guis[guiId]["controls"][controlId] := control
         }
         
         return controlId
@@ -571,9 +574,9 @@ class GUIContextManager {
         context := this.guis[id]
         
         ; Add current state
-        context.currentState := Map()
-        for ctrlId, ctrl in context.controls {
-            context.currentState[ctrlId] := this.GetControlValue(ctrl)
+        context["currentState"] := Map()
+        for ctrlId, ctrl in context["controls"] {
+            context["currentState"][ctrlId] := this.GetControlValue(ctrl)
         }
         
         return context
@@ -589,7 +592,7 @@ class GUIContextManager {
         
         for ctrlId, value in state {
             if (this.controls.Has(ctrlId)) {
-                this.SetControlValue(this.controls[ctrlId].control, value)
+                this.SetControlValue(this.controls[ctrlId]["control"], value)
             }
         }
         
@@ -609,17 +612,17 @@ class ContextQuery {
         parsed := this.ParseQuery(query)
         
         ; Execute based on query type
-        switch parsed.type {
+        switch parsed["type"] {
             case "find":
-                return ContextRetrieval.FindReferences(parsed.target)
+                return ContextRetrieval.FindReferences(parsed["target"])
             case "scope":
-                return ScopeManager.ResolveVariable(parsed.target)
+                return ScopeManager.ResolveVariable(parsed["target"])
             case "refs":
-                return ObjectLifecycleTracker.GetReferences(parsed.target)
+                return ObjectLifecycleTracker.GetReferences(parsed["target"])
             case "state":
-                return StateManager.Get(parsed.target)
+                return StateManager.Get(parsed["target"])
             case "usage":
-                return ContextRetrieval.GetUsageStats(parsed.target)
+                return ContextRetrieval.GetUsageStats(parsed["target"])
             default:
                 return ""
         }
@@ -635,10 +638,10 @@ class ContextQuery {
         ; "usage MyClass"
         
         parts := StrSplit(query, " ")
-        return {
-            type: parts[1],
-            target: parts.Length > 1 ? parts[2] : ""
-        }
+        parsed := Map()
+        parsed["type"] := parts[1]
+        parsed["target"] := parts.Length > 1 ? parts[2] : ""
+        return parsed
     }
 }
 ```
@@ -649,19 +652,21 @@ class ContextQuery {
 ```ahkv2
 ; Optimize context retrieval performance
 class ContextOptimizer {
-    static metrics := Map(
-        "retrievals", 0,
-        "avgTime", 0,
-        "cacheHitRate", 0,
-        "indexUpdates", 0
-    )
+    static metrics := Map()
+    
+    static __New() {
+        this.metrics["retrievals"] := 0
+        this.metrics["avgTime"] := 0
+        this.metrics["cacheHitRate"] := 0
+        this.metrics["indexUpdates"] := 0
+    }
     
     static OptimizeRetrieval() {
         ; Analyze access patterns
         patterns := this.AnalyzeAccessPatterns()
         
         ; Optimize indices
-        for pattern in patterns.frequent {
+        for pattern in patterns["frequent"] {
             this.CreateSpecializedIndex(pattern)
         }
         

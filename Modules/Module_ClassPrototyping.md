@@ -1,11 +1,12 @@
 ---
 name: Module_ClassPrototyping
-description: 'Static class definitions using the `class` keyword, standard inheritance via `extends`,
-  and __Item / __Enum meta-function patterns are not covered — see Module_Classes.md and Module_Objects.md.
+description: 'Runtime prototype manipulation in AHK v2 — DefineProp descriptors, dynamic getters and
+  setters, existence guards, closure factories, method decorators, ObjSetBase, and dynamic class generation.
   TRIGGER when the request involves: DefineProp, ObjSetBase, HasProp, HasMethod, "property descriptor",
   "descriptor object", "dynamic getter", "readonly property", "intercept property assignment", "change
   method at runtime", "add property to instance", "runtime class generation", "method decorator", "class
-  generator", "prototyping"'
+  generator", "prototyping". Not covered: static class definitions with the `class` keyword, inheritance
+  via `extends`, and __Item / __Enum meta-function patterns — see Module_Classes.md and Module_Objects.md.'
 ---
 
 # Module_ClassPrototyping
@@ -42,7 +43,7 @@ description: 'Static class definitions using the `class` keyword, standard inher
 
 ## AHK V2 CONSTRAINTS
 
-- **`{}` literals are correct and expected for descriptor objects** — the project convention (CLAUDE.md) explicitly endorses `{Get: ..., Set: ..., Call: ..., Value: ...}` for DefineProp descriptors. `Object()` followed by property assignment is an optional stricter house convention to make the descriptor role explicit; both produce the same Object type and both are accepted by DefineProp.
+- **`{}` is the correct container for DefineProp descriptors** — the project's object-literal ban targets key-value *data* storage (use `Map()` there), not property descriptors, so `{Get: ..., Set: ..., Call: ..., Value: ...}` is correct and expected. `Object()` followed by property assignment is an optional stricter house convention to make the descriptor role explicit; both produce the same Object type and both are accepted by DefineProp.
 - **Every Get descriptor function must have exactly one parameter: the object instance** — `GetterFunc(Obj)`. AHK v2 injects the target object as the first argument unconditionally; reading the property through a zero-parameter getter throws "Too many parameters passed to function".
 - **Every Set descriptor function must have exactly two parameters: the object instance and the assigned value** — `SetterFunc(Obj, Value)`. A single-parameter setter throws "Too many parameters passed to function" the moment the property is assigned.
 - **Every Call descriptor function must accept the object instance as its first parameter** — `MethodFunc(Obj, Args*)`. The invocation `myObj.Prop(x)` internally becomes `Desc.Call(myObj, x)`.
@@ -77,7 +78,8 @@ CustomMethod(Obj, Prefix) {
 MyObj := Object()
 MyObj.Name := "Alpha"
 
-; ✓ Object() produces a plain Object instance — the preferred form for descriptor containers
+; ✓ Object() produces a plain Object instance — this module's stricter convention for
+;   descriptor containers; the object-literal {Call: fn} form is equally correct
 PropDesc := Object()
 PropDesc.Call := CustomMethod
 
@@ -345,9 +347,9 @@ EntityId    := EntityInst.Identify() ; "I am a RuntimeEntity"
 ## SEE ALSO
 
 > This module does NOT cover: static `class` definitions, `extends` inheritance, or `__Item` / `__Enum` meta-function patterns → see Module_Classes.md
-> This module does NOT cover: base Object API, prototype chain inspection, or ObjGetBase() traversal → see Module_Objects.md
+> This module does NOT cover: the base Object API, `.Base` / `.HasBase()` prototype inspection, or `.OwnProps()` enumeration → see Module_Objects.md
 > This module does NOT cover: try/catch patterns for DefineProp failures, TypeError construction, or custom error hierarchies → see Module_Errors.md
 
 - `Module_Classes.md` — static class definitions, `extends` inheritance, meta-functions (`__New`, `__Delete`, `__Get`, `__Set`), and `super` dispatch.
-- `Module_Objects.md` — base Object API (`ObjGetBase`, `ObjSetBase`, `ObjOwnProps`), prototype chain traversal, and raw object construction patterns.
+- `Module_Objects.md` — base Object API (`.Base`, `.HasBase()`, `.OwnProps()`, `DefineProp` descriptors), prototype chain traversal, and raw object construction patterns.
 - `Module_Errors.md` — try/catch patterns for runtime DefineProp failures, TypeError and ValueError construction, and custom exception class hierarchies.

@@ -1,6 +1,15 @@
+---
+name: Module_Tooltip
+description: >
+  TooltipEx (nperovic) library reference for rich, styled tooltips in AHK v2 - construction, positioning,
+  timing and styling, with alpha.30-correct class-ref typed properties. TRIGGER when the request involves:
+  tooltip, TooltipEx, ToolTip(), hover text, "show a message near the cursor", tooltip styling, tooltip
+  timeout, balloon tip, transient message.
+---
+
 If a user asks for code that includes a Tooltip, use the TooltipEx library. Your response should include this header where the library is referenced:
 
-```cpp
+```ahk
 #Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 #Warn All, OutputDebug
@@ -9,7 +18,7 @@ If a user asks for code that includes a Tooltip, use the TooltipEx library. Your
 ```
 Inside of the code, use the library changing where ever you would put "Tooltip" and replace it with "TooltipEx" like this:
 
-```cpp
+```ahk
 ToolTipEx("Hello, world!", 5, 1, true, false)
 ```
 
@@ -29,7 +38,7 @@ Summary of the parameters of `ToolTipEx`:
 
 Library code:
 
-```cpp
+```ahk
 class RECT {
     L: Int32, T: Int32, R: Int32, B: Int32
 }

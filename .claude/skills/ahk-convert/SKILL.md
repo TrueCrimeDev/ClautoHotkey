@@ -111,7 +111,8 @@ Apply these transformations in order:
 + obj := ComObject("Excel.Application")
 
 - obj := {key: "value"}         ; as data store
-+ obj := Map("key", "value")    ; use Map for data
++ obj := Map()                  ; use Map for data
++ obj["key"] := "value"
 
 - for key, val in obj
 + for key, val in obj            ; same syntax but Map uses different iteration
@@ -163,14 +164,14 @@ Apply these transformations in order:
 
 1. **Detect** v1 patterns in the input
 2. **Apply** all conversion rules
-3. **Add** `#Requires AutoHotkey v2.0` at top
+3. **Add** `#Requires AutoHotkey v2.1-alpha.30` at top
 4. **Add** `#SingleInstance Force` if not present
 5. **Validate** with `check /Diag=json`
 6. **Report** conversion summary: "Converted N patterns across M lines"
 
 ## Rules
 
-- Always add `#Requires AutoHotkey v2.0` to converted output
+- Always add `#Requires AutoHotkey v2.1-alpha.30` to converted output
 - Validate converted code with `check` before returning
 - Preserve comments and formatting where possible
 - Flag any patterns that need manual review (e.g., OnMessage, DllCall signatures)

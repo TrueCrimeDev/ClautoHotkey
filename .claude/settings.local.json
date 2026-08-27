@@ -117,5 +117,10 @@
     ],
     "deny": []
   },
-  "enableAllProjectMcpServers": false
+  "enableAllProjectMcpServers": false,
+  "enabledMcpjsonServers": [
+    "ahk",
+    "autohotkey-debug",
+    "deep-research"
+  ]
 }

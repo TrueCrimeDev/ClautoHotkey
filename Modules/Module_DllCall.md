@@ -1,11 +1,12 @@
 ---
 name: Module_DllCall
-description: 'COM/IDispatch automation and vtable ComCall belong in Module_COM.md; Windows messages, subclassing,
-  and WinRT activation belong in Module_WinAPI.md. This module is the native-call and memory-marshalling
-  foundation those two build on. TRIGGER when the request involves: DllCall, Buffer, NumPut, NumGet, StrPut,
+description: 'Native-call and memory-marshalling foundation for AHK v2 — DllCall type strings,
+  Buffer/NumPut/NumGet struct layout, StrPut/StrGet marshalling, CallbackCreate lifetime, and the
+  alpha.30 typed Struct. TRIGGER when the request involves: DllCall, Buffer, NumPut, NumGet, StrPut,
   StrGet, CallbackCreate, CallbackFree, Struct, VarSetStrCapacity, A_LastError, "call a Windows API",
   "call a native function", "pointer", "struct", "marshal", "raw memory", "pass a struct", "output parameter",
-  "winapi", "user32", "kernel32", "Ptr type"'
+  "winapi", "user32", "kernel32", "Ptr type". Not covered: COM/IDispatch automation and vtable ComCall -
+  see Module_COM.md; window messages, subclassing and WinRT activation - see Module_WinAPI.md.'
 ---
 
 # Module_DllCall
@@ -30,7 +31,7 @@ _AHK v2.0+ (typed Struct requires v2.1-alpha.30 — upstream or the +Console for
 | `Float`, `Double` | 32 / 64-bit | |
 | `Ptr` / `UPtr` | pointer-sized | Handles, addresses, struct pointers; pass a `Buffer` directly for a `Ptr` arg |
 | `Str` / `WStr` / `AStr` | string | `Str` is native (UTF-16); pass a variable for in/out string buffers |
-| `Type*` | by-address | Output scalar — pass `&var`; value lands in `var` after the call |
+| `Type*` | by-address | Output scalar — pass `&var := 0`; value lands in `var` after the call |
 
 ### Memory objects and marshalling
 | Function | Signature | Notes |
@@ -52,10 +53,21 @@ _AHK v2.0+ (typed Struct requires v2.1-alpha.30 — upstream or the +Console for
   class **references** (`Int32`, `UInt32`, `IntPtr`). Do not mix the two vocabularies.
 - A `Ptr` argument accepts a `Buffer` object directly — `DllCall(..., "Ptr", buf, ...)` —
   AHK passes `buf.Ptr`. Passing `buf.Ptr` explicitly is equivalent.
-- Output scalars require both the `*` type and a `&var` reference: `"Int*", &out`.
+- Output scalars require the `*` type and a VarRef to an *initialized* variable:
+  `"Int*", &out := 0`. On alpha.30 a `&var` whose variable has never been assigned throws
+  "This global variable has not been assigned a value." before the call runs (the wording
+  varies with scope — "local variable", "global variable") — always seed it with `:= 0`.
 - Check `A_LastError` immediately after a call when the API sets last-error; an
   intervening AHK statement can overwrite it.
 - There is no `UInt64`. Read a 64-bit unsigned value as `Int64` and correct the sign.
+
+alpha.30 FFI removals — `/validate` does not catch any of these, so probe at runtime:
+
+- `StructFromPtr` is removed — overlay raw memory with a `Struct` plus
+  `ObjGetDataPtr`/`.At()` instead.
+- `DefineProp` with a `{type: ...}` descriptor accepts primitives only.
+- An object passed as an out-arg must expose `.Ptr`; a bare object is rejected.
+- `ComCall` no longer accepts a class as an argument (see Module_COM.md).
 
 ✗ / ✓ pairs:
 
@@ -165,6 +177,18 @@ Struct GUID {
     Data3: UInt16
     Data4: Int64
 }
+```
+
+A `Struct` instance exposes `.Ptr` and `.Size` and can be passed directly for a `Ptr`
+argument — `pt := POINT()`, `DllCall("GetCursorPos", "Ptr", pt)`, then read `pt.x` / `pt.y`.
+A plain **class** with typed properties has NO `.Ptr` (accessing it throws "has no property
+named Ptr") — use `ObjGetDataPtr(obj)` for its data address.
+
+```ahk
+; ✓ A Struct crosses the DllCall boundary as its own .Ptr
+pt := POINT()
+DllCall("GetCursorPos", "Ptr", pt)
+MsgBox("cursor at " pt.x ", " pt.y)
 ```
 
 On stock v2 (or for raw byte regions) fall back to `Buffer` + `NumPut`/`NumGet` from

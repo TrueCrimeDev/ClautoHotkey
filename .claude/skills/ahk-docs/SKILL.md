@@ -29,9 +29,15 @@ Search these files in `Modules/` for the term:
 |--------------|-------------|
 | Class, object, prototype | `Module_Classes.md`, `Module_Objects.md` |
 | Array, Map, loop | `Module_Arrays.md`, `Module_Objects.md` |
-| GUI, control, window | `Module_GUI.md`, `Supplemental/Module_GUI_Layout.md` |
-| Error, try, catch | `Module_Errors.md`, `Supplemental/Module_ErrorHandling.md` |
-| String, regex, text | `Module_TextProcessing.md`, `Module_Escapes.md` |
+| GUI, control, window | `Module_GUI.md` |
+| Error, try, catch, debug | `Module_Errors.md` |
+| String, regex, text, escape | `Module_TextProcessing.md`, `Module_Escapes.md` |
+| DllCall, Buffer, struct | `Module_DllCall.md` |
+| COM, Excel, WMI | `Module_COM.md` |
+| Message, subclass, WinRT | `Module_WinAPI.md` |
+| Version, fork, portability | `Module_Versions.md` |
+| Fat arrow, callback, Bind | `Supplemental/Module_FatArrows.md` |
+| Official example of a built-in | `Supplemental/Module_MiniExamples.md` |
 | Property, getter, setter | `Module_DynamicProperties.md` |
 | #Include, #Requires | `Module_Instructions.md` |
 | Data structure, Stack, Queue | `Module_DataStructures.md` |

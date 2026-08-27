@@ -1,3 +1,13 @@
+---
+name: Module_MiniExamples
+description: >
+  A corpus of verbatim AutoHotkey v2 official-documentation examples - each a Description/Code pair
+  separated by <<<>>>, spanning the full built-in API surface. Use as a lookup for a known-good example of
+  a specific built-in before writing one from memory. TRIGGER when the request involves: example, "show me
+  how", "official example", "how do I use", sample code, snippet, "docs example", built-in function usage,
+  reference implementation.
+---
+
 
 All examples target the project interpreter (`#Requires AutoHotkey v2.1-alpha.30`); they omit per-example pins for brevity.
  
@@ -10,7 +20,7 @@ By enclosing the two statements MsgBox "test1" and Sleep 5 with braces, the If s
  
 Code:
  
-```ahkv2
+```ahk
 if (x = 1)
 {
     MsgBox "test1"
@@ -29,7 +39,7 @@ Breaks the loop if var is greater than 25.
  
 Code:
  
-```ahkv2
+```ahk
 Loop
 {
  
@@ -50,7 +60,7 @@ Breaks the outer loop from within a nested loop.
  
 Code:
  
-```ahkv2
+```ahk
 outer:
 Loop 3
 {
@@ -74,7 +84,7 @@ Allows the user to move the caret around to see its current position displayed i
  
 Code:
  
-```ahkv2
+```ahk
 SetTimer WatchCaret, 100
 WatchCaret() {
     if CaretGetPos(&x, &y)
@@ -93,7 +103,7 @@ Clicks the left mouse button at the mouse cursor's current position.
  
 Code:
  
-```ahkv2
+```ahk
 Click
 ```
  
@@ -106,7 +116,7 @@ Clicks the left mouse button at a specific position.
  
 Code:
  
-```ahkv2
+```ahk
 Click 100, 200
 ```
  
@@ -119,7 +129,7 @@ Moves the mouse cursor to a specific position without clicking.
  
 Code:
  
-```ahkv2
+```ahk
 Click 100, 200, 0
 ```
  
@@ -132,7 +142,7 @@ Clicks the right mouse button at a specific position.
  
 Code:
  
-```ahkv2
+```ahk
 Click 100, 200, "Right"
 ```
  
@@ -145,7 +155,7 @@ Performs a double-click at the mouse cursor's current position.
  
 Code:
  
-```ahkv2
+```ahk
 Click 2
 ```
  
@@ -158,7 +168,7 @@ Presses down the left mouse button and holds it.
  
 Code:
  
-```ahkv2
+```ahk
 Click "Down"
 ```
  
@@ -171,7 +181,7 @@ Releases the right mouse button.
  
 Code:
  
-```ahkv2
+```ahk
 Click "Up Right"
 ```
  
@@ -184,7 +194,7 @@ Saves and restores everything on the clipboard using a variable.
  
 Code:
  
-```ahkv2
+```ahk
 ClipSaved := ClipboardAll()   
 A_Clipboard := ClipSaved   
 ClipSaved := ""  
@@ -199,7 +209,7 @@ Saves and restores everything on the clipboard using a file.
  
 Code:
  
-```ahkv2
+```ahk
 FileDelete "Company Logo.clip"
 FileAppend ClipboardAll(), "Company Logo.clip" 
 ClipData := ClipboardAll()
@@ -215,7 +225,7 @@ Empties the clipboard, copies the current selection into the clipboard and waits
  
 Code:
  
-```ahkv2
+```ahk
 A_Clipboard := "" 
 Send "^c"
 if !ClipWait(2)
@@ -236,7 +246,7 @@ Gives the clipboard entirely new contents.
  
 Code:
  
-```ahkv2
+```ahk
 A_Clipboard := "my text"
 ```
  
@@ -249,7 +259,7 @@ Empties the clipboard.
  
 Code:
  
-```ahkv2
+```ahk
 A_Clipboard := ""
 ```
  
@@ -262,7 +272,7 @@ Converts any copied files, HTML, or other formatted text to plain text.
  
 Code:
  
-```ahkv2
+```ahk
 A_Clipboard := A_Clipboard
 ```
  
@@ -275,7 +285,7 @@ Appends some text to the clipboard.
  
 Code:
  
-```ahkv2
+```ahk
 A_Clipboard .= " Text to append."
 ```
  
@@ -288,7 +298,7 @@ Replaces all occurrences of ABC with DEF (also converts the clipboard to plain t
  
 Code:
  
-```ahkv2
+```ahk
 A_Clipboard := StrReplace(A_Clipboard, "ABC", "DEF")
 ```
  
@@ -301,7 +311,7 @@ Displays 5 message boxes, one for each number between 6 and 10. Note that in the
  
 Code:
  
-```ahkv2
+```ahk
 Loop 10
 {
     if (A_Index <= 5)
@@ -319,7 +329,7 @@ Continues the outer loop from within a nested loop.
  
 Code:
  
-```ahkv2
+```ahk
 outer:
 Loop 3
 {
@@ -343,7 +353,7 @@ Places tooltips at absolute screen coordinates.
  
 Code:
  
-```ahkv2
+```ahk
 CoordMode "ToolTip", "Screen"
 ```
  
@@ -356,7 +366,7 @@ Same effect as the above because "Screen" is the default.
  
 Code:
  
-```ahkv2
+```ahk
 CoordMode "ToolTip"
 ```
  
@@ -369,7 +379,7 @@ Press a hotkey to display a tooltip for 3 seconds. Due to Critical, any new thre
  
 Code:
  
-```ahkv2
+```ahk
 #space::  
 {
     Critical
@@ -389,7 +399,7 @@ Calculates the date 31 days from now and reports the result in human-readable fo
  
 Code:
  
-```ahkv2
+```ahk
 later := DateAdd(A_Now, 31, "days")
 MsgBox FormatTime(later)
 ```
@@ -403,7 +413,7 @@ Calculates the number of days between two timestamps and reports the result.
  
 Code:
  
-```ahkv2
+```ahk
 var1 := "20050126"
 var2 := "20040126"
 MsgBox DateDiff(var1, var2, "days")  
@@ -418,7 +428,7 @@ Turns off the detection of hidden text.
  
 Code:
  
-```ahkv2
+```ahk
 DetectHiddenText false
 ```
  
@@ -431,7 +441,7 @@ Activates either Notepad or another window, depending on which of them was found
  
 Code:
  
-```ahkv2
+```ahk
 if WinExist("ahk_class Notepad") or WinExist("ahk_class" ClassName)
     WinActivate 
 ```
@@ -445,7 +455,7 @@ Retrieves and reports the unique ID (HWND) of the active window.
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox "The active window's ID is " WinExist("A")
 ```
  
@@ -458,7 +468,7 @@ Returns if the calculator does not exist.
  
 Code:
  
-```ahkv2
+```ahk
 if not WinExist("Calculator")
     return
 ```
@@ -472,7 +482,7 @@ Turns on the detection of hidden windows.
  
 Code:
  
-```ahkv2
+```ahk
 DetectHiddenWindows true
 ```
  
@@ -485,7 +495,7 @@ Copies a directory to a new location.
  
 Code:
  
-```ahkv2
+```ahk
 DirCopy "C:\My Folder", "C:\Copy of My Folder"
 ```
  
@@ -498,7 +508,7 @@ Prompts the user to copy a folder.
  
 Code:
  
-```ahkv2
+```ahk
 SourceFolder := DirSelect(, 3, "Select the folder to copy")
 if SourceFolder = ""
     return
@@ -525,7 +535,7 @@ Creates a new directory, including its parent directories if necessary.
  
 Code:
  
-```ahkv2
+```ahk
 DirCreate "C:\Test1\My Images\Folder2"
 ```
  
@@ -538,7 +548,7 @@ Removes the directory, but only if it is empty.
  
 Code:
  
-```ahkv2
+```ahk
 DirDelete "C:\Download Temp"
 ```
  
@@ -551,7 +561,7 @@ Removes the directory including its files and subdirectories.
  
 Code:
  
-```ahkv2
+```ahk
 DirDelete "C:\Download Temp", true
 ```
  
@@ -564,7 +574,7 @@ Shows a message box if a folder does exist.
  
 Code:
  
-```ahkv2
+```ahk
 if DirExist("C:\Windows")
     MsgBox "The target folder does exist."
 ```
@@ -578,7 +588,7 @@ Shows a message box if at least one program folder does exist.
  
 Code:
  
-```ahkv2
+```ahk
 if DirExist("C:\Program*")
     MsgBox "At least one program folder exists."
 ```
@@ -592,7 +602,7 @@ Shows a message box if a folder does not exist.
  
 Code:
  
-```ahkv2
+```ahk
 if not DirExist("C:\Temp")
     MsgBox "The target folder does not exist."
 ```
@@ -606,7 +616,7 @@ Demonstrates how to check a folder for a specific attribute.
  
 Code:
  
-```ahkv2
+```ahk
 if InStr(DirExist("C:\System Volume Information"), "H")
     MsgBox "The folder is hidden."
 ```
@@ -620,7 +630,7 @@ Moves a directory to a new drive.
  
 Code:
  
-```ahkv2
+```ahk
 DirMove "C:\My Folder", "D:\My Folder"
 ```
  
@@ -633,7 +643,7 @@ Performs a simple rename.
  
 Code:
  
-```ahkv2
+```ahk
 DirMove "C:\My Folder", "C:\My Folder (renamed)", "R"
 ```
  
@@ -646,7 +656,7 @@ Directories can be "renamed into" another location as long as it's on the same v
  
 Code:
  
-```ahkv2
+```ahk
 DirMove "C:\My Folder", "C:\New Location\My Folder", "R"
 ```
  
@@ -659,7 +669,7 @@ Allows the user to select a folder and provides both an edit field and a "make n
  
 Code:
  
-```ahkv2
+```ahk
 SelectedFolder := DirSelect(, 3)
 if SelectedFolder = ""
     MsgBox "You didn't select a folder."
@@ -676,7 +686,7 @@ A CLSID example. Allows the user to select a folder in This PC (formerly My Comp
  
 Code:
  
-```ahkv2
+```ahk
 SelectedFolder := DirSelect("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}")
 ```
  
@@ -689,7 +699,7 @@ Downloads a text file.
  
 Code:
  
-```ahkv2
+```ahk
 Download "https://www.autohotkey.com/download/2.0/version.txt", "C:\AutoHotkey Latest Version.txt"
 ```
  
@@ -702,7 +712,7 @@ Downloads a zip file.
  
 Code:
  
-```ahkv2
+```ahk
 Download "https://someorg.org/archive.zip", "C:\SomeOrg's Archive.zip"
 ```
  
@@ -715,7 +725,7 @@ Downloads text to a variable.
  
 Code:
  
-```ahkv2
+```ahk
 whr := ComObject("WinHttp.WinHttpRequest.5.1")
 whr.Open("GET", "https://www.autohotkey.com/download/2.0/version.txt", true)
 whr.Send()
@@ -733,7 +743,7 @@ Makes an asynchronous HTTP request.
  
 Code:
  
-```ahkv2
+```ahk
 req := ComObject("Msxml2.XMLHTTP")
 req.open("GET", "https://www.autohotkey.com/download/2.0/version.txt", true)
 req.onreadystatechange := Ready
@@ -759,7 +769,7 @@ Opens the script for editing.
  
 Code:
  
-```ahkv2
+```ahk
 Edit
 ```
  
@@ -772,7 +782,7 @@ If your editor's command-line usage is something like Editor.exe "Full path of s
  
 Code:
  
-```ahkv2
+```ahk
 Editor := FileSelect(2,, "Select your editor", "Programs (*.exe)")
 if Editor = ""
     ExitApp
@@ -788,7 +798,7 @@ Retrieves the first line of the Notepad's Edit control.
  
 Code:
  
-```ahkv2
+```ahk
 line1 := EditGetLine(1, "Edit1", "ahk_class Notepad")
 ```
  
@@ -811,7 +821,7 @@ Common usage of an  statement. This example is executed as follows:
  
 Code:
  
-```ahkv2
+```ahk
 if WinExist("Untitled - Notepad")
 {
     WinActivate
@@ -833,7 +843,7 @@ Demonstrates different styles of how the  statement can be used too.
  
 Code:
  
-```ahkv2
+```ahk
 if (x = 1)
     firstFunction()
 else if (x = 2) 
@@ -855,7 +865,7 @@ Executes some code if a loop had zero iterations.
  
 Code:
  
-```ahkv2
+```ahk
 for window in ComObject("Shell.Application").Windows
     MsgBox "Window #" A_Index ": " window.LocationName
 else
@@ -871,7 +881,7 @@ In this example, the Exit function terminates the call_exit function as well as 
  
 Code:
  
-```ahkv2
+```ahk
 #z::
 {
     call_exit
@@ -892,7 +902,7 @@ Press a hotkey to terminate the script.
  
 Code:
  
-```ahkv2
+```ahk
 #x::ExitApp  
 ```
  
@@ -905,7 +915,7 @@ Creates a file, if necessary, and appends a line.
  
 Code:
  
-```ahkv2
+```ahk
 FileAppend "Another line.`n", "C:\My Documents\Test.txt"
 ```
  
@@ -918,7 +928,7 @@ Use a continuation section to enhance readability and maintainability.
  
 Code:
  
-```ahkv2
+```ahk
 FileAppend "
 (
 A line of text.
@@ -936,7 +946,7 @@ Demonstrates how to automate FTP uploading using the operating system's built-in
  
 Code:
  
-```ahkv2
+```ahk
 FTPCommandFile := A_ScriptDir "\FTPCommands.txt"
 FTPLogFile := A_ScriptDir "\FTPLog.txt"
 try FileDelete FTPCommandFile  
@@ -967,7 +977,7 @@ Makes a copy but keep the original file name.
  
 Code:
  
-```ahkv2
+```ahk
 FileCopy "C:\My Documents\List1.txt", "D:\Main Backup\"
 ```
  
@@ -980,7 +990,7 @@ Copies a file into the same directory by providing a new name.
  
 Code:
  
-```ahkv2
+```ahk
 FileCopy "C:\My File.txt", "C:\My File New.txt"
 ```
  
@@ -993,7 +1003,7 @@ Copies text files to a new location and gives them a new extension.
  
 Code:
  
-```ahkv2
+```ahk
 FileCopy "C:\Folder1\*.txt", "D:\New Folder\*.bkp"
 ```
  
@@ -1006,7 +1016,7 @@ Copies all files and folders inside a folder to a different folder.
  
 Code:
  
-```ahkv2
+```ahk
 ErrorCount := CopyFilesAndFolders("C:\My Folder\*.*", "D:\Folder to receive all files & folders")
 if ErrorCount != 0
     MsgBox ErrorCount " files/folders could not be copied."
@@ -1043,7 +1053,7 @@ The letter "i" in the last parameter makes the shortcut key be Ctrl+Alt+I.
  
 Code:
  
-```ahkv2
+```ahk
 FileCreateShortcut "Notepad.exe", A_Desktop "\My Shortcut.lnk", "C:\", A_ScriptFullPath, "My Description", "C:\My Icon.ico", "i"
 ```
  
@@ -1056,7 +1066,7 @@ Deletes all .tmp files in a directory.
  
 Code:
  
-```ahkv2
+```ahk
 FileDelete "C:\temp files\*.tmp"
 ```
  
@@ -1069,7 +1079,7 @@ Only those lines of the 1st file that contain the word FAMILY will be written to
  
 Code:
  
-```ahkv2
+```ahk
 Loop read, "C:\Docs\Address List.txt", "C:\Docs\Family Addresses.txt"
 {
     if InStr(A_LoopReadLine, "family")
@@ -1088,7 +1098,7 @@ Retrieves the last line from a text file.
  
 Code:
  
-```ahkv2
+```ahk
 Loop read, "C:\Log File.txt"
     last_line := A_LoopReadLine  
 ```
@@ -1102,7 +1112,7 @@ Attempts to extract all FTP and HTTP URLs from a text or HTML file.
  
 Code:
  
-```ahkv2
+```ahk
 SourceFile := FileSelect(3,, "Pick a text or HTML file to analyze.")
 if SourceFile = ""
     return  
@@ -1170,7 +1180,7 @@ Shows a message box if the D drive does exist.
  
 Code:
  
-```ahkv2
+```ahk
 if FileExist("D:\")
     MsgBox "The drive exists."
 ```
@@ -1184,7 +1194,7 @@ Shows a message box if at least one text file does exist in a directory.
  
 Code:
  
-```ahkv2
+```ahk
 if FileExist("D:\Docs\*.txt")
     MsgBox "At least one .txt file exists."
 ```
@@ -1198,7 +1208,7 @@ Shows a message box if a file does not exist.
  
 Code:
  
-```ahkv2
+```ahk
 if not FileExist("C:\Temp\FlagFile.txt")
     MsgBox "The target file does not exist."
 ```
@@ -1212,7 +1222,7 @@ Demonstrates how to check a file for a specific attribute.
  
 Code:
  
-```ahkv2
+```ahk
 if InStr(FileExist("C:\My File.txt"), "H")
     MsgBox "The file is hidden."
 ```
@@ -1226,7 +1236,7 @@ Moves a file without renaming it.
  
 Code:
  
-```ahkv2
+```ahk
 FileMove "C:\My Documents\List1.txt", "D:\Main Backup\"
 ```
  
@@ -1239,7 +1249,7 @@ Renames a single file.
  
 Code:
  
-```ahkv2
+```ahk
 FileMove "C:\File Before.txt", "C:\File After.txt"
 ```
  
@@ -1252,7 +1262,7 @@ Moves text files to a new location and gives them a new extension.
  
 Code:
  
-```ahkv2
+```ahk
 FileMove "C:\Folder1\*.txt", "D:\New Folder\*.bkp"
 ```
  
@@ -1265,7 +1275,7 @@ Moves all files and folders inside a folder to a different folder.
  
 Code:
  
-```ahkv2
+```ahk
 ErrorCount := MoveFilesAndFolders("C:\My Folder\*.*", "D:\Folder to receive all files & folders")
 if ErrorCount != 0
     MsgBox ErrorCount " files/folders could not be moved."
@@ -1304,7 +1314,7 @@ Writes some text to a file then reads it back into memory (it provides the same 
  
 Code:
  
-```ahkv2
+```ahk
 FileName := FileSelect("S16",, "Create a new file:")
 if (FileName = "")
     return
@@ -1342,7 +1352,7 @@ Opens the script in read-only mode and read its first line.
  
 Code:
  
-```ahkv2
+```ahk
 Script := FileOpen(A_ScriptFullPath, "r")
 MsgBox Script.ReadLine()
 ```
@@ -1356,7 +1366,7 @@ Demonstrates the usage of the standard input/output streams.
  
 Code:
  
-```ahkv2
+```ahk
 DllCall("AllocConsole")
 stdin  := FileOpen("*", "r")
 stdout := FileOpen("*", "w")
@@ -1377,7 +1387,7 @@ Reads a text file into .
  
 Code:
  
-```ahkv2
+```ahk
 MyText := FileRead("C:\My Documents\My File.txt")
 ```
  
@@ -1390,7 +1400,7 @@ Quickly sorts the contents of a file.
  
 Code:
  
-```ahkv2
+```ahk
 Contents := FileRead("C:\Address List.txt")
 Contents := Sort(Contents)
 FileDelete "C:\Address List (alphabetical).txt"
@@ -1407,7 +1417,7 @@ Allows the user to select an existing .txt or .doc file.
  
 Code:
  
-```ahkv2
+```ahk
 SelectedFile := FileSelect(3, , "Open a file", "Text Documents (*.txt; *.doc)")
 if SelectedFile = ""
     MsgBox "The dialog was canceled."
@@ -1424,7 +1434,7 @@ Allows the user to select multiple existing files.
  
 Code:
  
-```ahkv2
+```ahk
 SelectedFiles := FileSelect("M3")  
 if SelectedFiles.Length = 0
 {
@@ -1448,7 +1458,7 @@ Allows the user to select a folder.
  
 Code:
  
-```ahkv2
+```ahk
 SelectedFolder := FileSelect("D", , "Select a folder")
 if SelectedFolder = ""
     MsgBox "The dialog was canceled."
@@ -1465,7 +1475,7 @@ Demonstrates the behavior of  in detail.
  
 Code:
  
-```ahkv2
+```ahk
 try
 {
     ToolTip "Working..."
@@ -1506,7 +1516,7 @@ Lists the key-value pairs stored in a Map.
  
 Code:
  
-```ahkv2
+```ahk
 colours := Map()
 colours["red"] := 0xFF0000
 colours["blue"] := 0x0000FF
@@ -1526,7 +1536,7 @@ Lists all open Explorer and Internet Explorer windows, using the Shell object.
  
 Code:
  
-```ahkv2
+```ahk
 windows := ""
 for window in ComObject("Shell.Application").Windows
     windows .= window.LocationName " :: " window.LocationURL "`n"
@@ -1542,7 +1552,7 @@ Defines an enumerator as a fat arrow function. Returns numbers from the Fibonacc
  
 Code:
  
-```ahkv2
+```ahk
 for n in FibF()
     if MsgBox("#" A_Index " = " n "`nContinue?",, "y/n") = "No"
         break
@@ -1564,7 +1574,7 @@ Defines an enumerator as a class. Equivalent to the previous example.
  
 Code:
  
-```ahkv2
+```ahk
 for n in FibC()
     if MsgBox("#" A_Index " = " n "`nContinue?",, "y/n") = "No"
         break
@@ -1586,7 +1596,7 @@ Demonstrates different usages.
  
 Code:
  
-```ahkv2
+```ahk
 s := ""
 s .= Format("{2}, {1}!`r`n", "World", "Hello")
 s .= Format("|{:-10}|`r`n|{:10}|`r`n", "Left", "Right")
@@ -1607,7 +1617,7 @@ Demonstrates different usages.
  
 Code:
  
-```ahkv2
+```ahk
 TimeString := FormatTime()
 MsgBox "The current time and date (time first) is " TimeString
 TimeString := FormatTime("R")
@@ -1634,7 +1644,7 @@ Changes the date-time stamp of a file.
  
 Code:
  
-```ahkv2
+```ahk
 FileName := FileSelect(3,, "Pick a file")
 if FileName = "" 
     return
@@ -1652,7 +1662,7 @@ Converts the specified number of seconds into the corresponding number of hours,
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox FormatSeconds(7384)  
 FormatSeconds(NumberOfSeconds)  
 {
@@ -1672,7 +1682,7 @@ Retrieves and reports the English name of Esc.
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox GetKeyName("Esc") 
 MsgBox GetKeyName("vk1B") 
 ```
@@ -1686,7 +1696,7 @@ Retrieves and reports the hexadecimal virtual key code of Esc.
  
 Code:
  
-```ahkv2
+```ahk
 vk_code := GetKeyVK("Esc")
 MsgBox Format("vk{:X}", vk_code) 
 ```
@@ -1700,7 +1710,7 @@ Retrieves and reports the hexadecimal scan code of the left Ctrl.
  
 Code:
  
-```ahkv2
+```ahk
 sc_code := GetKeySC("LControl")
 MsgBox Format("sc{:X}", sc_code) 
 ```
@@ -1714,7 +1724,7 @@ Retrieves the current state of the right mouse button.
  
 Code:
  
-```ahkv2
+```ahk
 state := GetKeyState("RButton")
 ```
  
@@ -1727,7 +1737,7 @@ Retrieves the current state of the first controller's second button.
  
 Code:
  
-```ahkv2
+```ahk
 state := GetKeyState("Joy2")
 ```
  
@@ -1740,7 +1750,7 @@ Checks if at least one Shift is down.
  
 Code:
  
-```ahkv2
+```ahk
 if GetKeyState("Shift")
     MsgBox "At least one Shift key is down."
 else
@@ -1756,7 +1766,7 @@ Retrieves the current toggle state of CapsLock.
  
 Code:
  
-```ahkv2
+```ahk
 state := GetKeyState("CapsLock", "T")
 ```
  
@@ -1769,7 +1779,7 @@ Remapping. (This example is only for illustration because it would be easier to 
  
 Code:
  
-```ahkv2
+```ahk
 *NumpadAdd::
 {
     MouseClick "left",,, 1, 0, "D"  
@@ -1793,7 +1803,7 @@ Makes controller button behavior depend on stick axis position.
  
 Code:
  
-```ahkv2
+```ahk
 joy2::
 {
     JoyX := GetKeyState("JoyX")
@@ -1815,7 +1825,7 @@ Creates a popup window.
  
 Code:
  
-```ahkv2
+```ahk
 MyGui := Gui(, "Title of Window")
 MyGui.Opt("+AlwaysOnTop +Disabled -SysMenu +Owner")  
 MyGui.Add("Text",, "Some text to display.")
@@ -1831,7 +1841,7 @@ Creates a simple input-box that asks for the first and last name.
  
 Code:
  
-```ahkv2
+```ahk
 MyGui := Gui(, "Simple Input Example")
 MyGui.Add("Text",, "First name:")
 MyGui.Add("Text",, "Last name:")
@@ -1856,7 +1866,7 @@ Creates a tab control with multiple tabs, each containing different controls to 
  
 Code:
  
-```ahkv2
+```ahk
 MyGui := Gui()
 Tab := MyGui.Add("Tab3",, ["First Tab", "Second Tab", "Third Tab"])
 MyGui.Add("CheckBox", "vMyCheckBox", "Sample checkbox") 
@@ -1887,7 +1897,7 @@ Creates a ListBox control containing files in a directory.
  
 Code:
  
-```ahkv2
+```ahk
 MyGui := Gui()
 MyGui.Add("Text",, "Pick a file to launch from the list below.")
 LB := MyGui.Add("ListBox", "w640 r10")
@@ -1916,7 +1926,7 @@ Displays a context-sensitive help (via ToolTip) whenever the user moves the mous
  
 Code:
  
-```ahkv2
+```ahk
 MyGui := Gui()
 MyEdit := MyGui.Add("Edit")
 MyEdit.ToolTip := "This is a tooltip for the control whose name is MyEdit."
@@ -1954,7 +1964,7 @@ Creates an On-screen display (OSD) via transparent window.
  
 Code:
  
-```ahkv2
+```ahk
 MyGui := Gui()
 MyGui.Opt("+AlwaysOnTop -Caption +ToolWindow")  
 MyGui.BackColor := "EEAA99"  
@@ -1980,7 +1990,7 @@ Creates a moving progress bar overlayed on a background image.
  
 Code:
  
-```ahkv2
+```ahk
 MyGui := Gui()
 MyGui.BackColor := "White"
 MyGui.Add("Picture", "x0 y0 h350 w450", A_WinDir "\Web\Wallpaper\Windows\img0.jpg")
@@ -2012,7 +2022,7 @@ Creates a simple image viewer.
  
 Code:
  
-```ahkv2
+```ahk
 MyGui := Gui("+Resize")
 MyBtn := MyGui.Add("Button", "default", "&Load New Image")
 MyBtn.OnEvent("Click", LoadNewImage)
@@ -2050,7 +2060,7 @@ Creates a simple text editor with menu bar.
  
 Code:
  
-```ahkv2
+```ahk
 MyGui := Gui("+Resize", "Untitled")  
 FileMenu := Menu()
 FileMenu.Add("&New", MenuFileNew)
@@ -2168,7 +2178,7 @@ Demonstrates problems caused by reference cycles.
  
 Code:
  
-```ahkv2
+```ahk
 ; Click Open or double-click tray icon to show another GUI.
 ; Use the menu items, Escape or Close button to see how it responds.
 A_TrayMenu.Add("&Open", ShowRefCycleGui)
@@ -2199,7 +2209,7 @@ Similar to #HotIf example #1, this creates two hotkeys and one hotstring which o
  
 Code:
  
-```ahkv2
+```ahk
 HotIfWinActive "ahk_class Notepad"
 Hotkey "^!a", ShowMsgBox
 Hotkey "#c", ShowMsgBox
@@ -2221,7 +2231,7 @@ Similar to the example above, but with a callback.
  
 Code:
  
-```ahkv2
+```ahk
 HotIf MyCallback
 Hotkey "^!a", ShowMsgBox
 Hotkey "#c", ShowMsgBox
@@ -2250,7 +2260,7 @@ Creates a Ctrl-Alt-Z hotkey.
  
 Code:
  
-```ahkv2
+```ahk
 Hotkey "^!z", MyFunc
 MyFunc(ThisHotkey)
 {
@@ -2267,7 +2277,7 @@ Makes RCtrl & RShift operate like Alt-Tab.
  
 Code:
  
-```ahkv2
+```ahk
 Hotkey "RCtrl & RShift", "AltTab"
 ```
  
@@ -2280,7 +2290,7 @@ Disables the Shift-Win-C hotkey.
  
 Code:
  
-```ahkv2
+```ahk
 Hotkey "$+#c", "Off"
 ```
  
@@ -2293,7 +2303,7 @@ Changes a hotkey to allow 5 threads.
  
 Code:
  
-```ahkv2
+```ahk
 Hotkey "^!a",, "T5"
 ```
  
@@ -2306,7 +2316,7 @@ Creates Alt+W as a hotkey that works only in Notepad.
  
 Code:
  
-```ahkv2
+```ahk
 HotIfWinActive "ahk_class Notepad"
 Hotkey "!w", ToggleWordWrap  
 ToggleWordWrap(ThisHotkey)
@@ -2324,7 +2334,7 @@ Creates a GUI that allows to register primitive three-key combination hotkeys.
  
 Code:
  
-```ahkv2
+```ahk
 HkGui := Gui()
 HkGui.Add("Text", "xm", "Prefix key:")
 HkGui.Add("Edit", "yp x100 w100 vPrefix", "Space")
@@ -2351,7 +2361,7 @@ Hotstring Helper. The following script might be useful if you are a heavy user o
  
 Code:
  
-```ahkv2
+```ahk
 #h::  
 {
  
@@ -2424,7 +2434,7 @@ If A_Index is greater than 100, return.
  
 Code:
  
-```ahkv2
+```ahk
 if (A_Index > 100)
     return
 ```
@@ -2438,7 +2448,7 @@ If the result of A_TickCount - StartTime is greater than the result of 2*MaxTime
  
 Code:
  
-```ahkv2
+```ahk
 if (A_TickCount - StartTime > 2*MaxTime + 100)
 {
     MsgBox "Too much time has passed."
@@ -2471,7 +2481,7 @@ This example is executed as follows:
  
 Code:
  
-```ahkv2
+```ahk
 if (Color = "Blue" or Color = "White")
 {
     MsgBox "The color is one of the allowed values."
@@ -2498,7 +2508,7 @@ A single multi-statement line does not need to be enclosed in braces.
  
 Code:
  
-```ahkv2
+```ahk
 MyVar := 3
 if (MyVar > 2)
     MyVar++, MyVar := MyVar - 4, MyVar .= " test"
@@ -2515,7 +2525,7 @@ Checks whether var is in the range 1 to 5:
  
 Code:
  
-```ahkv2
+```ahk
 if (var >= 1 and var <= 5)
     MsgBox var " is in the range 1 to 5, inclusive."
 ```
@@ -2530,7 +2540,7 @@ Checks whether var is the file extension exe, bat or com:
  
 Code:
  
-```ahkv2
+```ahk
 if (var ~= "i)\A(exe|bat|com)\z")
     MsgBox "The file extension is an executable type."
 ```
@@ -2544,7 +2554,7 @@ Selects or de-selects all rows by specifying 0 as the row number.
  
 Code:
  
-```ahkv2
+```ahk
 LV.Modify(0, "Select")   
 LV.Modify(0, "-Select")  
 LV.Modify(0, "-Check")  
@@ -2559,7 +2569,7 @@ Auto-sizes all columns to fit their contents.
  
 Code:
  
-```ahkv2
+```ahk
 LV.ModifyCol()  
 ```
  
@@ -2572,7 +2582,7 @@ Displays the files in a folder chosen by the user, with each file assigned the i
  
 Code:
  
-```ahkv2
+```ahk
 MyGui := Gui("+Resize")  
 B1 := MyGui.Add("Button", "Default", "Load a folder")
 B2 := MyGui.Add("Button", "x+20", "Clear List")
@@ -2731,7 +2741,7 @@ The following is a working script that is more elaborate than the one near the t
  
 Code:
  
-```ahkv2
+```ahk
 TreeRoot := A_MyDocuments
 TreeViewWidth := 280
 ListViewWidth := A_ScreenWidth/2 - TreeViewWidth - 30
@@ -2800,7 +2810,7 @@ Searches a region of the active window for an image and stores in FoundX and Fou
  
 Code:
  
-```ahkv2
+```ahk
 ImageSearch &FoundX, &FoundY, 40, 40, 300, 300, "C:\My Images\test.bmp"
 ```
  
@@ -2813,7 +2823,7 @@ Searches a region of the screen for an image and stores in FoundX and FoundY the
  
 Code:
  
-```ahkv2
+```ahk
 CoordMode "Pixel"  
 try
 {
@@ -2835,7 +2845,7 @@ Deletes a key and its value located in section2 from a standard format .ini file
  
 Code:
  
-```ahkv2
+```ahk
 IniDelete "C:\Temp\myfile.ini", "section2", "key"
 ```
  
@@ -2848,7 +2858,7 @@ Reads the value of a key located in section2 from a standard format .ini file an
  
 Code:
  
-```ahkv2
+```ahk
 Value := IniRead("C:\Temp\myfile.ini", "section2", "key")
 MsgBox "The value is " Value
 ```
@@ -2862,7 +2872,7 @@ Writes a value to a key located in section2 of a standard format .ini file.
  
 Code:
  
-```ahkv2
+```ahk
 IniWrite "this is a new value", "C:\Temp\myfile.ini", "section2", "key"
 ```
  
@@ -2875,7 +2885,7 @@ Allows the user to enter a hidden password.
  
 Code:
  
-```ahkv2
+```ahk
 password := InputBox("(your input will be hidden)", "Enter Password", "password").value
 ```
  
@@ -2888,7 +2898,7 @@ Allows the user to enter a phone number.
  
 Code:
  
-```ahkv2
+```ahk
 IB := InputBox("Please enter a phone number.", "Phone Number", "w640 h480")
 if IB.Result = "Cancel"
     MsgBox "You entered '" IB.Value "' but then cancelled."
@@ -2905,7 +2915,7 @@ Waits for the user to press any single key.
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox KeyWaitAny()
 MsgBox KeyWaitAny("V")
 KeyWaitAny(Options:="")
@@ -2929,7 +2939,7 @@ Waits for any key in combination with Ctrl/Alt/Shift/Win.
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox KeyWaitCombo()
 KeyWaitCombo(Options:="")
 {
@@ -2954,7 +2964,7 @@ Simple auto-complete: any day of the week.  Pun aside, this is a mostly function
  
 Code:
  
-```ahkv2
+```ahk
 WordList := "Monday`nTuesday`nWednesday`nThursday`nFriday`nSaturday`nSunday"
 Suffix := ""
 SacHook := InputHook("V", "{Esc}")
@@ -2994,7 +3004,7 @@ Waits for the user to press any key. Keys that produce no visible character -- s
  
 Code:
  
-```ahkv2
+```ahk
 ih := InputHook("L1", "{LControl}{RControl}{LAlt}{RAlt}{LShift}{RShift}{LWin}{RWin}{AppsKey}{F1}{F2}{F3}{F4}{F5}{F6}{F7}{F8}{F9}{F10}{F11}{F12}{Left}{Right}{Up}{Down}{Home}{End}{PgUp}{PgDn}{Del}{Ins}{BS}{CapsLock}{NumLock}{PrintScreen}{Pause}")
 ih.Start()
 ih.Wait()
@@ -3009,7 +3019,7 @@ This is a working hotkey example. Since the hotkey has the tilde (~) prefix, its
  
 Code:
  
-```ahkv2
+```ahk
 ~[::
 {
     msg := ""
@@ -3050,7 +3060,7 @@ Installs the keyboard hook unconditionally.
  
 Code:
  
-```ahkv2
+```ahk
 InstallKeybdHook
 ```
  
@@ -3063,7 +3073,7 @@ Installs the mouse hook unconditionally.
  
 Code:
  
-```ahkv2
+```ahk
 InstallMouseHook
 ```
  
@@ -3076,7 +3086,7 @@ Reports the 1-based position of the substring "abc" in the string "123abc789".
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox InStr("123abc789", "abc") 
 ```
  
@@ -3089,7 +3099,7 @@ Searches for Needle in Haystack.
  
 Code:
  
-```ahkv2
+```ahk
 Haystack := "The Quick Brown Fox Jumps Over the Lazy Dog"
 Needle := "Fox"
 If InStr(Haystack, Needle)
@@ -3107,7 +3117,7 @@ Demonstrates the difference between a case-insensitive and case-sensitive search
  
 Code:
  
-```ahkv2
+```ahk
 Haystack := "The Quick Brown Fox Jumps Over the Lazy Dog"
 Needle := "the"
 MsgBox InStr(Haystack, Needle, false, 1, 2) 
@@ -3123,7 +3133,7 @@ Displays the history info in a window.
  
 Code:
  
-```ahkv2
+```ahk
 KeyHistory
 ```
  
@@ -3136,7 +3146,7 @@ Causes KeyHistory to display the last 100 instead 40 keyboard and mouse events.
  
 Code:
  
-```ahkv2
+```ahk
 KeyHistory 100
 ```
  
@@ -3149,7 +3159,7 @@ Disables key history entirely.
  
 Code:
  
-```ahkv2
+```ahk
 KeyHistory 0
 ```
  
@@ -3162,7 +3172,7 @@ Waits for the A key to be released.
  
 Code:
  
-```ahkv2
+```ahk
 KeyWait "a"
 ```
  
@@ -3175,7 +3185,7 @@ Waits for the left mouse button to be pressed down.
  
 Code:
  
-```ahkv2
+```ahk
 KeyWait "LButton", "D"
 ```
  
@@ -3188,7 +3198,7 @@ Waits up to 3 seconds for the first controller button to be pressed down.
  
 Code:
  
-```ahkv2
+```ahk
 KeyWait "Joy1", "D T3"
 ```
  
@@ -3201,7 +3211,7 @@ Waits for the left Alt key to be logically released.
  
 Code:
  
-```ahkv2
+```ahk
 KeyWait "LAlt", "L"
 ```
  
@@ -3214,7 +3224,7 @@ When pressing this hotkey, KeyWait waits for the user to physically release the 
  
 Code:
  
-```ahkv2
+```ahk
 ~CapsLock::
 {
     KeyWait "CapsLock"  
@@ -3231,7 +3241,7 @@ Remaps a key or mouse button. (This example is only for illustration because it 
  
 Code:
  
-```ahkv2
+```ahk
 *NumpadAdd::
 {
     MouseClick "left",,, 1, 0, "D"  
@@ -3249,7 +3259,7 @@ Detects when a key has been double-pressed (similar to double-click). KeyWait is
  
 Code:
  
-```ahkv2
+```ahk
 ~RControl::
 {
     if (A_PriorHotkey != ThisHotkey or A_TimeSincePriorHotkey > 400)
@@ -3271,7 +3281,7 @@ Displays information about the hotkeys used by the current script.
  
 Code:
  
-```ahkv2
+```ahk
 ListHotkeys
 ```
  
@@ -3284,7 +3294,7 @@ Installs the keyboard hook unconditionally.
  
 Code:
  
-```ahkv2
+```ahk
 InstallKeybdHook
 ```
  
@@ -3297,7 +3307,7 @@ Installs the mouse hook unconditionally.
  
 Code:
  
-```ahkv2
+```ahk
 InstallMouseHook
 ```
  
@@ -3310,7 +3320,7 @@ Enables and disables line logging for specific lines and then displays the resul
  
 Code:
  
-```ahkv2
+```ahk
 x := "This line is logged"
 ListLines False
 x := "This line is not logged"
@@ -3328,7 +3338,7 @@ Displays information about the script's variables.
  
 Code:
  
-```ahkv2
+```ahk
 var1 := "foo"
 var2 := "bar"
 obj := []
@@ -3345,7 +3355,7 @@ Extracts the individual rows and fields out of a ListView.
  
 Code:
  
-```ahkv2
+```ahk
 List := ListViewGetContent("Selected", "SysListView321", WinTitle)
 Loop Parse, List, "`n"  
 {
@@ -3364,7 +3374,7 @@ Pre-loads and reuses some images.
  
 Code:
  
-```ahkv2
+```ahk
 Pics := []
 Loop Files, A_WinDir "\Web\Wallpaper\*.jpg", "R"
 {
@@ -3399,7 +3409,7 @@ Creates a loop with 3 iterations.
  
 Code:
  
-```ahkv2
+```ahk
 Loop 3
 {
     MsgBox "Iteration number is " A_Index  
@@ -3416,7 +3426,7 @@ Creates an infinite loop, but it will be terminated after the 25th iteration.
  
 Code:
  
-```ahkv2
+```ahk
 Loop
 {
     if (A_Index > 25)
@@ -3436,7 +3446,7 @@ Reports the full path of each text file located in a directory and in its subdir
  
 Code:
  
-```ahkv2
+```ahk
 Loop Files, A_ProgramFiles "\*.txt", "R"  
 {
     Result := MsgBox("Filename = " A_LoopFilePath "`n`nContinue?",, "y/n")
@@ -3454,7 +3464,7 @@ Calculates the size of a folder, including the files in all its subfolders.
  
 Code:
  
-```ahkv2
+```ahk
 FolderSizeKB := 0
 WhichFolder := DirSelect()  
 Loop Files, WhichFolder "\*.*", "R"
@@ -3471,7 +3481,7 @@ Retrieves file names sorted by name (see next example to sort by date).
  
 Code:
  
-```ahkv2
+```ahk
 FileList := ""  
 Loop Files, "C:\*.*"
     FileList .= A_LoopFileName "`n"
@@ -3495,7 +3505,7 @@ Retrieves file names sorted by modification date.
  
 Code:
  
-```ahkv2
+```ahk
 FileList := ""
 Loop Files, A_MyDocuments "\Photos\*.*", "FD"  
     FileList .= A_LoopFileTimeModified "`t" A_LoopFileName "`n"
@@ -3520,7 +3530,7 @@ Copies only the source files that are newer than their counterparts in the desti
  
 Code:
  
-```ahkv2
+```ahk
 CopyIfNewer(SourcePattern, Dest)
 {
     Loop Files, SourcePattern
@@ -3555,7 +3565,7 @@ Converts filenames passed in via command-line parameters to long names, complete
  
 Code:
  
-```ahkv2
+```ahk
 for GivenPath in A_Args  
 {
     Loop Files, GivenPath, "FD"  
@@ -3573,7 +3583,7 @@ Parses a comma-separated string.
  
 Code:
  
-```ahkv2
+```ahk
 Colors := "red,green,blue"
 Loop parse, Colors, ","
 {
@@ -3590,7 +3600,7 @@ Reads the lines inside a variable, one by one (similar to a file-reading loop). 
  
 Code:
  
-```ahkv2
+```ahk
 Loop parse, FileContents, "`n", "`r"  
 {
     Result := MsgBox("Line number " A_Index " is " A_LoopField ".`n`nContinue?",, "y/n")
@@ -3607,7 +3617,7 @@ This is the same as the example above except that it's for the clipboard. It's u
  
 Code:
  
-```ahkv2
+```ahk
 Loop parse, A_Clipboard, "`n", "`r"
 {
     Result := MsgBox("File number " A_Index " is " A_LoopField ".`n`nContinue?",, "y/n")
@@ -3624,7 +3634,7 @@ Parses a comma separated value (CSV) file.
  
 Code:
  
-```ahkv2
+```ahk
 Loop read, "C:\Database Export.csv"
 {
     LineNumber := A_Index
@@ -3646,7 +3656,7 @@ Determines which delimiter character was encountered.
  
 Code:
  
-```ahkv2
+```ahk
 Colors := "red,green|blue;yellow|cyan,magenta"
 Position := 0
 Loop Parse, Colors, ",|;"
@@ -3668,7 +3678,7 @@ Adds a new menu item to the bottom of the tray icon menu.
  
 Code:
  
-```ahkv2
+```ahk
 A_TrayMenu.Add()  
 A_TrayMenu.Add("Item1", MenuHandler)  
 Persistent
@@ -3686,7 +3696,7 @@ Creates a popup menu that is displayed when the user presses a hotkey.
  
 Code:
  
-```ahkv2
+```ahk
 MyMenu := Menu()
 MyMenu.Add("Item 1", MenuHandler)
 MyMenu.Add("Item 2", MenuHandler)
@@ -3712,7 +3722,7 @@ Demonstrates some of the various menu object members.
  
 Code:
  
-```ahkv2
+```ahk
 #SingleInstance
 Persistent
 Tray := A_TrayMenu 
@@ -3785,7 +3795,7 @@ Demonstrates how to add icons to menu items.
  
 Code:
  
-```ahkv2
+```ahk
 FileMenu := Menu()
 FileMenu.Add("Script Icon", MenuHandler)
 FileMenu.Add("Suspend Icon", MenuHandler)
@@ -3813,7 +3823,7 @@ Reports the number of items in a menu and the ID of the last item.
  
 Code:
  
-```ahkv2
+```ahk
 MyMenu := Menu()
 MyMenu.Add("Item 1", NoAction)
 MyMenu.Add("Item 2", NoAction)
@@ -3835,7 +3845,7 @@ Selects File -> Open in Notepad. This example may fail on Windows 11 or later, a
  
 Code:
  
-```ahkv2
+```ahk
 MenuSelect "Untitled - Notepad",, "File", "Open"
 ```
  
@@ -3848,7 +3858,7 @@ Same as above except it is done by position instead of name. On Windows 10, 2& m
  
 Code:
  
-```ahkv2
+```ahk
 MenuSelect "Untitled - Notepad",, "1&", "2&"
 ```
  
@@ -3861,7 +3871,7 @@ Selects View -> Lines most recently executed in the main window.
  
 Code:
  
-```ahkv2
+```ahk
 WinShow "ahk_class AutoHotkey"
 MenuSelect "ahk_class AutoHotkey",, "View", "Lines most recently executed"
 ```
@@ -3875,7 +3885,7 @@ Double-clicks at the current mouse position.
  
 Code:
  
-```ahkv2
+```ahk
 MouseClick "left"
 MouseClick "left"
 ```
@@ -3889,7 +3899,7 @@ Same as above.
  
 Code:
  
-```ahkv2
+```ahk
 MouseClick "left",,, 2
 ```
  
@@ -3902,7 +3912,7 @@ Moves the mouse cursor to a specific position, then right-clicks once.
  
 Code:
  
-```ahkv2
+```ahk
 MouseClick "right", 200, 300
 ```
  
@@ -3915,7 +3925,7 @@ Simulates the turning of the mouse wheel.
  
 Code:
  
-```ahkv2
+```ahk
 #up::MouseClick "WheelUp",,, 2  
 #down::MouseClick "WheelDown",,, 2
 ```
@@ -3929,7 +3939,7 @@ Clicks and holds the left mouse button, moves the mouse cursor to the destinatio
  
 Code:
  
-```ahkv2
+```ahk
 MouseClickDrag "left", 0, 200, 600, 400
 ```
  
@@ -3942,7 +3952,7 @@ Opens MS Paint and draws a little house.
  
 Code:
  
-```ahkv2
+```ahk
 Run "mspaint.exe"
 if !WinWaitActive("ahk_class MSPaintApp",, 2)
     return
@@ -3965,7 +3975,7 @@ Reports the position of the mouse cursor.
  
 Code:
  
-```ahkv2
+```ahk
 MouseGetPos &xpos, &ypos 
 MsgBox "The cursor is at X" xpos " Y" ypos
 ```
@@ -3979,7 +3989,7 @@ Shows the HWND, class name, title and controls of the window currently under the
  
 Code:
  
-```ahkv2
+```ahk
 SetTimer WatchCursor, 100
 WatchCursor()
 {
@@ -4003,7 +4013,7 @@ Moves the mouse cursor to a new position.
  
 Code:
  
-```ahkv2
+```ahk
 MouseMove 200, 100
 ```
  
@@ -4016,7 +4026,7 @@ Moves the mouse cursor slowly (speed 50 vs. 2) by 20 pixels to the right and 30 
  
 Code:
  
-```ahkv2
+```ahk
 MouseMove 20, 30, 50, "R"
 ```
  
@@ -4029,7 +4039,7 @@ Shows a message box with specific text. A quick and easy way to show information
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox "This is a string."
 ```
  
@@ -4042,7 +4052,7 @@ Shows a message box with specific text and a title.
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox "This MsgBox has a custom title.", "A Custom Title"
 ```
  
@@ -4055,7 +4065,7 @@ Shows a message box with default text. Mainly useful for debugging purposes, for
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox 
 ```
  
@@ -4068,7 +4078,7 @@ Shows a message box with specific text, a title and an info icon. Besides, a con
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox "
   (
     The first parameter is displayed as the message.
@@ -4086,7 +4096,7 @@ Use the return value to determine which button the user pressed in the message b
  
 Code:
  
-```ahkv2
+```ahk
 result := MsgBox("Do you want to continue? (Press YES or NO)",, "YesNo")
 if (result = "No")
     return
@@ -4101,7 +4111,7 @@ Use the T (timeout) option to automatically close the message box after a certai
  
 Code:
  
-```ahkv2
+```ahk
 result := MsgBox("This MsgBox will time out in 5 seconds.  Continue?",, "Y/N T5")
 if (result = "Timeout")
     MsgBox "You didn't press YES or NO within the 5-second period."
@@ -4118,7 +4128,7 @@ Include a variable or sub-expression in the message. See also: Concatenation
  
 Code:
  
-```ahkv2
+```ahk
 var := 10
 MsgBox "The initial value is: " var
 MsgBox "The result is: " var * 2
@@ -4134,7 +4144,7 @@ Briefly displays a tooltip for each clipboard change.
  
 Code:
  
-```ahkv2
+```ahk
 OnClipboardChange ClipChanged
 ClipChanged(DataType) {
     ToolTip "Clipboard data type: " DataType
@@ -4152,7 +4162,7 @@ Logs errors caused by the script into a text file instead of displaying them to 
  
 Code:
  
-```ahkv2
+```ahk
 OnError LogError
 i := Integer("cause_error")
 LogError(exception, mode) {
@@ -4171,7 +4181,7 @@ Use OnError to implement alternative error handling methods. Caveat: OnError is 
  
 Code:
  
-```ahkv2
+```ahk
 AccumulateErrors()
 {
     local ea := ErrorAccumulator()
@@ -4236,7 +4246,7 @@ Asks the user before exiting the script. To test this example, right-click the t
  
 Code:
  
-```ahkv2
+```ahk
 Persistent  
 OnExit ExitFunc
 ExitFunc(ExitReason, ExitCode)
@@ -4260,7 +4270,7 @@ Registers a method to be called on exit.
  
 Code:
  
-```ahkv2
+```ahk
 Persistent  
 OnExit MyObject.Exiting
 class MyObject
@@ -4282,7 +4292,7 @@ Monitors mouse clicks in a GUI window. Related topic: ContextMenu event
  
 Code:
  
-```ahkv2
+```ahk
 MyGui := Gui(, "Example Window")
 MyGui.Add("Text",, "Click anywhere in this window.")
 MyGui.Add("Edit", "w200")
@@ -4313,7 +4323,7 @@ Detects system shutdown/logoff and allows the user to abort it. On Windows Vista
  
 Code:
  
-```ahkv2
+```ahk
 DllCall("kernel32.dll\SetProcessShutdownParameters", "UInt", 0x4FF, "UInt", 0)
 OnMessage(0x0011, On_WM_QUERYENDSESSION)
 Persistent
@@ -4362,7 +4372,7 @@ Receives a custom message and up to two numbers from some other script or progra
  
 Code:
  
-```ahkv2
+```ahk
 OnMessage 0x5555, MsgMonitor
 Persistent
 MsgMonitor(wParam, lParam, msg, *)
@@ -4387,7 +4397,7 @@ Use Pause to halt the script, such as to inspect variables.
  
 Code:
  
-```ahkv2
+```ahk
 ListVars
 Pause
 ExitApp 
@@ -4402,7 +4412,7 @@ Press a hotkey once to pause the script. Press it again to unpause.
  
 Code:
  
-```ahkv2
+```ahk
 Pause::Pause -1  
 #p::Pause -1  
 ```
@@ -4416,7 +4426,7 @@ Sends a Pause command to another script.
  
 Code:
  
-```ahkv2
+```ahk
 DetectHiddenWindows True
 WM_COMMAND := 0x0111
 ID_FILE_PAUSE := 65403
@@ -4432,7 +4442,7 @@ Press a hotkey to show the color of the pixel located at the current position of
  
 Code:
  
-```ahkv2
+```ahk
 ^!z::  
 {
     MouseGetPos &MouseX, &MouseY
@@ -4449,7 +4459,7 @@ Searches a region of the active window for a pixel and stores in  and  the X and
  
 Code:
  
-```ahkv2
+```ahk
 if PixelSearch(&Px, &Py, 200, 200, 300, 300, 0x9d6346, 3)
     MsgBox "A color within 3 shades of variation was found at X" Px " Y" Py
 else
@@ -4465,7 +4475,7 @@ Generates a random integer in the range 1 to 10 and stores it in N.
  
 Code:
  
-```ahkv2
+```ahk
 N := Random(1, 10)
 ```
  
@@ -4478,7 +4488,7 @@ Generates a random integer in the range 0 to 9 and stores it in N.
  
 Code:
  
-```ahkv2
+```ahk
 N := Random(9)
 ```
  
@@ -4491,7 +4501,7 @@ Generates a random floating point number in the range 0.0 to 1.0 and stores it i
  
 Code:
  
-```ahkv2
+```ahk
 fraction := Random(0.0, 1.0)
 fraction := Random()  
 ```
@@ -4505,7 +4515,7 @@ Reports 4, which is the position where the match was found.
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox RegExMatch("xxxabc123xyz", "abc.*xyz")
 ```
  
@@ -4518,7 +4528,7 @@ Reports 7 because the $ requires the match to be at the end.
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox RegExMatch("abc123123", "123$")
 ```
  
@@ -4531,7 +4541,7 @@ Reports 1 because a match was achieved via the case-insensitive option.
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox RegExMatch("abc123", "i)^ABC")
 ```
  
@@ -4544,7 +4554,7 @@ Reports 1 and stores "XYZ" in SubPat[1].
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox RegExMatch("abcXYZ123", "abc(.*)123", &SubPat)
 ```
  
@@ -4557,7 +4567,7 @@ Reports 7 instead of 1 due to the starting position 2 instead of 1.
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox RegExMatch("abc123abc456", "abc\d+",, 2)
 ```
  
@@ -4570,7 +4580,7 @@ Demonstrates the usage of the Match object.
  
 Code:
  
-```ahkv2
+```ahk
 FoundPos := RegExMatch("Michiganroad 72", "(.*) (?<nr>\d+)", &SubPat)
 MsgBox SubPat.Count ": " SubPat[1] " " SubPat.Name[2] "=" SubPat.nr  
 ```
@@ -4584,7 +4594,7 @@ Retrieves the extension of a file. Note that SplitPath can also be used for this
  
 Code:
  
-```ahkv2
+```ahk
 Path := "C:\Foo\Bar\Baz.txt"
 RegExMatch(Path, "\w+$", &Extension)
 MsgBox Extension[]  
@@ -4599,7 +4609,7 @@ The following function expands variable references and escape sequences containe
  
 Code:
  
-```ahkv2
+```ahk
 var1 := "abc"
 var2 := 123
 MsgBox Deref("%var1%def%var2%")  
@@ -4638,7 +4648,7 @@ Reports "abc123xyz" because the $ allows a match only at the end.
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox RegExReplace("abc123123", "123$", "xyz")
 ```
  
@@ -4651,7 +4661,7 @@ Reports "123" because a match was achieved via the case-insensitive option.
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox RegExReplace("abc123", "i)^ABC")
 ```
  
@@ -4664,7 +4674,7 @@ Reports "aaaXYZzzz" by means of the $1 backreference.
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox RegExReplace("abcXYZ123", "abc(.*)123", "aaa$1zzz")
 ```
  
@@ -4677,7 +4687,7 @@ Reports an empty string and stores 2 in ReplacementCount.
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox RegExReplace("abc123abc456", "abc\d+", "", &ReplacementCount)
 ```
  
@@ -4690,7 +4700,7 @@ Press a hotkey to restart the script.
  
 Code:
  
-```ahkv2
+```ahk
 ^!r::Reload  
 ```
  
@@ -4703,7 +4713,7 @@ Reports the value returned by the function.
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox returnTest() 
 returnTest() {
     return 123
@@ -4719,7 +4729,7 @@ The first Return ensures that the subsequent function call is skipped if the pre
  
 Code:
  
-```ahkv2
+```ahk
 #z::  
 ^#z::  
 {
@@ -4744,7 +4754,7 @@ Run is able to launch Windows system programs from any directory. Note that exec
  
 Code:
  
-```ahkv2
+```ahk
 Run "notepad"
 ```
  
@@ -4758,7 +4768,7 @@ The following opens an internet address in the user's default web browser.
  
 Code:
  
-```ahkv2
+```ahk
 Run "https://www.google.com"
 ```
  
@@ -4771,7 +4781,7 @@ Opens a document in a maximized application and displays a custom error message 
  
 Code:
  
-```ahkv2
+```ahk
 try Run("ReadMe.doc", , "Max")
 if A_LastError
     MsgBox "The document could not be launched."
@@ -4786,7 +4796,7 @@ Runs the dir command in minimized state and stores the output in a text file. Af
  
 Code:
  
-```ahkv2
+```ahk
 RunWait A_ComSpec " /c dir C:\ >>C:\DirTest.txt", , "Min"
 Run "C:\DirTest.txt"
 Run "properties C:\DirTest.txt"
@@ -4803,7 +4813,7 @@ The following opens the Recycle Bin.
  
 Code:
  
-```ahkv2
+```ahk
 Run "::{645FF040-5081-101B-9F08-00AA002F954E}"
 ```
  
@@ -4816,7 +4826,7 @@ To run multiple commands consecutively, use "&&" between each.
  
 Code:
  
-```ahkv2
+```ahk
 Run A_ComSpec "/c dir /b > C:\list.txt && type C:\list.txt && pause"
 ```
  
@@ -4829,7 +4839,7 @@ The following custom functions can be used to run a command and retrieve its out
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox RunWaitOne("dir " A_ScriptDir)
 MsgBox RunWaitMany("
 (
@@ -4864,7 +4874,7 @@ Executes the given code as a new AutoHotkey process.
  
 Code:
  
-```ahkv2
+```ahk
 ExecScript(Script, Wait:=true)
 {
     shell := ComObject("WScript.Shell")
@@ -4890,7 +4900,7 @@ Opens the registry editor as administrator.
  
 Code:
  
-```ahkv2
+```ahk
 RunAs "Administrator", "MyPassword"
 Run "RegEdit.exe"
 RunAs  
@@ -4905,7 +4915,7 @@ Types a two-line signature.
  
 Code:
  
-```ahkv2
+```ahk
 Send "Sincerely,{enter}John Smith"
 ```
  
@@ -4918,7 +4928,7 @@ Selects the File->Save menu (Alt+F followed by S).
  
 Code:
  
-```ahkv2
+```ahk
 Send "!fs"
 ```
  
@@ -4931,7 +4941,7 @@ Jumps to the end of the text then send four shift+left-arrow keystrokes.
  
 Code:
  
-```ahkv2
+```ahk
 Send "{End}+{Left 4}"
 ```
  
@@ -4944,7 +4954,7 @@ Sends a long series of raw characters via the fastest method.
  
 Code:
  
-```ahkv2
+```ahk
 SendInput "{Raw}A long series of raw characters sent via the fastest method."
 ```
  
@@ -4957,7 +4967,7 @@ Holds down a key contained in a variable.
  
 Code:
  
-```ahkv2
+```ahk
 MyKey := "Shift"
 Send "{" MyKey " down}"  
 ```
@@ -4971,7 +4981,7 @@ Makes Send synonymous with SendInput, but falls back to SendPlay if SendInput is
  
 Code:
  
-```ahkv2
+```ahk
 SendMode "InputThenPlay"
 ```
  
@@ -4984,7 +4994,7 @@ Types a two-line signature.
  
 Code:
  
-```ahkv2
+```ahk
 Send "Sincerely,{enter}John Smith"
 ```
  
@@ -4997,7 +5007,7 @@ Selects the File->Save menu (Alt+F followed by S).
  
 Code:
  
-```ahkv2
+```ahk
 Send "!fs"
 ```
  
@@ -5010,7 +5020,7 @@ Jumps to the end of the text then send four shift+left-arrow keystrokes.
  
 Code:
  
-```ahkv2
+```ahk
 Send "{End}+{Left 4}"
 ```
  
@@ -5023,7 +5033,7 @@ Sends a long series of raw characters via the fastest method.
  
 Code:
  
-```ahkv2
+```ahk
 SendInput "{Raw}A long series of raw characters sent via the fastest method."
 ```
  
@@ -5036,7 +5046,7 @@ Holds down a key contained in a variable.
  
 Code:
  
-```ahkv2
+```ahk
 MyKey := "Shift"
 Send "{" MyKey " down}"  
 ```
@@ -5050,7 +5060,7 @@ Causes the smallest possible delay to occur after each control-modifying functio
  
 Code:
  
-```ahkv2
+```ahk
 SetControlDelay 0
 ```
  
@@ -5063,7 +5073,7 @@ Causes the mouse cursor to be moved instantly.
  
 Code:
  
-```ahkv2
+```ahk
 SetDefaultMouseSpeed 0
 ```
  
@@ -5076,7 +5086,7 @@ Moves the mouse cursor to a new position.
  
 Code:
  
-```ahkv2
+```ahk
 MouseMove 200, 100
 ```
  
@@ -5089,7 +5099,7 @@ Moves the mouse cursor slowly (speed 50 vs. 2) by 20 pixels to the right and 30 
  
 Code:
  
-```ahkv2
+```ahk
 MouseMove 20, 30, 50, "R"
 ```
  
@@ -5102,7 +5112,7 @@ Double-clicks at the current mouse position.
  
 Code:
  
-```ahkv2
+```ahk
 MouseClick "left"
 MouseClick "left"
 ```
@@ -5116,7 +5126,7 @@ Same as above.
  
 Code:
  
-```ahkv2
+```ahk
 MouseClick "left",,, 2
 ```
  
@@ -5129,7 +5139,7 @@ Moves the mouse cursor to a specific position, then right-clicks once.
  
 Code:
  
-```ahkv2
+```ahk
 MouseClick "right", 200, 300
 ```
  
@@ -5142,7 +5152,7 @@ Simulates the turning of the mouse wheel.
  
 Code:
  
-```ahkv2
+```ahk
 #up::MouseClick "WheelUp",,, 2  
 #down::MouseClick "WheelDown",,, 2
 ```
@@ -5156,7 +5166,7 @@ Clicks and holds the left mouse button, moves the mouse cursor to the destinatio
  
 Code:
  
-```ahkv2
+```ahk
 MouseClickDrag "left", 0, 200, 600, 400
 ```
  
@@ -5169,7 +5179,7 @@ Opens MS Paint and draws a little house.
  
 Code:
  
-```ahkv2
+```ahk
 Run "mspaint.exe"
 if !WinWaitActive("ahk_class MSPaintApp",, 2)
     return
@@ -5192,7 +5202,7 @@ Causes the smallest possible delay to occur after each keystroke sent via Send o
  
 Code:
  
-```ahkv2
+```ahk
 SetKeyDelay 0
 ```
  
@@ -5205,7 +5215,7 @@ Types a two-line signature.
  
 Code:
  
-```ahkv2
+```ahk
 Send "Sincerely,{enter}John Smith"
 ```
  
@@ -5218,7 +5228,7 @@ Selects the File->Save menu (Alt+F followed by S).
  
 Code:
  
-```ahkv2
+```ahk
 Send "!fs"
 ```
  
@@ -5231,7 +5241,7 @@ Jumps to the end of the text then send four shift+left-arrow keystrokes.
  
 Code:
  
-```ahkv2
+```ahk
 Send "{End}+{Left 4}"
 ```
  
@@ -5244,7 +5254,7 @@ Sends a long series of raw characters via the fastest method.
  
 Code:
  
-```ahkv2
+```ahk
 SendInput "{Raw}A long series of raw characters sent via the fastest method."
 ```
  
@@ -5257,7 +5267,7 @@ Holds down a key contained in a variable.
  
 Code:
  
-```ahkv2
+```ahk
 MyKey := "Shift"
 Send "{" MyKey " down}"  
 ```
@@ -5271,7 +5281,7 @@ Opens Notepad minimized and send it some text. This example may fail on Windows 
  
 Code:
  
-```ahkv2
+```ahk
 Run "Notepad",, "Min", &PID  
 WinWait "ahk_pid " PID  
 ControlSend "This is a line of text in the notepad window.{Enter}", "Edit1"
@@ -5289,7 +5299,7 @@ Opens the command prompt and sent it some text. This example may fail on Windows
  
 Code:
  
-```ahkv2
+```ahk
 SetTitleMatchMode 2
 Run A_ComSpec,,, &PID  
 WinWait "ahk_pid " PID  
@@ -5305,7 +5315,7 @@ Creates a GUI with an edit control and sent it some text.
  
 Code:
  
-```ahkv2
+```ahk
 MyGui := Gui()
 MyGui.Add("Edit", "r10 w500")
 MyGui.Show()
@@ -5322,7 +5332,7 @@ Causes the smallest possible delay to occur after each mouse movement or click.
  
 Code:
  
-```ahkv2
+```ahk
 SetMouseDelay 0
 ```
  
@@ -5335,7 +5345,7 @@ Types a two-line signature.
  
 Code:
  
-```ahkv2
+```ahk
 Send "Sincerely,{enter}John Smith"
 ```
  
@@ -5348,7 +5358,7 @@ Selects the File->Save menu (Alt+F followed by S).
  
 Code:
  
-```ahkv2
+```ahk
 Send "!fs"
 ```
  
@@ -5361,7 +5371,7 @@ Jumps to the end of the text then send four shift+left-arrow keystrokes.
  
 Code:
  
-```ahkv2
+```ahk
 Send "{End}+{Left 4}"
 ```
  
@@ -5374,7 +5384,7 @@ Sends a long series of raw characters via the fastest method.
  
 Code:
  
-```ahkv2
+```ahk
 SendInput "{Raw}A long series of raw characters sent via the fastest method."
 ```
  
@@ -5387,7 +5397,7 @@ Holds down a key contained in a variable.
  
 Code:
  
-```ahkv2
+```ahk
 MyKey := "Shift"
 Send "{" MyKey " down}"  
 ```
@@ -5401,7 +5411,7 @@ Closes unwanted windows whenever they appear.
  
 Code:
  
-```ahkv2
+```ahk
 SetTimer CloseMailWarnings, 250
 CloseMailWarnings()
 {
@@ -5419,7 +5429,7 @@ Waits for a certain window to appear and then alerts the user.
  
 Code:
  
-```ahkv2
+```ahk
 SetTimer Alert1, 500
 Alert1()
 {
@@ -5440,7 +5450,7 @@ Detects single, double, and triple-presses of a hotkey. This allows a hotkey to 
  
 Code:
  
-```ahkv2
+```ahk
 #c::
 KeyWinC(ThisHotkey)  
 {
@@ -5482,7 +5492,7 @@ Uses a method as the timer function.
  
 Code:
  
-```ahkv2
+```ahk
 counter := SecondCounter()
 counter.Start()
 Sleep 5000
@@ -5520,7 +5530,7 @@ Forces windowing functions to operate upon windows whose titles contain WinTitle
  
 Code:
  
-```ahkv2
+```ahk
 SetTitleMatchMode 1
 ```
  
@@ -5533,7 +5543,7 @@ Allows windowing functions to possibly detect more control types, but with lower
  
 Code:
  
-```ahkv2
+```ahk
 SetTitleMatchMode "Slow"
 ```
  
@@ -5546,7 +5556,7 @@ Use RegEx mode to easily exclude multiple windows. Replace the following Exclude
  
 Code:
  
-```ahkv2
+```ahk
 SetTitleMatchMode "RegEx"
 CountAll := WinGetCount()
 CountExcluded := WinGetCount(,, "ExcludeTitle1|ExcludeTitle2")
@@ -5562,7 +5572,7 @@ Opens Notepad and waits a maximum of 3 seconds until it exists. If WinWait times
  
 Code:
  
-```ahkv2
+```ahk
 Run "notepad.exe"
 if WinWait("Untitled - Notepad", , 3)
     WinMinimize 
@@ -5579,7 +5589,7 @@ Causes a delay of 10ms to occur after each windowing function.
  
 Code:
  
-```ahkv2
+```ahk
 SetWinDelay 10
 ```
  
@@ -5592,7 +5602,7 @@ If Notepad does exist, activate it, otherwise activate the calculator.
  
 Code:
  
-```ahkv2
+```ahk
 if WinExist("Untitled - Notepad")
     WinActivate 
 else
@@ -5608,7 +5618,7 @@ Changes the script's current working directory.
  
 Code:
  
-```ahkv2
+```ahk
 SetWorkingDir "D:\My Folder\Temp"
 ```
  
@@ -5621,7 +5631,7 @@ Forces the script to use the folder it was initially launched from as its workin
  
 Code:
  
-```ahkv2
+```ahk
 SetWorkingDir A_InitialWorkingDir
 ```
  
@@ -5634,7 +5644,7 @@ Waits 1 second before continuing execution.
  
 Code:
  
-```ahkv2
+```ahk
 Sleep 1000
 ```
  
@@ -5647,7 +5657,7 @@ Waits 30 minutes before continuing execution.
  
 Code:
  
-```ahkv2
+```ahk
 MyVar := 30 * 60000 
 Sleep MyVar 
 ```
@@ -5661,7 +5671,7 @@ Demonstrates how to sleep for less time than the normal 10 or 15.6 milliseconds.
  
 Code:
  
-```ahkv2
+```ahk
 SleepDuration := 1  
 TimePeriod := 3 
 DllCall("Winmm\timeBeginPeriod", "UInt", TimePeriod)  
@@ -5682,7 +5692,7 @@ Sorts a comma-separated list of numbers.
  
 Code:
  
-```ahkv2
+```ahk
 MyVar := "5,3,7,9,1,13,999,-4"
 MyVar := Sort(MyVar, "N D,")  
 MsgBox MyVar   
@@ -5697,7 +5707,7 @@ Sorts the contents of a file.
  
 Code:
  
-```ahkv2
+```ahk
 Contents := FileRead("C:\Address List.txt")
 FileDelete "C:\Address List (alphabetical).txt"
 FileAppend Sort(Contents), "C:\Address List (alphabetical).txt"
@@ -5713,7 +5723,7 @@ Makes a hotkey to copy files from an open Explorer window and put their sorted f
  
 Code:
  
-```ahkv2
+```ahk
 #c:: 
 {
     A_Clipboard := "" 
@@ -5733,7 +5743,7 @@ Demonstrates custom sorting via a callback function.
  
 Code:
  
-```ahkv2
+```ahk
 MyVar := "This`nis`nan`nexample`nstring`nto`nbe`nsorted"
 MsgBox Sort(MyVar,, LengthSort)
 LengthSort(a1, a2, *)
@@ -5766,7 +5776,7 @@ Plays the default pitch and duration.
  
 Code:
  
-```ahkv2
+```ahk
 SoundBeep
 ```
  
@@ -5779,7 +5789,7 @@ Plays a higher pitch for half a second.
  
 Code:
  
-```ahkv2
+```ahk
 SoundBeep 750, 500
 ```
  
@@ -5792,7 +5802,7 @@ Plays a .wav file located in the Windows directory.
  
 Code:
  
-```ahkv2
+```ahk
 SoundPlay A_WinDir "\Media\ding.wav"
 ```
  
@@ -5805,7 +5815,7 @@ Generates a simple beep.
  
 Code:
  
-```ahkv2
+```ahk
 SoundPlay "*-1"
 ```
  
@@ -5818,7 +5828,7 @@ Turns on the master mute.
  
 Code:
  
-```ahkv2
+```ahk
 SoundSetMute true
 ```
  
@@ -5831,7 +5841,7 @@ Turns off the master mute.
  
 Code:
  
-```ahkv2
+```ahk
 SoundSetMute false
 ```
  
@@ -5844,7 +5854,7 @@ Toggles the master mute (sets it to the opposite of its current state).
  
 Code:
  
-```ahkv2
+```ahk
 SoundSetMute -1
 ```
  
@@ -5857,7 +5867,7 @@ Mutes Line In.
  
 Code:
  
-```ahkv2
+```ahk
 SoundSetMute true, "Line In"
 ```
  
@@ -5870,7 +5880,7 @@ Mutes microphone recording.
  
 Code:
  
-```ahkv2
+```ahk
 SoundSetMute true,, "Microphone"
 ```
  
@@ -5883,7 +5893,7 @@ Sets the master volume to 50 percent. Quotation marks can be omitted.
  
 Code:
  
-```ahkv2
+```ahk
 SoundSetVolume "50"
 ```
  
@@ -5896,7 +5906,7 @@ Increases the master volume by 10 percent. Quotation marks cannot be omitted.
  
 Code:
  
-```ahkv2
+```ahk
 SoundSetVolume "+10"
 ```
  
@@ -5909,7 +5919,7 @@ Decreases the master volume by 10 percent. Quotation marks can be omitted.
  
 Code:
  
-```ahkv2
+```ahk
 SoundSetVolume "-10"
 ```
  
@@ -5922,7 +5932,7 @@ Increases microphone recording volume by 20 percent.
  
 Code:
  
-```ahkv2
+```ahk
 SoundSetVolume "+20", , "Microphone"
 ```
  
@@ -5935,7 +5945,7 @@ Demonstrates different usages.
  
 Code:
  
-```ahkv2
+```ahk
 FullFileName := "C:\My Documents\Address List.txt"
  
 SplitPath FullFileName, &name
@@ -5953,7 +5963,7 @@ Retrieves and analyzes the text from the first part of a status bar.
  
 Code:
  
-```ahkv2
+```ahk
 RetrievedText := StatusBarGetText(1, "Search Results")
 if InStr(RetrievedText, "found")
     MsgBox "Search results have been found."
@@ -5968,7 +5978,7 @@ Enters a new search pattern into an existing Explorer/Search window.
  
 Code:
  
-```ahkv2
+```ahk
 if WinExist("Search Results") 
 {
     WinActivate
@@ -5990,7 +6000,7 @@ Waits for the status bar of the active window to change.
  
 Code:
  
-```ahkv2
+```ahk
 SetTitleMatchMode "RegEx"  
 if WinExist("A")  
 {
@@ -6008,7 +6018,7 @@ Demonstrates the difference between a case-insensitive and case-sensitive compar
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox StrCompare("Abc", "abc") 
 MsgBox StrCompare("Abc", "abc", true) 
 ```
@@ -6022,7 +6032,7 @@ Either  or  may be specified directly after , but in those cases  must be non-nu
  
 Code:
  
-```ahkv2
+```ahk
 str := StrGet(address, "cp0")  
 str := StrGet(address, n, 0)   
 str := StrGet(address, 0)      
@@ -6037,7 +6047,7 @@ Retrieves and reports the count of how many characters are in a string.
  
 Code:
  
-```ahkv2
+```ahk
 StrValue := "The quick brown fox jumps over the lazy dog"
 MsgBox "The length of the string is " StrLen(StrValue) 
 ```
@@ -6051,7 +6061,7 @@ Converts the string to lowercase and stores "this is a test." in String1.
  
 Code:
  
-```ahkv2
+```ahk
 String1 := "This is a test."
 String1 := StrLower(String1)  
 ```
@@ -6065,7 +6075,7 @@ Converts the string to uppercase and stores "THIS IS A TEST." in String2.
  
 Code:
  
-```ahkv2
+```ahk
 String2 := "This is a test."
 String2 := StrUpper(String2)
 ```
@@ -6079,7 +6089,7 @@ Converts the string to title case and stores "This Is A Test." in String3.
  
 Code:
  
-```ahkv2
+```ahk
 String3 := "This is a test."
 String3 := StrTitle(String3)
 ```
@@ -6093,7 +6103,7 @@ Removes all CR-LF pairs from the clipboard contents.
  
 Code:
  
-```ahkv2
+```ahk
 A_Clipboard := StrReplace(A_Clipboard, "`r`n")
 ```
  
@@ -6106,7 +6116,7 @@ Replaces all spaces with pluses.
  
 Code:
  
-```ahkv2
+```ahk
 NewStr := StrReplace(OldStr, A_Space, "+")
 ```
  
@@ -6119,7 +6129,7 @@ Removes all blank lines from the text in a variable.
  
 Code:
  
-```ahkv2
+```ahk
 Loop
 {
     MyString := StrReplace(MyString, "`r`n`r`n", "`r`n",, &Count)
@@ -6137,7 +6147,7 @@ Separates a sentence into an array of words and reports the fourth word.
  
 Code:
  
-```ahkv2
+```ahk
 TestString := "This is a test."
 word_array := StrSplit(TestString, A_Space, ".")  
 MsgBox "The 4th word is " word_array[4]
@@ -6152,7 +6162,7 @@ Separates a comma-separated list of colors into an array of substrings and trave
  
 Code:
  
-```ahkv2
+```ahk
 colors := "red,green,blue"
 For index, color in StrSplit(colors, ",")
     MsgBox "Color number " index " is " color
@@ -6167,7 +6177,7 @@ Retrieves a substring with a length of 3 characters at position 4.
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox SubStr("123abc789", 4, 3) 
 ```
  
@@ -6180,7 +6190,7 @@ Retrieves a substring from the beginning and end of a string.
  
 Code:
  
-```ahkv2
+```ahk
 Str := "The Quick Brown Fox Jumps Over the Lazy Dog"
 MsgBox SubStr(Str, 1, 19)  
 MsgBox SubStr(Str, -8)  
@@ -6195,7 +6205,7 @@ Press a hotkey once to suspend all hotkeys and hotstrings. Press it again to uns
  
 Code:
  
-```ahkv2
+```ahk
 #SuspendExempt
 ^!s::Suspend  
 #SuspendExempt False
@@ -6210,7 +6220,7 @@ Sends a Suspend command to another script.
  
 Code:
  
-```ahkv2
+```ahk
 DetectHiddenWindows True
 WM_COMMAND := 0x0111
 ID_FILE_SUSPEND := 65404
@@ -6226,7 +6236,7 @@ Compares a number with multiple cases and shows the message box of the first mat
  
 Code:
  
-```ahkv2
+```ahk
 switch 2
 {
 case 1: MsgBox "no match"
@@ -6244,7 +6254,7 @@ The  parameter can be omitted to execute the first case which evaluates to true.
  
 Code:
  
-```ahkv2
+```ahk
 str := "The quick brown fox jumps over the lazy dog"
 switch
 {
@@ -6263,7 +6273,7 @@ To test this example, type [ followed by one of the abbreviations listed below, 
  
 Code:
  
-```ahkv2
+```ahk
 ~[::
 {
     ih := InputHook("V T5 L4 C", "{enter}.{esc}{tab}", "btw,otoh,fl,ahk,ca")
@@ -6301,7 +6311,7 @@ Closes unwanted windows whenever they appear.
  
 Code:
  
-```ahkv2
+```ahk
 SetTimer CloseMailWarnings, 250
 CloseMailWarnings()
 {
@@ -6319,7 +6329,7 @@ Waits for a certain window to appear and then alerts the user.
  
 Code:
  
-```ahkv2
+```ahk
 SetTimer Alert1, 500
 Alert1()
 {
@@ -6340,7 +6350,7 @@ Detects single, double, and triple-presses of a hotkey. This allows a hotkey to 
  
 Code:
  
-```ahkv2
+```ahk
 #c::
 KeyWinC(ThisHotkey)  
 {
@@ -6382,7 +6392,7 @@ Uses a method as the timer function.
  
 Code:
  
-```ahkv2
+```ahk
 counter := SecondCounter()
 counter.Start()
 Sleep 5000
@@ -6420,7 +6430,7 @@ Demonstrates the basic concept of  and .
  
 Code:
  
-```ahkv2
+```ahk
 try  
 {
     HelloWorld
@@ -6451,7 +6461,7 @@ Demonstrates basic error handling of built-in functions.
  
 Code:
  
-```ahkv2
+```ahk
 try
 {
  
@@ -6480,7 +6490,7 @@ Demonstrates the use of  dealing with COM errors. For details about the COM obje
  
 Code:
  
-```ahkv2
+```ahk
 try
 {
     obj := ComObject("ScriptControl")
@@ -6508,7 +6518,7 @@ Demonstrates nesting  statements.
  
 Code:
  
-```ahkv2
+```ahk
 try Example1 
 catch Number as e
     MsgBox "Example1() threw " e
@@ -6538,7 +6548,7 @@ Shows a multiline tooltip at a specific position in the active window.
  
 Code:
  
-```ahkv2
+```ahk
 ToolTip "Multiline`nTooltip", 100, 150
 ```
  
@@ -6551,7 +6561,7 @@ Hides a tooltip after a certain amount of time without having to use Sleep (whic
  
 Code:
  
-```ahkv2
+```ahk
 ToolTip "Timed ToolTip`nThis will be displayed for 5 seconds."
 SetTimer () => ToolTip(), -5000
 ```
@@ -6565,7 +6575,7 @@ Trims all spaces from the left and right side of a string.
  
 Code:
  
-```ahkv2
+```ahk
 text := "  text  "
 MsgBox
 (
@@ -6585,7 +6595,7 @@ Trims all zeros from the left side of a string.
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox LTrim("00000123", "0")
 ```
  
@@ -6598,7 +6608,7 @@ Retrieves and reports the exact type of the values stored in a, b and c.
  
 Code:
  
-```ahkv2
+```ahk
 a := 1, b := 2.0, c := "3"
 MsgBox Type(a)  
 MsgBox Type(b)  
@@ -6614,7 +6624,7 @@ Turns off the monitor via hotkey. In the SendMessage line, replace the number 2 
  
 Code:
  
-```ahkv2
+```ahk
 #o::  
 {
     Sleep 1000  
@@ -6631,7 +6641,7 @@ Starts the user's chosen screen saver.
  
 Code:
  
-```ahkv2
+```ahk
 SendMessage 0x0112, 0xF140, 0,, "Program Manager"  
 ```
  
@@ -6644,7 +6654,7 @@ Scrolls up by one line (for a control that has a vertical scroll bar).
  
 Code:
  
-```ahkv2
+```ahk
 SendMessage 0x0115, 0, 0, ControlGetFocus("A")
 ```
  
@@ -6657,7 +6667,7 @@ Scrolls down by one line (for a control that has a vertical scroll bar).
  
 Code:
  
-```ahkv2
+```ahk
 SendMessage 0x0115, 1, 0, ControlGetFocus("A")
 ```
  
@@ -6670,7 +6680,7 @@ Asks Winamp which track number is currently active (see Automating Winamp for mo
  
 Code:
  
-```ahkv2
+```ahk
 SetTitleMatchMode 2
 TrackNumber := SendMessage(0x0400, 0, 120,, "- Winamp")
 TrackNumber++  
@@ -6686,7 +6696,7 @@ Finds the process ID of an AHK script (an alternative to WinGetPID).
  
 Code:
  
-```ahkv2
+```ahk
 SetTitleMatchMode 2
 DetectHiddenWindows true
 PID := SendMessage(0x0044, 0x405, 0, , "SomeOtherScript.ahk - AutoHotkey v")
@@ -6702,7 +6712,7 @@ As the user drags the left mouse button, a tooltip displays the size of the regi
  
 Code:
  
-```ahkv2
+```ahk
 CoordMode "Mouse", "Screen"
 ~LButton::
 {
@@ -6726,7 +6736,7 @@ Closes either Notepad or another window, depending on which of them was found by
  
 Code:
  
-```ahkv2
+```ahk
 if WinActive("ahk_class Notepad") or WinActive("ahk_class" ClassName)
     WinClose 
 ```
@@ -6740,7 +6750,7 @@ If Notepad does exist, close it, otherwise close the calculator.
  
 Code:
  
-```ahkv2
+```ahk
 if WinExist("Untitled - Notepad")
     WinClose 
 else
@@ -6756,7 +6766,7 @@ Activates either Notepad or another window, depending on which of them was found
  
 Code:
  
-```ahkv2
+```ahk
 if WinExist("ahk_class Notepad") or WinExist("ahk_class" ClassName)
     WinActivate 
 ```
@@ -6770,7 +6780,7 @@ Retrieves and reports the unique ID (HWND) of the active window.
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox "The active window's ID is " WinExist("A")
 ```
  
@@ -6783,7 +6793,7 @@ Returns if the calculator does not exist.
  
 Code:
  
-```ahkv2
+```ahk
 if not WinExist("Calculator")
     return
 ```
@@ -6797,7 +6807,7 @@ Retrieves and reports the class name of the active window.
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox "The active window's class is " WinGetClass("A")
 ```
  
@@ -6810,7 +6820,7 @@ Retrieves and reports the position and size of the calculator's client area.
  
 Code:
  
-```ahkv2
+```ahk
 WinGetClientPos &X, &Y, &W, &H, "Calculator"
 MsgBox "Calculator's client area is at " X "," Y " and its size is " W "x" H
 ```
@@ -6824,7 +6834,7 @@ Retrieves and reports the position of the active window's client area.
  
 Code:
  
-```ahkv2
+```ahk
 WinGetClientPos &X, &Y,,, "A"
 MsgBox "The active window's client area is at " X "," Y
 ```
@@ -6838,7 +6848,7 @@ If Notepad does exist, retrieve and report the position of its client area.
  
 Code:
  
-```ahkv2
+```ahk
 if WinExist("Untitled - Notepad")
 {
     WinGetClientPos &Xpos, &Ypos 
@@ -6855,7 +6865,7 @@ Extracts the individual control names from the active window's control list.
  
 Code:
  
-```ahkv2
+```ahk
 for n, ctrl in WinGetControls("A")
 {
     Result := MsgBox("Control #" n " is '" ctrl "'. Continue?",, 4)
@@ -6873,7 +6883,7 @@ Displays in real time the active window's control list.
  
 Code:
  
-```ahkv2
+```ahk
 SetTimer WatchActiveWindow, 200
 WatchActiveWindow()
 {
@@ -6902,7 +6912,7 @@ Maximizes the active window and reports its unique ID.
  
 Code:
  
-```ahkv2
+```ahk
 active_id := WinGetID("A")
 WinMaximize active_id
 MsgBox "The active window's ID is " active_id
@@ -6917,7 +6927,7 @@ Visits all windows on the entire system and displays info about each of them.
  
 Code:
  
-```ahkv2
+```ahk
 ids := WinGetList(,, "Program Manager")
 for this_id in ids
 {
@@ -6947,7 +6957,7 @@ Retrieves and reports the position and size of the calculator.
  
 Code:
  
-```ahkv2
+```ahk
 WinGetPos &X, &Y, &W, &H, "Calculator"
 MsgBox "Calculator is at " X "," Y " and its size is " W "x" H
 ```
@@ -6961,7 +6971,7 @@ Retrieves and reports the position of the active window.
  
 Code:
  
-```ahkv2
+```ahk
 WinGetPos &X, &Y,,, "A"
 MsgBox "The active window is at " X "," Y
 ```
@@ -6975,7 +6985,7 @@ If Notepad does exist, retrieve and report its position.
  
 Code:
  
-```ahkv2
+```ahk
 if WinExist("Untitled - Notepad")
 {
     WinGetPos &Xpos, &Ypos 
@@ -6992,7 +7002,7 @@ Opens the calculator, waits until it exists, and retrieves and reports its text.
  
 Code:
  
-```ahkv2
+```ahk
 Run "calc.exe"
 WinWait "Calculator"
 MsgBox "The text is:`n" WinGetText() 
@@ -7007,7 +7017,7 @@ Retrieves and reports the title of the active window.
  
 Code:
  
-```ahkv2
+```ahk
 MsgBox "The active window is '" WinGetTitle("A") "'."
 ```
  
@@ -7020,7 +7030,7 @@ Retrieves the transparent color of a window under the mouse cursor.
  
 Code:
  
-```ahkv2
+```ahk
 MouseGetPos ,, &MouseWin
 TransColor := WinGetTransColor(MouseWin)
 ```
@@ -7034,7 +7044,7 @@ Retrieves the degree of transparency of the window under the mouse cursor.
  
 Code:
  
-```ahkv2
+```ahk
 MouseGetPos ,, &MouseWin
 TransDegree := WinGetTransparent(MouseWin)
 ```
@@ -7048,7 +7058,7 @@ Opens Notepad, waits until it exists, hides it for a short time and unhides it.
  
 Code:
  
-```ahkv2
+```ahk
 Run "notepad.exe"
 WinWait "Untitled - Notepad"
 Sleep 500
@@ -7066,7 +7076,7 @@ Temporarily hides the taskbar.
  
 Code:
  
-```ahkv2
+```ahk
 WinHide "ahk_class Shell_TrayWnd"
 Sleep 1000
 WinShow "ahk_class Shell_TrayWnd"
@@ -7081,7 +7091,7 @@ Opens Notepad, waits until it exists and maximizes it.
  
 Code:
  
-```ahkv2
+```ahk
 Run "notepad.exe"
 WinWait "Untitled - Notepad"
 WinMaximize 
@@ -7096,7 +7106,7 @@ Press a hotkey to maximize the active window.
  
 Code:
  
-```ahkv2
+```ahk
 ^Up::WinMaximize "A"  
 ```
  
@@ -7109,7 +7119,7 @@ Opens Notepad, waits until it exists and minimizes it.
  
 Code:
  
-```ahkv2
+```ahk
 Run "notepad.exe"
 WinWait "Untitled - Notepad"
 WinMinimize 
@@ -7124,7 +7134,7 @@ Press a hotkey to minimize the active window.
  
 Code:
  
-```ahkv2
+```ahk
 ^Down::WinMinimize "A"  
 ```
  
@@ -7137,7 +7147,7 @@ Minimizes all windows for 1 second and unminimizes them.
  
 Code:
  
-```ahkv2
+```ahk
 WinMinimizeAll
 Sleep 1000
 WinMinimizeAllUndo
@@ -7152,7 +7162,7 @@ Opens the calculator, waits until it exists and moves it to the upper-left corne
  
 Code:
  
-```ahkv2
+```ahk
 Run "calc.exe"
 WinWait "Calculator"
 WinMove 0, 0 
@@ -7167,7 +7177,7 @@ Creates a fixed-size popup window that shows the contents of the clipboard, and 
  
 Code:
  
-```ahkv2
+```ahk
 MyGui := Gui("ToolWindow -Sysmenu Disabled", "The clipboard contains:")
 MyGui.Add("Text",, A_Clipboard)
 MyGui.Show("w400 h300")
@@ -7185,7 +7195,7 @@ Centers a window on the screen.
  
 Code:
  
-```ahkv2
+```ahk
 CenterWindow("ahk_class Notepad")
 CenterWindow(WinTitle)
 {
@@ -7203,7 +7213,7 @@ Unminimizes or unmaximizes Notepad if it is minimized or maximized.
  
 Code:
  
-```ahkv2
+```ahk
 WinRestore "Untitled - Notepad"
 ```
  
@@ -7216,7 +7226,7 @@ Toggles the always-on-top status of the calculator.
  
 Code:
  
-```ahkv2
+```ahk
 WinSetAlwaysOnTop -1, "Calculator"
 ```
  
@@ -7229,7 +7239,7 @@ Changes the title of Notepad. This example may fail on Windows 11 or later, as i
  
 Code:
  
-```ahkv2
+```ahk
 WinSetTitle("This is a new title", "Untitled - Notepad")
 ```
  
@@ -7242,7 +7252,7 @@ Opens Notepad, waits until it is active and changes its title. This example may 
  
 Code:
  
-```ahkv2
+```ahk
 Run "notepad.exe"
 WinWaitActive "Untitled - Notepad"
 WinSetTitle "This is a new title" 
@@ -7257,7 +7267,7 @@ Opens the main window, waits until it is active and changes its title.
  
 Code:
  
-```ahkv2
+```ahk
 ListVars
 WinWaitActive "ahk_class AutoHotkey"
 WinSetTitle "This is a new title" 
@@ -7272,7 +7282,7 @@ Makes all white pixels in Notepad invisible. This example may not work well with
  
 Code:
  
-```ahkv2
+```ahk
 WinSetTransColor "White", "Untitled - Notepad"
 ```
  
@@ -7285,7 +7295,7 @@ Makes Notepad a little bit transparent.
  
 Code:
  
-```ahkv2
+```ahk
 WinSetTransparent 200, "Untitled - Notepad"
 ```
  
@@ -7298,7 +7308,7 @@ Makes the classic Start Menu transparent (to additionally make the Start Menu's 
  
 Code:
  
-```ahkv2
+```ahk
 DetectHiddenWindows True
 WinSetTransparent 150, "ahk_class BaseBar"
 ```
@@ -7312,7 +7322,7 @@ Makes all or selected menus transparent throughout the system as soon as they ap
  
 Code:
  
-```ahkv2
+```ahk
 SetTimer WatchForMenu, 5
 WatchForMenu()
 {
@@ -7331,7 +7341,7 @@ Demonstrates the effects of WinSetTransparent and WinSetTransColor. Note: If you
  
 Code:
  
-```ahkv2
+```ahk
 #t::  
 {
     MouseGetPos &MouseX, &MouseY, &MouseWin
@@ -7363,7 +7373,7 @@ Opens Notepad, waits until it exists, hides it for a short time and unhides it.
  
 Code:
  
-```ahkv2
+```ahk
 Run "notepad.exe"
 WinWait "Untitled - Notepad"
 Sleep 500
@@ -7381,7 +7391,7 @@ Opens Notepad and waits a maximum of 3 seconds until it exists. If WinWait times
  
 Code:
  
-```ahkv2
+```ahk
 Run "notepad.exe"
 if WinWait("Untitled - Notepad", , 3)
     WinMinimize 
@@ -7398,7 +7408,7 @@ Opens Notepad and waits a maximum of 2 seconds until it is active. If WinWait ti
  
 Code:
  
-```ahkv2
+```ahk
 Run "notepad.exe"
 if WinWaitActive("Untitled - Notepad", , 2)
     WinMinimize 
@@ -7415,7 +7425,7 @@ Opens Notepad, waits until it exists and then waits until it is closed.
  
 Code:
  
-```ahkv2
+```ahk
 Run "notepad.exe"
 WinWait "Untitled - Notepad"
 WinWaitClose 

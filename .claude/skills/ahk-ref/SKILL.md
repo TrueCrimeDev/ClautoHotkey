@@ -14,11 +14,14 @@ description: >
 
 When this skill is invoked, load the following module files:
 
-1. **Read** `Modules/Supplemental/Module_All.md` — Unified reference covering ALL AHK v2 domains
-2. **Read** `Modules/Module_Instructions.md` — Core instruction framework, cognitive tiers, module routing
-3. **Read** `Modules/Module_DataStructures.md` — Map usage, structured data, code organization
-4. **Read** `Modules/Supplemental/Module_Keywords.md` — Keyword reference and language constructs
-5. **Read** `Modules/Supplemental/Module_JSDOC.md` — JSDoc documentation conventions for AHK v2 (load when documenting code)
+1. **Read** `Modules/Module_Instructions.md` — the baseline: engineering standards, syntax
+   rules, the keyword and directive reference, and the diagnostic checklist
+2. **Read** `Modules/Module_DataStructures.md` — Map usage, nested containers, structured data
+3. **Read** `Modules/Supplemental/Module_Formatting.md` — the house formatting standard
+4. **Read** `Modules/Supplemental/Module_FatArrows.md` — fat-arrow limits, callbacks, `.Bind()`
+5. **Read** `Modules/Supplemental/Module_JSDOC.md` — JSDoc conventions (load when documenting code)
+6. **Read** `Modules/Supplemental/Module_MiniExamples.md` — a corpus of official-documentation
+   examples; grep it for a known-good use of a specific built-in rather than reading it whole
 
 ## Module Routing Table
 
@@ -40,13 +43,13 @@ COMPARISON:       if (x = value) or if (x == value) (case-sensitive)
 CONCATENATION:    str := "a" . "b"
 TERNARY:          result := condition ? trueVal : falseVal
 OBJECT CREATE:    obj := MyClass()
-MAP CREATE:       m := Map("key", "value")
+MAP CREATE:       m := Map(), m["key"] := "value"   (never constructor pairs)
 ARRAY CREATE:     arr := ["a", "b", "c"]
 FUNCTION DEF:     MyFunc(param1, param2?) { }
 FAT ARROW:        prop => this.value (SINGLE LINE ONLY)
 FOR LOOP:         for key, value in collection
 INCLUDE:          #Include "path/file.ahk" or #Include <LibName>
-REQUIRES:         #Requires AutoHotkey v2.0
+REQUIRES:         #Requires AutoHotkey v2.1-alpha.30
 HOTKEY:           ^s:: { ... } (Ctrl+S)
 HOTSTRING:        ::btw::by the way
 ```
@@ -54,7 +57,7 @@ HOTSTRING:        ::btw::by the way
 ## File Organization Pattern
 
 ```
-#Requires AutoHotkey v2.0
+#Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
 #Include <Array>        ; Lib folder includes
 
@@ -81,5 +84,5 @@ items := ["first", "second", "third"]
 
 ; NEVER use object literals for data storage
 ; WRONG: config := {theme: "dark"}
-; RIGHT: config := Map("theme", "dark")
+; RIGHT: config := Map(), config["theme"] := "dark"
 ```

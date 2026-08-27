@@ -1,11 +1,13 @@
 ---
 name: Module_DataStructures
-description: 'Deep copy via DeepClone, functional Map/Filter/Reduce helpers, Sort algorithms, and set
-  operations (Union/Intersection/Difference) are not covered here — see Module_Arrays.md. TRIGGER when
-  the request involves: Array, Map, Push, Pop, InsertAt, RemoveAt, Delete, Has, Get, Set, Clear, Clone,
-  Count, Length, Capacity, CaseSense, Default, __Enum, "key-value", "dictionary", "list", "collection",
-  "store ordered items", "store named settings", "iterate all elements", "check key existence", "case-insensitive
-  lookup", "nested data", "data storage"'
+description: 'Key-value storage in AHK v2 — Map construction and safe access, CaseSense and Default,
+  mutation and cloning, Map enumeration and prototype extension, nested Array-of-Map structures, static
+  class Maps, and UnsetItemError handling. TRIGGER when the request involves: Map, Delete, Has, Get, Set,
+  Clear, Clone, Count, Capacity, CaseSense, Default, __Enum, "key-value", "dictionary", "store named
+  settings", "iterate all elements", "check key existence", "case-insensitive lookup", "nested data",
+  "data storage", "Map of Maps", "Map of Arrays", "nested Map", "chained key access", "instance Map
+  field", "registry", "lazy initialization", "cache", "event handler table". Not covered: the Array API, functional Map/Filter/Reduce helpers, DeepClone, Sort
+  algorithms, and set operations (Union/Intersection/Difference) — see Module_Arrays.md.'
 ---
 
 # Module_DataStructures
@@ -13,18 +15,8 @@ description: 'Deep copy via DeepClone, functional Map/Filter/Reduce helpers, Sor
 ## API QUICK-REFERENCE
 
 ### Array
-| Method/Property | Signature | Notes |
-|----------------|-----------|-------|
-| `.Push()` | `.Push(val1, val2, ...)` | Append one or more values; no return value |
-| `.Pop()` | `.Pop()` | Remove and return last element; throws if empty |
-| `.InsertAt()` | `.InsertAt(index, val1, ...)` | Insert at position, shifting existing elements right |
-| `.RemoveAt()` | `.RemoveAt(index, length?)` | Remove one or more elements shifting left; returns removed value when length omitted |
-| `.Delete()` | `.Delete(index)` | Clear element value without changing Length — element becomes unset, not removed |
-| `.Has()` | `.Has(index)` | True only if index is within bounds AND the element has a value (not unset) |
-| `.Get()` | `.Get(index, default)` | Return default if element is unset (index must be in range); throws IndexError for zero or out-of-range index |
-| `.Clone()` | `.Clone()` | Shallow copy — nested Array/Map objects share the same reference |
-| `.Capacity` | `.Capacity` | Read or pre-set the number of allocated slots to avoid repeated reallocation |
-| `.Length` | `.Length` | Current element count (read-write — truncates or extends the array) |
+
+The Array API (`.Push` / `.Pop` / `.InsertAt` / `.RemoveAt` / `.Delete` / `.Has` / `.Get` / `.Clone` / `.Capacity` / `.Length`), 1-based indexing rules, and the Array safe-access ladder are owned by **Module_Arrays.md** — this module covers Arrays only where they nest inside or alongside Maps.
 
 ### Map
 | Method/Property | Signature | Notes |
@@ -53,6 +45,8 @@ description: 'Deep copy via DeepClone, functional Map/Filter/Reduce helpers, Sor
 
 - ✗ `arr[0]` — `IndexError` always; zero is not a valid Array index in AHK v2
 - ✓ `arr[1]` for first element, `arr[-1]` for last — negative indices are valid and idiomatic
+  (Array indexing rules are owned by Module_Arrays.md; repeated here only because the
+  Map-vs-Array choice below depends on them.)
 
 - ✗ `m.CaseSense := "Off"` after key insertion — throws an exception; internal sorted array already built
 - ✓ Set `CaseSense` on an empty Map before the first key is inserted
@@ -65,15 +59,19 @@ description: 'Deep copy via DeepClone, functional Map/Filter/Reduce helpers, Sor
 
 - Float keys in Map are silently converted to String — never rely on float key identity for equality checks (e.g., `m[1.0]` and `m["1.0"]` refer to the same slot)
 
-- `Array.Delete(index)` clears the element value but does NOT change `.Length` — the slot remains, now unset; use `.RemoveAt(index)` when you need the array to shrink
+- `Array.Delete(index)` clears the element value but does NOT change `.Length` — the slot remains, now unset; use `.RemoveAt(index)` when you need the array to shrink (full Array API: Module_Arrays.md)
 
 - Map has no built-in `.Keys()` method — iterate with `for k in map` or add `.Keys()` via `Map.Prototype.DefineProp` as shown in TIER 4
 
-Safe-access priority order for Array and Map:
-  1. `.Get(key/index, default)` — one-line resolution; for Map, never throws; for Array, returns default only for in-range unset elements — still throws IndexError for out-of-range access; preferred default for unset-element access
-  2. `.Has(key/index)` — when if/else branch logic genuinely differs for present vs absent
-  3. `.Default` — when the entire Map or Array needs a universal fallback for all absent accesses
-  4. `try/catch IndexError / UnsetItemError` — only when the exception message itself carries diagnostic information not available otherwise
+- ✗ `m["outer"]["inner"]` unguarded — a chained lookup has two independent `UnsetItemError` sites; guard the outer key with `.Has()` first, or chain `.Get("outer", Map()).Get("inner", fallback)`
+
+- A class-body initializer (`handlers := Map()`) and any `this.x := ...` in `__New` both route through `__Set` — in a class that defines `__Set`, initialise the backing store with `this.DefineProp("_data", { value: Map() })` instead
+
+Safe-access priority order for Map keys (the Array ladder lives in Module_Arrays.md):
+  1. `.Get(key, default)` — one-line resolution; never throws; preferred default for absent-key access
+  2. `.Has(key)` — when if/else branch logic genuinely differs for present vs absent
+  3. `.Default` — when the entire Map needs a universal fallback for all absent accesses
+  4. `try/catch UnsetItemError` — only when the exception message itself carries diagnostic information not available otherwise
 
 ## TIER 1 — Data Storage Fundamentals: Map vs Object Literal; Choosing Array vs Map
 > METHODS COVERED: Map() · Array · [] literal
@@ -107,83 +105,21 @@ class AppConfig {
 ; Array vs Map selection reference:
 ; Need                         | Use   | Example
 ; Ordered sequence             | Array | steps := ["init", "run", "cleanup"]
-; Named/keyed lookup           | Map   | cfg := Map(), cfg["host"] := "localhost"
+; Named/keyed lookup           | Map   | cfg := Map() then cfg["host"] := "localhost"
 ; Integer index, 1-based       | Array | arr[1], arr[-1]
 ; Any-typed key                | Map   | m["key"], m[42], m[objRef]
 ; Push / Pop stack behaviour   | Array | arr.Push(x) / arr.Pop()
 ; Dynamic key enumeration      | Map   | for k, v in myMap
 ```
 
-## TIER 2 — Array Construction, Mutation, and Safe Access
-> METHODS COVERED: Push · Pop · InsertAt · RemoveAt · Delete · Has · Get · Clone · Capacity · Length
+## TIER 2 — Array Handling: Delegated to Module_Arrays
+> METHODS COVERED: (none — the Array API is owned by Module_Arrays.md)
 
-Arrays are 1-based ordered sequences. Out-of-bounds access (including index 0) throws `IndexError`. Negative indices (`arr[-1]` = last, `arr[-2]` = second-last) are valid and idiomatic. `Delete()` unsets a value without shrinking the array; `RemoveAt()` shifts elements and shrinks.
+Arrays are 1-based ordered sequences and the correct container whenever access is positional. Their construction, mutation, safe access, cloning, capacity pre-allocation, and error ladder are taught in full — and maintained in one place — in `Module_Arrays.md`. Reach for this module instead the moment the data is keyed by name rather than by position, or when an Array holds `Map()` records (TIER 5).
 ```ahk
-; ✓ Array literal and constructor — both are valid
-fruits := ["apple", "banana", "orange"]
-nums   := Array(10, 20, 30)
-
-; ✓ Positive and negative indexing — negative indices avoid computing Length manually
-MsgBox(fruits[1])    ; "apple"
-MsgBox(fruits[-1])   ; "orange"  (last element)
-MsgBox(fruits[-2])   ; "banana"  (second-last)
-MsgBox(fruits.Length) ; 3
-
-; ✗ Zero-based access — IndexError always thrown; zero slot does not exist
-; MsgBox(fruits[0])   ; → IndexError
-
-; Mutation methods
-
-arr := ["A", "B", "C"]
-
-; ✓ Push — append one or more values
-arr.Push("D", "E")        ; ["A","B","C","D","E"]
-
-; ✓ Pop — remove and return last element
-last := arr.Pop()         ; last = "E", arr = ["A","B","C","D"]
-
-; ✓ InsertAt — insert at specific position (shifts right)
-arr.InsertAt(2, "X")      ; ["A","X","B","C","D"]
-
-; ✓ RemoveAt — remove one element (shifts left), returns removed value
-removed := arr.RemoveAt(2)  ; removed = "X", arr = ["A","B","C","D"]
-
-; ✓ RemoveAt with length — remove a range (no return value when length given)
-arr.RemoveAt(2, 2)          ; removes indices 2–3, arr = ["A","D"]
-
-; ✓ Delete — clears element value without changing Length (slot becomes unset)
-arr.Delete(1)               ; arr[1] has no value, Length unchanged
-
-; Safe access
-
-arr2 := ["alpha", , "gamma"]  ; index 2 has no value (unset)
-
-; ✓ Has — true only if index is in range AND element has a value
-MsgBox(arr2.Has(1))   ; 1 (true)
-MsgBox(arr2.Has(2))   ; 0 (false — unset element)
-MsgBox(arr2.Has(99))  ; 0 (false — out of range)
-
-; ✓ Get — returns default when element is unset (index in range); still throws IndexError for out-of-range index
-val := arr2.Get(2, "default")   ; "default"
-val := arr2.Get(1, "default")   ; "alpha"
-
-; ✓ Default property — global fallback for every unset access on this array
-arr2.Default := "N/A"
-MsgBox(arr2[2])   ; "N/A"  (no UnsetItemError)
-
-; Clone and Capacity
-
-; ✓ Clone — shallow copy; mutations to the copy do not affect the original's structure
-original := [1, 2, 3]
-copy := original.Clone()
-copy.Push(4)
-MsgBox(original.Length)    ; still 3
-
-; ✓ Capacity — pre-allocate to avoid repeated memory reallocation in bulk loops
-bigArr := Array()
-bigArr.Capacity := 1000
-Loop 1000
-    bigArr.Push(A_Index)
+; Full Array API and safe-access ladder → Module_Arrays.md
+;   .Push · .Pop · .InsertAt · .RemoveAt · .Delete · .Has · .Get · .Clone · .Capacity · .Length,
+;   1-based and negative indexing, IndexError rules, and the functional helpers all live there.
 ```
 
 ## TIER 3 — Map Construction, Safe Access, Mutation, and CaseSense
@@ -493,41 +429,11 @@ Loop len
 
 **Method preference.** Always prefer built-in methods (`.Push`, `.Set`, `.Get`, `.Has`) over custom reimplementations — built-ins are implemented in C++ and incur no AHK parse overhead.
 
-## TIER 6 — Error Handling: IndexError, UnsetItemError, Defensive Guards
-> METHODS COVERED: Get · Has · Default · try/catch IndexError · UnsetItemError
+## TIER 6 — Map Error Handling: UnsetItemError and Defensive Guards
+> METHODS COVERED: Get · Has · Default · try/catch UnsetItemError
 
-AHK v2 throws `IndexError` for out-of-bounds Array access (including index 0) and `UnsetItemError` for accessing an absent Map key or an unset Array element. Prefer `.Get(index/key, default)` over `try/catch` for simple fallback scenarios — it is faster and more readable. Use `try/catch` only when the exception message carries diagnostic information not otherwise available.
+AHK v2 throws `UnsetItemError` when an absent Map key is read through bracket access and no `.Default` is set. Prefer `.Get(key, default)` over `try/catch` for simple fallback scenarios — it is faster and more readable. Use `try/catch` only when the exception message carries diagnostic information not otherwise available. (Array `IndexError` handling is covered in `Module_Arrays.md`.)
 ```ahk
-; Array error handling
-
-arr := ["a", "b", "c"]
-
-; ✓ Helper function for multi-condition safe access (bounds + unset check)
-SafeGet(arr, index, default := "") {
-    if (index >= 1 && index <= arr.Length && arr.Has(index))
-        return arr[index]
-    return default
-}
-
-MsgBox(SafeGet(arr, 2))     ; "b"
-MsgBox(SafeGet(arr, 99))    ; ""  (no IndexError)
-
-; ✓ Built-in Get() returns default for in-range unset elements; still throws IndexError for out-of-range
-arr2 := ["a", , "c"]            ; element 2 is unset
-val := arr2.Get(2, "fallback")   ; "fallback" (unset in-range element)
-
-; ✓ try/catch for diagnostic recovery when error detail matters
-try {
-    MsgBox(arr[0])   ; IndexError — zero is never valid
-} catch IndexError as e {
-    MsgBox("Index error: " . e.Message)
-}
-
-; ✗ Unguarded access — IndexError thrown immediately
-; MsgBox(arr[0])    ; → IndexError
-
-; Map error handling
-
 cfg := Map()
 cfg["host"] := "localhost"
 cfg["port"] := 5432
@@ -556,6 +462,86 @@ try {
 ; val := cfg["nonexistent"]   ; → UnsetItemError
 ```
 
+## TIER 7 — Nested Map Composition: Map-of-Map, Map-of-Array, and Instance Map Fields
+> METHODS COVERED: Map() · Has · Get · Push · DefineProp
+
+TIER 5 nests Maps inside an Array (ordered rows of named fields). The mirror case is nesting *inside a Map*: a Map value that is itself a `Map()` (a settings branch, a cache entry) or an `Array` (all handlers registered for one event). Chained bracket access reads naturally but throws at two levels, so guard the outer key before descending — or chain `.Get()` with an empty `Map()` as the stand-in branch.
+
+A Map declared in the class body (`handlers := Map()`) is an *instance* field: every object gets its own store, unlike the `static` lookup tables in TIER 5. Reach for an instance Map for per-object registries and caches, and for `static` only when the table is genuinely shared by the whole class. Both a class-body initializer and a `this.x := ...` assignment in `__New` route through `__Set`; in a class that defines `__Set`, create the backing store with `this.DefineProp("_data", { value: Map() })` so the meta-function is bypassed.
+```ahk
+; Map inside a Map — the inner value is itself a Map, reached by chained brackets
+
+cache := Map()
+
+prefs := Map()
+prefs["theme"]    := "dark"
+prefs["fontSize"] := 12
+
+cache["user_prefs"]   := prefs
+cache["recent_files"] := ["doc1.txt", "doc2.txt"]
+
+; ✓ Guard the outer key first — a chained access has two independent throw sites
+if cache.Has("user_prefs")
+    MsgBox(cache["user_prefs"]["theme"])   ; "dark"
+
+; ✓ Get() chains safely — an empty Map() stands in for the missing branch
+theme := cache.Get("user_prefs", Map()).Get("theme", "light")
+
+; ✗ Chained bare access — two UnsetItemError sites in one expression
+; MsgBox(cache["missing"]["theme"])
+
+; Map of Arrays — lazy-initialise the inner Array on first use
+
+class EventEmitter {
+    handlers := Map()          ; instance field: one Map per emitter
+
+    On(event, callback) {
+        if !this.handlers.Has(event)
+            this.handlers[event] := []      ; create the bucket on first subscriber
+        this.handlers[event].Push(callback)
+    }
+
+    Emit(event, data?) {
+        if !this.handlers.Has(event)
+            return
+        for callback in this.handlers[event]
+            callback(data?)
+    }
+}
+
+; Instance Map field vs static Map — a registry per object, not per class
+
+class WindowRegistry {
+    windows := Map()
+
+    __New() {
+        this.windows["main"]     := Gui("+Resize", "Main")
+        this.windows["settings"] := Gui("+Resize", "Settings")
+    }
+
+    Show(name) {
+        if !this.windows.Has(name)
+            throw ValueError("No window registered under that name", -1, name)
+        this.windows[name].Show()
+    }
+}
+
+; ✓ __Set-safe initialisation — bypasses the meta-function when the class defines one
+class SafeStore {
+    __New() {
+        this.DefineProp("_data", { value: Map() })
+    }
+
+    __Set(name, params, value) {
+        throw PropertyError("SafeStore is read-only", -1, name)
+    }
+
+    Put(key, value) {
+        this._data[key] := value
+    }
+}
+```
+
 ## ANTI-PATTERNS
 
 | Pattern | Wrong | Correct | LLM Common Cause |
@@ -567,15 +553,18 @@ try {
 | CaseSense set after key insertion | `m["key"] := 1` then `m.CaseSense := "Off"` | Set `CaseSense` on an empty Map before the first key | Missing API knowledge — insertion-time constraint is not obvious from method names |
 | Assuming Clone() is deep | `deep := nested.Clone()` then mutating inner Maps | Use `DeepClone` from Module_Arrays.md | Cross-language habit — Python/JS `.copy()` / spread also produce shallow copies but the consequence is less visible |
 | Calling .Keys() as built-in | `m.Keys()` | `for k in m` or `Map.Prototype.DefineProp("Keys", ...)` | Missing v2 API knowledge — Python and JS both provide `.keys()` natively on their dict/Map types |
+| Unguarded chained Map access | `m["user_prefs"]["theme"]` | `if m.Has("user_prefs")` first, or `m.Get("user_prefs", Map()).Get("theme", fallback)` | Chained subscripting is safe-ish in JS (`undefined` propagates) and only throws once in Python; v2 throws `UnsetItemError` at each level |
+| Missing lazy-init of a Map-of-Arrays bucket | `this.handlers[event].Push(cb)` on a new event | `if !this.handlers.Has(event)` then `this.handlers[event] := []`, then `.Push` | Python `defaultdict(list)` and JS `??=` auto-create the bucket; AHK v2 Map has no auto-vivification |
+| Class-body Map initializer inside a `__Set` class | `data := Map()` in the class body of a class defining `__Set` | `this.DefineProp("_data", { value: Map() })` in `__New` | Initializers look like direct slot writes, but alpha.30 routes them through `__Set` — a `__Get` companion then recurses |
 
 ## SEE ALSO
 
-> This module does NOT cover: functional Map/Filter/Reduce helpers, DeepClone, Sort algorithms, and set operations (Union/Intersection/Difference/Without) → see Module_Arrays.md
+> This module does NOT cover: the whole Array API and the Array safe-access ladder (including Array `.Default`), functional Map/Filter/Reduce helpers, DeepClone, Sort algorithms, and set operations (Union/Intersection/Difference/Without) → see Module_Arrays.md
 > This module does NOT cover: DefineProp property descriptor rules (get/set/call) and the full Any → Object → Array/Map inheritance hierarchy → see Module_Objects.md
 > This module does NOT cover: static Map patterns scoped to class lifecycle, `__Delete` cleanup of Map/Array references → see Module_Classes.md
 > This module does NOT cover: IndexError/UnsetItemError diagnosis beyond the guards shown here, structured error recovery patterns → see Module_Errors.md
 
-- `Module_Arrays.md` — extended Array operations: functional Map/Filter/Reduce helpers, Sort with custom callbacks, set operations (Union/Intersection/Difference/Without), and DeepClone for fully independent nested copies.
+- `Module_Arrays.md` — the complete Array API: creation, indexing, mutation, `.Capacity`, `.Get`/`.Has`/`.Default` and the Array safe-access ladder, plus functional Map/Filter/Reduce helpers, Sort with custom callbacks, set operations (Union/Intersection/Difference/Without), and DeepClone for fully independent nested copies.
 - `Module_Objects.md` — the `Any → Object → Array / Map` inheritance hierarchy; `DefineProp` property descriptor rules (`get` / `set` / `call`) that apply when extending Array or Map prototypes.
 - `Module_Classes.md` — static Map patterns inside classes for config and error-message storage; `__Delete` for cleaning up Map/Array references; instance vs static collection property scoping.
 - `Module_Errors.md` — `IndexError` and `UnsetItemError` diagnosis and recovery; object-literal-as-storage error classification; runtime diagnostic checklist for Map/Array-related failures.

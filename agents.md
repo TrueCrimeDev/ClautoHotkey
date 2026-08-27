@@ -47,15 +47,10 @@ Identify whether this is a new feature, a refactor, or a bugfix pattern
 </problem_analysis>
 
 <knowledge_retrieval id="3">
-Reference modules based on keywords:
-
-- "gui" → Module_GUI.md
-- "class" → Module_Classes.md
-- "array", "list", "collection" → Module_Arrays.md
-- "string", "regex" → Module_TextProcessing.md
-- "map", "object", "storage" → Module_Objects.md
-  Use toolcall to the `analyze_code` function only when contextually necessary (not by default)
-  </knowledge_retrieval>
+Reference the module whose frontmatter `description` matches the request. The single
+routing table is the keyword table in `CLAUDE.md`; do not restate it here.
+Use toolcall to the `analyze_code` function only when contextually necessary (not by default)
+</knowledge_retrieval>
 
 <solution_design id="4">
 Sketch the class structure, method hierarchy, and object responsibilities
@@ -146,18 +141,12 @@ Ensure all code adheres to ethical use:
 
 <MODULE_REFERENCES>
 Use toolcall to the `analyze_code` function only when contextually necessary (not by default)
-Reference specific module documentation based on keywords in the user's request:
 
-- "class" → `Module_Classes.md`
-- "gui", gui, gui classes, data storage, window/dialog → `Module_GUI.md`
-- "string", quotes, regex → `Module_TextProcessing.md`
-- "tooltip", notify → built-in AHK v2 knowledge (ToolTip/TrayTip; no dedicated module)
-- "map", objects, storage, settings → `Module_Objects.md`
-- "backtick", escape, quote → `Module_Escapes.md`
-- "data", map, data-structures, examples → `Module_DataStructures.md`
-- "examples", gui, classes, objects → `Module_DataStructures.md`
-- "array", "list", "collection", "transform", "filter", "sort", "multiple items", "batch process" → `Module_Arrays.md`
-  </MODULE_REFERENCES>
+Module routing lives in one place: the keyword table in `CLAUDE.md`. Do not maintain a
+second copy here — the two drifted apart and disagreed on where map/storage requests go.
+Every module carries a trigger-rich `description` in its frontmatter, so the harness
+routes on those natively.
+</MODULE_REFERENCES>
 
 <diagnostic_checklist>
 Before submitting my response, I will verify:
@@ -273,7 +262,9 @@ Root guidance for Codex working in this AutoHotkey v2 prompt/knowledge workspace
 
 - `Modules/` - structured AHK v2 knowledge, one file per domain (start: `Module_Instructions.md`).
 - `Modules/Supplemental/` - deeper supplemental material.
-- `Lib/` - shared libraries (`_Dark.ahk` dark mode, `cJSON.ahk`, `XHotstring.ahk`, `DarkListView.ahk`).
+- `Lib/` - shared libraries (`_Dark.ahk` dark mode, `DarkModeModular_Alpha.ahk` (stale snapshot of the
+  parent repo's copy - never edit), `cJSON.ahk`, `XHotstring.ahk`, `DarkListView.ahk`) and the analysis
+  harness (`TreeSitter.ahk`, `Lint.ahk`, `CodeIntel.ahk`).
 - `AHK_Notes/` - examples and patterns by topic.
 
 ## Workstyle

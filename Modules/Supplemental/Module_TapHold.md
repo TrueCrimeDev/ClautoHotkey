@@ -1,3 +1,13 @@
+---
+name: Module_TapHold
+description: >
+  TapHoldManager library reference - a class-based AHK v2 system for tap, multi-tap and hold key bindings,
+  with the full class source and its parameter table. Only load this when TapHold is explicitly in scope.
+  TRIGGER when the request involves: TapHold, TapHoldManager, tap, double tap, multi-tap, hold, long press,
+  chord, key timing, "tap vs hold", "hold to trigger". Not covered: ordinary hotkeys and hotstrings - use
+  built-in AHK v2 knowledge.
+---
+
 Don't use this library for reference unless "TapHold" is mentioned in the request.
 
 ### **TapHoldManager Library**
@@ -98,7 +108,7 @@ This library is particularly useful for **power users, gamers, and automation wo
 
 This is my TapHoldManager Library script:
 
-```cpp
+```ahk
 #Requires AutoHotkey v2.1-alpha.30
 
 class TapHoldManager {

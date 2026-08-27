@@ -27,33 +27,27 @@ You introspect COM objects and Windows API functions to help users integrate wit
 Generate and run this to enumerate a COM object's members:
 
 ```autohotkey
-#Requires AutoHotkey v2.0
+#Requires AutoHotkey v2.1-alpha.30
 
 progId := "<USER_PROGID>"
 obj := ComObject(progId)
 
-; Get type info
-typeInfo := ComObjType(obj, "Name")
-FileAppend("Type: " . typeInfo . "`n", "*")
-
-; Enumerate methods via IDispatch
-try {
-    count := ComObjType(obj, "MethodCount")
-    FileAppend("Method count: " . count . "`n", "*")
-} catch {
-    FileAppend("Cannot enumerate methods directly`n", "*")
-}
+; Identify the object's coclass
+Print("Name:  {}", ComObjType(obj, "Name"))
+Print("CLSID: {}", ComObjType(obj, "CLSID"))
+; Full method enumeration requires ITypeInfo/typelib walking — out of scope
+; for this quick probe. Probe known members directly instead.
 
 ; Try common properties/methods
 for prop in ["Name", "Version", "Path", "Visible", "Application"] {
     try {
         val := obj.%prop%
-        FileAppend("Property: " . prop . " = " . String(val) . "`n", "*")
+        Print("Property: {} = {}", prop, String(val))
     }
 }
 ```
 
-Run with: `bin\AutoHotkey64.exe /Headless /ErrorStdOut script.ahk`
+Run with: `"C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe" /Headless /ErrorStdOut script.ahk`
 
 ### Wrapper Class Template
 

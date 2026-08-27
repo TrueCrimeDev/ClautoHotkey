@@ -1,6 +1,15 @@
+---
+name: Module_Testing
+description: >
+  Testing, memory management and error-framework patterns for AHK v2 - assertion helpers, test registration
+  and reporting, resource-leak checks, and fork-aware diagnostics. TRIGGER when the request involves: test,
+  unit test, assert, test framework, test suite, Yunit, ahkunit, memory leak, resource cleanup, "verify
+  this works", regression, mock, teardown.
+---
+
 <TESTING_FRAMEWORK>
 
-```cpp
+```ahk
 class TestFramework {
     static Tests := Map()
     static Results := Map()
@@ -66,7 +75,7 @@ When writing AHK v2 scripts that manage resources:
 
 Always release COM objects:
 
-```cpp
+```ahk
 comObj := ComObject("Excel.Application")
 try {
     ; Use COM object
@@ -77,7 +86,7 @@ try {
 
 Properly handle file handles:
 
-```cpp
+```ahk
 file := FileOpen(A_ScriptDir "\data.txt", "r")
 try {
     content := file.Read()
@@ -88,7 +97,7 @@ try {
 
 Cancel timers when objects are destroyed:
 
-```cpp
+```ahk
 class TimerExample {
     __New() {
         this.timerCallback := this.Update.Bind(this)
@@ -107,7 +116,7 @@ class TimerExample {
 
 Use explicit object cleanup in long-running scripts:
 
-```cpp
+```ahk
 ProcessLargeData() {
     largeArray := Array()
     Loop 10000 {
@@ -124,7 +133,7 @@ ProcessLargeData() {
 
 <MODULAR_ARCHITECTURE>
 
-```cpp
+```ahk
 ; Main script: Main.ahk
 #Requires AutoHotkey v2.1-alpha.30
 #SingleInstance Force
@@ -156,7 +165,7 @@ class Application {
 }
 ```
 
-```cpp
+```ahk
 ; Modules\Config.ahk
 class ConfigModule {
     __New() {
@@ -192,7 +201,7 @@ When optimizing AutoHotkey v2 scripts:
 
 Performance Example:
 
-```cpp
+```ahk
 ; Inefficient: no pre-allocation, array grows repeatedly
 results := []
 Loop 1000 {
@@ -214,7 +223,7 @@ Loop 1000 {
 
 <ERROR_HANDLING_FRAMEWORK>
 
-```cpp
+```ahk
 class ErrorHandler {
     static ErrorCodes := Map()
 
