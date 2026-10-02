@@ -53,8 +53,8 @@ Each is a fresh-context investigator — launch one when a task needs its own wi
 ### **ahk-test-generator** (`.claude/agents/ahk-test-generator.md`)
 
 **Purpose**: Test generator.
-**Use Case**: Read a target file, extract classes/methods, and generate Yunit-style test suites.
-**Tools**: Read, Write, Edit, Grep, Glob.
+**Use Case**: Read a target file, extract classes/methods, write a TestKit test file (`Tests\<Stem>.test.ahk`), validate it with `check`, and run it through the harness's pure tier (`Tools/harness/GatePure.ahk`).
+**Tools**: Read, Write, Edit, Grep, Glob, Bash, PowerShell.
 
 ### **ahk-uia-explorer** (`.claude/agents/ahk-uia-explorer.md`)
 

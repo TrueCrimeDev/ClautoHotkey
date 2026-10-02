@@ -1,73 +1,48 @@
 ---
 name: Module_Testing
 description: >
-  Testing, memory management and error-framework patterns for AHK v2 - assertion helpers, test registration
-  and reporting, resource-leak checks, and fork-aware diagnostics. TRIGGER when the request involves: test,
-  unit test, assert, test framework, test suite, Yunit, ahkunit, memory leak, resource cleanup, "verify
-  this works", regression, mock, teardown.
+  Testing, memory management and error-framework patterns for AHK v2 - unit tests with TestKit (the
+  harness's assertion library) run by the GatePure.ahk pure tier, resource-leak checks, and fork-aware
+  diagnostics. TRIGGER when the request involves: test, unit test, assert, TestKit, GatePure, test
+  framework, test suite, Yunit, ahkunit, memory leak, resource cleanup, "verify this works", regression,
+  mock, teardown.
 ---
 
 <TESTING_FRAMEWORK>
+Unit tests use **TestKit**, the grading harness's assertion library: `Tools/harness/TestKit.ahk`,
+which needs `HarnessCore.ahk` beside it (`Tools/harness/Assert.ahk` is the qa-style alias). Name the
+file `Tests\<Stem>.test.ahk` for `<Stem>.ahk` so the harness's pure tier, `Tools/harness/GatePure.ahk`,
+finds and grades it.
 
 ```ahk
-class TestFramework {
-    static Tests := Map()
-    static Results := Map()
+#Requires AutoHotkey v2.1-alpha.30
+; From <project>\Tests\, with TestKit.ahk and HarnessCore.ahk copied into <project>\Lib\
+#Include %A_LineFile%\..\..\Lib\TestKit.ahk
 
-    static __New() {
-        TestFramework.Results["passed"] := 0
-        TestFramework.Results["failed"] := 0
-    }
+TestKit.Test("StrReplace swaps the word", () => TestKit.Eq(StrReplace("Hello World", "World", "AHK"), "Hello AHK"))
+TestKit.Test("StrSplit keeps empty items", SplitKeepsEmpty)
+TestKit.Test("Integer rejects text", () => TestKit.Throws(() => Integer("abc"), "text", TypeError))
+TestKit.Summary()   ; last statement: prints the totals, exits with the failure count
 
-    static AddTest(name, testFunc) {
-        TestFramework.Tests[name] := testFunc
-    }
-
-    static RunTests() {
-        for name, test in TestFramework.Tests {
-            try {
-                result := test()
-                if (result) {
-                    TestFramework.Results["passed"]++
-                    Print("Test '{}' passed", name)
-                } else {
-                    TestFramework.Results["failed"]++
-                    Print("Test '{}' failed", name)
-                }
-            } catch Error as e {
-                TestFramework.Results["failed"]++
-                Print("Test '{}' threw an exception: {}", name, e.Message)
-            }
-        }
-
-        Print("Test results - passed: {}, failed: {}"
-            , TestFramework.Results["passed"], TestFramework.Results["failed"])
-
-        return TestFramework.Results["failed"] = 0
-    }
-
-    static Assert(condition, message := "") {
-        if (!condition) {
-            if (message)
-                Print("Assertion failed: {}", message)
-            return false
-        }
-        return true
-    }
+; A multi-statement case is a named function — never a block-body fat arrow
+; (`() => { ... }` is a syntax error)
+SplitKeepsEmpty() {
+    parts := StrSplit("a,,b", ",")
+    TestKit.Eq(parts.Length, 3, "three items")
+    TestKit.DeepEq(parts, ["a", "", "b"], "empty middle item kept")
 }
-
-; Usage example — multi-statement test bodies need a named function,
-; never a block-body fat arrow (`() => { ... }` is a syntax error)
-TestStringManipulation() {
-    result := StrReplace("Hello World", "World", "AHK")
-    return TestFramework.Assert(result = "Hello AHK", "String replacement failed")
-}
-
-TestFramework.AddTest("StringManipulation", TestStringManipulation)
-TestFramework.RunTests()
 ```
 
-`Print` is a +Console fork BIF (variadic, stdout). On stock AutoHotkey v2 substitute `OutputDebug`; test runs in this project target the fork.
+Assertions: `Eq`, `Ne`, `Truthy`, `Falsy`, `Throws(fn, label, ErrorClass or message part)`, `NoThrow`,
+`Near` (floats), `Match` (regex), `DeepEq` (Arrays, Maps, own properties; names the first differing
+path), `Fail`. `TestKit.Test(name, fn)` groups a case — an exception escaping it fails the case and the
+run continues. Each failure is printed as an `AHKTEST|fail|{json}` record carrying the test file's line;
+`Summary()` prints `qa: P passed, F failed` and exits with the failure count, the same convention as the
+fork's own qa suite.
+
+Run one script's tests through the pure tier, which finds them, runs each under the dry-run shim and
+emits one NDJSON result: `AutoHotkey64.exe Tools\harness\GatePure.ahk <script.ahk>`. A test file also
+runs on its own. TestKit prints through `Print`, a +Console fork BIF, so it needs the fork.
 </TESTING_FRAMEWORK>
 
 <MEMORY_MANAGEMENT>
