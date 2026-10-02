@@ -157,7 +157,10 @@ runs automatically as a `pre-commit` hook over staged modules.
                  XHotstring.ahk, DarkListView.ahk, and the analysis harness
                  (TreeSitter.ahk, Lint.ahk, CodeIntel.ahk + tree-sitter-ahk.dll)
 /Tools/        - lint_modules.py (corpus lint, also a pre-commit hook), verify.sh
-                 (install self-test), CaptureWindow.ahk (PNG capture by PID/title)
+                 (install self-test), CaptureWindow.ahk (PNG capture by PID/title),
+                 harness/ (the four-tier grading gates — static, pure, dry-run, live —
+                 plus CheckResults.py, Report.py, Reduce.ahk and SelfTest.ahk;
+                 contract in harness/CONTRACT.md)
 /Assets/       - README diagrams and screenshots
 ```
 

@@ -30,10 +30,15 @@ cd ClautoHotkey
 cp harness.env.example harness.env
 ```
 
-Edit `harness.env`:
+Edit `harness.env` (every key is optional):
 
-- `AHK_BIN_WIN` — Windows path to your `AutoHotkey64.exe`.
+- `AHK_BIN_WIN` — Windows path to your `AutoHotkey64.exe`. Leave it empty to
+  auto-detect a standard install. `${WIN_HOME}` is your Windows profile folder, so
+  `"${WIN_HOME}\Documents\AutoHotkey\bin\AutoHotkey64.exe"` works on every machine.
 - `AHK_DIAG_JSON=1` if you built the +Console fork (else `0`).
+
+Paths that differ between machines go in `harness.local.env` beside it (also
+gitignored), which is read after `harness.env`.
 
 Then run:
 
@@ -42,7 +47,9 @@ Then run:
 ```
 
 Expected: `rendered .claude/settings.json` and `setup complete.` (re-run after any
-`harness.env` change). Requires WSL or Git Bash and `jq`.
+`harness.env` change). Requires Git Bash or WSL, plus `jq` or Python 3.8+ — without
+`jq` the hooks use the bundled `hooks/_jqlite.py`. Then run `./Tools/verify.sh`: its
+"Hooks are live" section proves the validator really blocks a broken edit.
 
 ## 4. Open it in Claude Code
 
@@ -77,7 +84,8 @@ completion, and diagnostics inside your AI client.
 
 | Symptom | Fix |
 |---------|-----|
-| `setup.sh`: `jq` not found | Install `jq` — the hooks parse JSON with it. |
+| `ClautoHotkey hooks inactive: install jq or Python 3` | Install `jq`, or Python 3.8+ (`python3` must actually run — the Microsoft Store stub does not count). |
+| `setup.sh`: `jq` not found | Fine if Python 3.8+ is present (the bundled jqlite takes over); install `jq` for speed. |
 | Edits aren't being validated | Open **ClautoHotkey itself** as the project (hooks resolve `$CLAUDE_PROJECT_DIR`); editing it from a parent folder uses that folder's config. |
 | `WARNING: AHK binary not found` | Fix `AHK_BIN_WIN` in `harness.env`, then re-run `./setup.sh`. |
 | A stock-AHK edit blocks oddly | Set `AHK_DIAG_JSON=0` — stock AHK has no `check /Diag=json`. |
@@ -90,8 +98,14 @@ completion, and diagnostics inside your AI client.
 back to `/validate`). The fork adds `Print`, `Eval`, JSON diagnostics, and the
 runtime probe. Set `AHK_DIAG_JSON=1` only if you have it.
 
-**Where do my machine-specific paths live?** In `harness.env`, which is gitignored.
-Never commit it — commit `harness.env.example` instead.
+**Where do my machine-specific paths live?** In `harness.env`, which is gitignored —
+written with `${WIN_HOME}` it works unchanged on every machine; anything that still
+differs goes in `harness.local.env`. Never commit either — commit
+`harness.env.example` instead.
+
+**How do I check the grading harness?** `AutoHotkey64.exe Tools/harness/SelfTest.ahk --run`
+runs every gate against canaries with known verdicts and confirms their attempted
+side effects never landed.
 
 **Does it need the MCP server?** No — `ahk-mcp` is optional (live docs/diagnostics).
 

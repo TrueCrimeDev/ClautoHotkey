@@ -55,11 +55,13 @@ Point it at a specific interpreter, or opt into the +Console fork's richer diagn
 dropping a `harness.env` in your own project root:
 
 ```bash
-AHK_BIN_WIN="C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe"
+AHK_BIN_WIN="${WIN_HOME}\Documents\AutoHotkey\bin\AutoHotkey64.exe"   # empty = auto-detect
 AHK_DIAG_JSON=0     # 1 only on the +Console fork
 ```
 
-Every key is optional — see [`harness.env.example`](harness.env.example) for the full set.
+`${WIN_HOME}` is your Windows profile folder, so one file works on every machine;
+anything that still differs goes in `harness.local.env`, read after it. Every key is
+optional — see [`harness.env.example`](harness.env.example) for the full set.
 
 ### As a cloned repo
 
@@ -74,7 +76,9 @@ cd ClautoHotkey && ./setup.sh
 `setup.sh` writes a `harness.env` from the example, makes the hooks executable, and tells
 you what to fill in.
 
-**Requires** WSL or Git Bash, `jq`, and AutoHotkey v2. Python 3 for the module lint.
+**Requires** Git Bash or WSL, AutoHotkey v2, and `jq` or Python 3.8+ (without `jq` the
+hooks fall back to the bundled `hooks/_jqlite.py`). Python 3 also runs the module lint
+and the harness checker. `./Tools/verify.sh` confirms the hooks really block a broken edit.
 
 > [!NOTE]
 > The knowledge modules were written and verified against the **v2.1-alpha.30 +Console
@@ -192,27 +196,40 @@ Fire automatically across the Claude Code lifecycle:
 
 The static-analysis core lives in `Lib/` and the tiered grading gates in
 `Tools/harness/`. Everything runs on the interpreter itself — no external
-toolchain.
+toolchain. Scripts move through four tiers in order — **static → pure →
+dry-run → live** — and a failed tier ends that script's branch.
 
 | Piece | What it is |
 |-------|------------|
 | `Lib/TreeSitter.ahk` | Native binding to the holy-tao tree-sitter-autohotkey grammar (`Lib/tree-sitter-ahk.dll`, x64, kept next to it) |
 | `Lib/Lint.ahk` | Structural lint — empty catches, v1-isms, shape problems |
 | `Lib/CodeIntel.ahk` | Scope-aware semantics: symbol table, call graph, references, plus diagnostics (`unused-function`, `undefined-call`, `property-called-as-method`, opt-in `unknown-member`) with built-in member sets read off the running interpreter |
-| `Tools/harness/GateStatic.ahk` | Tier-1 gate: fork `check` + `/validate` + Lint + CodeIntel, one NDJSON result per script |
-| `Tools/harness/GateDryRun.ahk` + `DryRunShim.ahk` | Tier-3 gate: executes candidates with synthetic input, `Gui`, dialogs, and mutating file/registry I/O shimmed to record intent instead of firing |
-| `Tools/harness/HarnessCore.ahk` | The shared NDJSON result emitter — the whole inter-tier contract |
-| `Tools/harness/CheckResults.py` | Flags empty, timed-out and contradictory results before synthesis |
+| `Tools/harness/GateStatic.ahk` | Tier 1: fork `check` + `/validate` + Lint + CodeIntel + a v1-API scan, one NDJSON result per script |
+| `Tools/harness/GatePure.ahk` + `TestKit.ahk` | Tier 2: finds a script's unit tests (`<name>.test.ahk`, `Test_<name>.ahk`, `<name>_Test.ahk`, beside it or in `Tests\`) and runs them under the shim. `TestKit` (`Assert.ahk` alias) is the assertion library |
+| `Tools/harness/GateDryRun.ahk` + `DryRunShim.ahk` + `ShimRun.ahk` | Tier 3: runs each candidate **in place** with the shim injected — input, windows, messages, `Gui`, dialogs, hotkeys, `Run`, `Shutdown`, and file/registry/download writes are recorded instead of performed; `FileOpen` writes go to a sink; risky `DllCall`/`ComObject` targets get stand-ins — inside a kill-on-close job with a memory cap, while a window watch and a clipboard guard catch what no shadow can |
+| `Tools/harness/GateLive.ahk` | Tier 4: an adapter over [ahkh](https://github.com/owhs/AHKTestHarness)'s hidden desktop, pinned to the same interpreter and serialised by lock. Reports `error` (never `pass`) until ahkh is built and `AHKH_HOME` points at it |
+| `Tools/harness/HarnessCore.ahk` | The shared result emitter plus the containment every tier uses: job objects, file-backed stdio, deadlines, the window watch and the clipboard guard |
+| `Tools/harness/CheckResults.py` | Drops empty, timed-out, contradictory and malformed results before synthesis; reports scripts with no unit tests |
+| `Tools/harness/Report.py` | SARIF 2.1.0, JUnit XML, GitHub annotations or Markdown, with baselines that survive line shifts |
+| `Tools/harness/Reduce.ahk` | Delta-debugs a failing script down to the fewest lines that still fail the same way |
+| `Tools/harness/SelfTest.ahk` | `--run` proves the harness works on this machine: every gate against canaries with known verdicts, including that their attempted side effects never landed |
 | `Tools/harness/CONTRACT.md` | The result schema every tier obeys |
 
 ```bash
-AutoHotkey64.exe Tools/harness/GateStatic.ahk MyScript.ahk        # static gate
-AutoHotkey64.exe Tools/harness/GateDryRun.ahk MyScript.ahk       # dry-run gate
+AutoHotkey64.exe Tools/harness/GateStatic.ahk MyScript.ahk        # tier 1
+AutoHotkey64.exe Tools/harness/GatePure.ahk MyScript.ahk          # tier 2
+AutoHotkey64.exe Tools/harness/GateDryRun.ahk MyScript.ahk        # tier 3
+AutoHotkey64.exe Tools/harness/SelfTest.ahk --run                 # prove the gates on this machine
+python Tools/harness/CheckResults.py results.ndjson --out clean.ndjson
+python Tools/harness/Report.py clean.ndjson --format sarif --out results.sarif
 ```
 
 Gates exit `0` when every script passes, `1` on failure, `2` on usage error.
 A parse failure ends that script's branch — later checks record `"skipped"`,
-never a silent zero. Details: `Tools/harness/CONTRACT.md`.
+never a silent zero. Relative script paths resolve against the directory you
+ran the command from. From PowerShell, pipe a gate's output
+(`... | Set-Content results.ndjson`): the fork is a GUI-subsystem exe, and a
+plain `>` redirect returns before it has run. Details: `Tools/harness/CONTRACT.md`.
 
 ### Commands
 
@@ -270,7 +287,7 @@ git clone https://github.com/TrueCrimeDev/ClautoHotkey.git
 |-------------|-----|
 | AutoHotkey v2 (the [+Console fork](https://github.com/TrueCrimeDev/AutoHotkey) recommended) | Running and validating scripts |
 | [Claude Code](https://claude.com/claude-code) | The harness — hooks, skills, agents |
-| WSL or Git Bash + `jq` | The harness hooks (written in bash) |
+| Git Bash or WSL, plus `jq` or Python 3.8+ | The harness hooks (written in bash; the bundled jqlite stands in for `jq`) |
 | Node.js | Optional — the [ahk-mcp](https://github.com/TrueCrimeDev/ahk-mcp) docs server |
 
 Then follow **[GETTING-STARTED.md](GETTING-STARTED.md)** for the full zero-to-coding path.
