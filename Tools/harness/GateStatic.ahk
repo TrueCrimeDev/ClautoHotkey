@@ -1,5 +1,10 @@
 #Requires AutoHotkey v2.1-alpha.30
 
+; Parallel agents run this same file at once. Without this the interpreter's
+; default (Prompt) asks whether to replace the running copy — a dialog on the
+; desktop, or a killed run — measured in the fork's CheckPriorInstance.
+#SingleInstance Off
+
 #Include %A_LineFile%\..\HarnessCore.ahk
 #Include %A_LineFile%\..\..\..\Lib\Lint.ahk
 #Include %A_LineFile%\..\..\..\Lib\CodeIntel.ahk
@@ -26,6 +31,7 @@
 ;     --out <dir>      scratch dir, default %A_Temp%\ahk-harness\<run>\<label>
 ;     --quiet          suppress the trailing human summary on stderr
 ;
+; Relative paths resolve against the directory the command was run from.
 ; Exit: 0 = every script passed, 1 = at least one failed, 2 = usage/tool error.
 
 ; Bare invocation is not an error — it is how the editor's post-edit check runs
@@ -93,7 +99,7 @@ ExitApp(failed ? 1 : 0)
 class StaticGate {
     static Grade(path, ctx, index) {
         started := A_TickCount
-        full := Harness.FullPath(path)
+        full := Harness.ResolveArg(path)
         res := Harness.Result(ctx, "static", full)
         checks := [], findings := []
 

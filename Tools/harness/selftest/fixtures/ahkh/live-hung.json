@@ -1,0 +1,93 @@
+{
+  "verdict": "HUNG",
+  "summary": "HUNG  {{LABEL}}  (8.51s)  1 error(s), 0 warning(s), 0 dialog(s), 2 shot(s)\n  ✗ hung: process main unresponsive for 4012ms (window 0x3A0B2C)\n  shots: 2  (shots/001_004630ms_hung.png, shots/002_008402ms_final.png)\n  run: {{RUNDIR}}",
+  "data": {
+    "run": "{{RUN}}",
+    "kind": "run",
+    "label": "{{LABEL}}",
+    "verdict": "HUNG",
+    "summary": "1 error(s), 0 warning(s), 0 dialog(s), 2 shot(s)",
+    "durationMs": 8506,
+    "startedAt": "2026-10-01T21:14:03.112Z",
+    "finishedAt": "2026-10-01T21:14:11.530Z",
+    "findings": [
+      {
+        "id": 1,
+        "t": 4630,
+        "severity": "error",
+        "kind": "hung",
+        "message": "process main unresponsive for 4012ms (window 0x3A0B2C)",
+        "proc": "main",
+        "signature": "hung: process main unresponsive for Nms (window <hex>)"
+      }
+    ],
+    "artifacts": [
+      {
+        "kind": "shot",
+        "path": "{{RUNDIR}}\\shots\\001_004630ms_hung.png",
+        "rel": "shots/001_004630ms_hung.png",
+        "label": "hung",
+        "technique": "printwindow-full",
+        "blank": false
+      },
+      {
+        "kind": "tree",
+        "path": "{{RUNDIR}}\\trees\\001_final.json",
+        "rel": "trees/001_final.json",
+        "label": "final"
+      },
+      {
+        "kind": "shot",
+        "path": "{{RUNDIR}}\\shots\\002_008402ms_final.png",
+        "rel": "shots/002_008402ms_final.png",
+        "label": "final",
+        "technique": "composite",
+        "blank": false
+      }
+    ],
+    "meta": {
+      "script": "{{SCRIPT}}",
+      "ahk": "{{AHK}}",
+      "args": [],
+      "harness": "ahkh 0.1.0",
+      "desktop": "AHKH_18204_7c1e",
+      "screen": [
+        1920,
+        1080
+      ]
+    },
+    "procs": {
+      "main": {
+        "pid": 23140,
+        "exitCode": 2577,
+        "exitName": "KILLED_BY_HARNESS",
+        "killedBy": "end-of-observation",
+        "elapsedMs": 8102,
+        "stdout": "procs/main/stdout.txt",
+        "stderr": "procs/main/stderr.txt"
+      }
+    },
+    "guard": {
+      "violations": [],
+      "count": 0,
+      "cursorMoved": false,
+      "clipboardChangedByTarget": 0,
+      "clipboardSeqDelta": 0,
+      "clipboard": {
+        "snapshotFormats": 1,
+        "restores": 0,
+        "restoreFailures": 0,
+        "note": null
+      },
+      "foregroundChanged": false,
+      "error": null
+    },
+    "dialogs": 0,
+    "shots": 2,
+    "exitCode": 5,
+    "runDir": "{{RUNDIR}}"
+  },
+  "runDir": "{{RUNDIR}}",
+  "exitCode": 5,
+  "images": []
+}

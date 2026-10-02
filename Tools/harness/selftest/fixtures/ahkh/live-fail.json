@@ -1,0 +1,69 @@
+{
+  "verdict": "FAIL",
+  "summary": "FAIL  {{LABEL}}  (702ms)  1 error(s), 0 warning(s), 0 dialog(s), 0 shot(s)\n  ✗ exit-code: exited with code 3\n  run: {{RUNDIR}}",
+  "data": {
+    "run": "{{RUN}}",
+    "kind": "run",
+    "label": "{{LABEL}}",
+    "verdict": "FAIL",
+    "summary": "1 error(s), 0 warning(s), 0 dialog(s), 0 shot(s)",
+    "durationMs": 702,
+    "startedAt": "2026-10-01T21:14:03.112Z",
+    "finishedAt": "2026-10-01T21:14:11.530Z",
+    "findings": [
+      {
+        "id": 1,
+        "t": 402,
+        "severity": "error",
+        "kind": "exit-code",
+        "proc": "main",
+        "message": "exited with code 3",
+        "signature": "exit-code: exited with code N"
+      }
+    ],
+    "artifacts": [],
+    "meta": {
+      "script": "{{SCRIPT}}",
+      "ahk": "{{AHK}}",
+      "args": [],
+      "harness": "ahkh 0.1.0",
+      "desktop": "AHKH_18204_7c1e",
+      "screen": [
+        1920,
+        1080
+      ]
+    },
+    "procs": {
+      "main": {
+        "pid": 23140,
+        "exitCode": 3,
+        "exitName": null,
+        "elapsedMs": 380,
+        "stdout": "procs/main/stdout.txt",
+        "stderr": "procs/main/stderr.txt"
+      }
+    },
+    "guard": {
+      "violations": [],
+      "count": 0,
+      "cursorMoved": false,
+      "clipboardChangedByTarget": 0,
+      "clipboardSeqDelta": 0,
+      "clipboard": {
+        "snapshotFormats": 1,
+        "restores": 0,
+        "restoreFailures": 0,
+        "note": null
+      },
+      "foregroundChanged": false,
+      "error": null
+    },
+    "dialogs": 0,
+    "shots": 0,
+    "exitCode": 1,
+    "runDir": "{{RUNDIR}}"
+  },
+  "runDir": "{{RUNDIR}}",
+  "exitCode": 1,
+  "images": []
+}

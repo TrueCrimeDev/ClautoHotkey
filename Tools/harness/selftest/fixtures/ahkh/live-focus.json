@@ -1,0 +1,77 @@
+{
+  "verdict": "FOCUS-STOLEN",
+  "summary": "FOCUS-STOLEN  {{LABEL}}  (1.44s)  1 error(s), 0 warning(s), 0 dialog(s), 0 shot(s)\n  ✗ guard-foreground: foreground-stolen: AutoHotkeyGUI \"Focus Thief\" 0x5C0D1E\n  run: {{RUNDIR}}",
+  "data": {
+    "run": "{{RUN}}",
+    "kind": "run",
+    "label": "{{LABEL}}",
+    "verdict": "FOCUS-STOLEN",
+    "summary": "1 error(s), 0 warning(s), 0 dialog(s), 0 shot(s)",
+    "durationMs": 1436,
+    "startedAt": "2026-10-01T21:14:03.112Z",
+    "finishedAt": "2026-10-01T21:14:11.530Z",
+    "findings": [
+      {
+        "id": 1,
+        "t": 377,
+        "severity": "error",
+        "kind": "guard-foreground",
+        "message": "foreground-stolen: AutoHotkeyGUI \"Focus Thief\" 0x5C0D1E",
+        "hwnd": "0x5C0D1E",
+        "signature": "guard-foreground: foreground-stolen: AutoHotkeyGUI \"Focus Thief\" <hex>"
+      }
+    ],
+    "artifacts": [],
+    "meta": {
+      "script": "{{SCRIPT}}",
+      "ahk": "{{AHK}}",
+      "args": [],
+      "harness": "ahkh 0.1.0",
+      "desktop": "AHKH_18204_7c1e",
+      "screen": [
+        1920,
+        1080
+      ]
+    },
+    "procs": {
+      "main": {
+        "pid": 23140,
+        "exitCode": 0,
+        "exitName": null,
+        "elapsedMs": 1390,
+        "stdout": "procs/main/stdout.txt",
+        "stderr": "procs/main/stderr.txt"
+      }
+    },
+    "guard": {
+      "violations": [
+        {
+          "kind": "foreground-stolen",
+          "t": 377,
+          "hwnd": "0x5C0D1E",
+          "class": "AutoHotkeyGUI",
+          "title": "Focus Thief"
+        }
+      ],
+      "count": 1,
+      "cursorMoved": false,
+      "clipboardChangedByTarget": 0,
+      "clipboardSeqDelta": 0,
+      "clipboard": {
+        "snapshotFormats": 1,
+        "restores": 0,
+        "restoreFailures": 0,
+        "note": null
+      },
+      "foregroundChanged": true,
+      "error": null
+    },
+    "dialogs": 0,
+    "shots": 0,
+    "exitCode": 7,
+    "runDir": "{{RUNDIR}}"
+  },
+  "runDir": "{{RUNDIR}}",
+  "exitCode": 7,
+  "images": []
+}

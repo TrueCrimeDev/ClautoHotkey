@@ -1,0 +1,75 @@
+{
+  "verdict": "PASS",
+  "summary": "PASS  {{LABEL}}  (8.42s)  0 error(s), 0 warning(s), 0 dialog(s), 1 shot(s)\n  shots: 1  (shots/001_008391ms_final.png)\n  run: {{RUNDIR}}",
+  "data": {
+    "run": "{{RUN}}",
+    "kind": "run",
+    "label": "{{LABEL}}",
+    "verdict": "PASS",
+    "summary": "0 error(s), 0 warning(s), 0 dialog(s), 1 shot(s)",
+    "durationMs": 8418,
+    "startedAt": "2026-10-01T21:14:03.112Z",
+    "finishedAt": "2026-10-01T21:14:11.530Z",
+    "findings": [],
+    "artifacts": [
+      {
+        "kind": "tree",
+        "path": "{{RUNDIR}}\\trees\\001_final.json",
+        "rel": "trees/001_final.json",
+        "label": "final"
+      },
+      {
+        "kind": "shot",
+        "path": "{{RUNDIR}}\\shots\\001_008391ms_final.png",
+        "rel": "shots/001_008391ms_final.png",
+        "label": "final",
+        "technique": "composite",
+        "blank": false
+      }
+    ],
+    "meta": {
+      "script": "{{SCRIPT}}",
+      "ahk": "{{AHK}}",
+      "args": [],
+      "harness": "ahkh 0.1.0",
+      "desktop": "AHKH_18204_7c1e",
+      "screen": [
+        1920,
+        1080
+      ]
+    },
+    "procs": {
+      "main": {
+        "pid": 23140,
+        "exitCode": 2577,
+        "exitName": "KILLED_BY_HARNESS",
+        "killedBy": "end-of-observation",
+        "elapsedMs": 8102,
+        "stdout": "procs/main/stdout.txt",
+        "stderr": "procs/main/stderr.txt"
+      }
+    },
+    "guard": {
+      "violations": [],
+      "count": 0,
+      "cursorMoved": false,
+      "clipboardChangedByTarget": 0,
+      "clipboardSeqDelta": 0,
+      "clipboard": {
+        "snapshotFormats": 1,
+        "restores": 0,
+        "restoreFailures": 0,
+        "note": null
+      },
+      "foregroundChanged": false,
+      "error": null
+    },
+    "dialogs": 0,
+    "shots": 1,
+    "exitCode": 0,
+    "runDir": "{{RUNDIR}}"
+  },
+  "runDir": "{{RUNDIR}}",
+  "exitCode": 0,
+  "images": []
+}

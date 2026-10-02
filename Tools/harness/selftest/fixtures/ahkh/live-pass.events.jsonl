@@ -1,0 +1,5 @@
+{"t":431,"ts":"2026-10-01T21:14:03.543Z","kind":"host.win.new","hwnd":"0x2B0C14","pid":23140,"proc":"main","class":"AutoHotkeyGUI","title":"Live Pass Window","rect":[760,440,1160,640]}
+{"t":690,"ts":"2026-10-01T21:14:03.802Z","kind":"ahk-gui","hwnd":"0x2B0C14","proc":"main","class":"AutoHotkeyGUI","title":"Live Pass Window","rect":[760,440,1160,640],"children":4}
+{"t":702,"ts":"2026-10-01T21:14:03.810Z","kind":"host.out","proc":"main","stream":"out","text":"gui-ready"}
+{"t":1210,"ts":"2026-10-01T21:14:03.543Z","kind":"host.win.new","hwnd":"0x1F0A2E","pid":23140,"proc":"main","class":"tooltips_class32","title":"","rect":[12,12,160,34]}
+{"t":2405,"ts":"2026-10-01T21:14:03.543Z","kind":"host.win.new","hwnd":"0x2B0C14","pid":23140,"proc":"main","class":"AutoHotkeyGUI","title":"Live Pass Window","rect":[760,440,1160,640]}

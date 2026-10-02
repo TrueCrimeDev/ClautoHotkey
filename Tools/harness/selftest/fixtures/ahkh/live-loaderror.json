@@ -1,0 +1,71 @@
+{
+  "verdict": "ERROR",
+  "summary": "ERROR  {{LABEL}}  (742ms)  1 error(s), 0 warning(s), 0 dialog(s), 0 shot(s)\n  ✗ load-error: Missing \")\" — if (1 {  [LiveHelper.ahk:12]\n  run: {{RUNDIR}}",
+  "data": {
+    "run": "{{RUN}}",
+    "kind": "run",
+    "label": "{{LABEL}}",
+    "verdict": "ERROR",
+    "summary": "1 error(s), 0 warning(s), 0 dialog(s), 0 shot(s)",
+    "durationMs": 742,
+    "startedAt": "2026-10-01T21:14:03.112Z",
+    "finishedAt": "2026-10-01T21:14:11.530Z",
+    "findings": [
+      {
+        "id": 1,
+        "t": 301,
+        "severity": "error",
+        "kind": "load-error",
+        "proc": "main",
+        "message": "Missing \")\" — if (1 {",
+        "file": "{{SCRIPT_DIR}}\\Lib\\LiveHelper.ahk",
+        "line": 12,
+        "signature": "load-error: Missing \")\" — if (N {"
+      }
+    ],
+    "artifacts": [],
+    "meta": {
+      "script": "{{SCRIPT}}",
+      "ahk": "{{AHK}}",
+      "args": [],
+      "harness": "ahkh 0.1.0",
+      "desktop": "AHKH_18204_7c1e",
+      "screen": [
+        1920,
+        1080
+      ]
+    },
+    "procs": {
+      "main": {
+        "pid": 23140,
+        "exitCode": 2,
+        "exitName": null,
+        "elapsedMs": 160,
+        "stdout": "procs/main/stdout.txt",
+        "stderr": "procs/main/stderr.txt"
+      }
+    },
+    "guard": {
+      "violations": [],
+      "count": 0,
+      "cursorMoved": false,
+      "clipboardChangedByTarget": 0,
+      "clipboardSeqDelta": 0,
+      "clipboard": {
+        "snapshotFormats": 1,
+        "restores": 0,
+        "restoreFailures": 0,
+        "note": null
+      },
+      "foregroundChanged": false,
+      "error": null
+    },
+    "dialogs": 0,
+    "shots": 0,
+    "exitCode": 2,
+    "runDir": "{{RUNDIR}}"
+  },
+  "runDir": "{{RUNDIR}}",
+  "exitCode": 2,
+  "images": []
+}

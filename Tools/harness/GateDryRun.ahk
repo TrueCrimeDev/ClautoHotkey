@@ -1,23 +1,25 @@
 #Requires AutoHotkey v2.1-alpha.30
 
-#Include %A_LineFile%\..\HarnessCore.ahk
+; Parallel agents run this same file at once. Without this the interpreter's
+; default (Prompt) asks whether to replace the running copy — a dialog on the
+; desktop, or a killed run — measured in the fork's CheckPriorInstance.
+#SingleInstance Off
 
-; GateDryRun.ahk — tier-3 gate: run a UI script without giving it the desktop.
+#Include %A_LineFile%\..\ShimRun.ahk
+
+; GateDryRun.ahk — tier-3 gate: run a script without giving it the desktop.
 ;
-; For each candidate this writes a small wrapper that includes DryRunShim.ahk
-; and then the candidate. The shim's function definitions shadow the built-ins,
-; so the candidate's Send, Click, WinActivate, FileDelete and RegWrite calls are
-; recorded instead of performed. The script executes for real; only its effects
-; on the outside world are intercepted.
-;
-; The wrapper is written next to the candidate under a dot-prefixed per-agent
-; name, so A_ScriptDir and relative includes resolve to the candidate's own
-; directory, and removed as soon as the child is gone. A read-only candidate
-; directory falls back to the scratch dir; either way the wrapper sets the
-; working directory to the candidate's home.
+; Each candidate runs in place with DryRunShim.ahk injected ahead of it (see
+; ShimRun.ahk), so its Send, Click, WinActivate, FileDelete and RegWrite
+; calls are recorded instead of performed while the script itself executes
+; for real. Its run is held in a kill-on-close job with a memory cap and UI
+; limits, its stdout and stderr go to scratch files, and between wait slices
+; a window watch and a clipboard guard catch what the shim cannot.
 ;
 ; Because nothing here competes for focus or synthetic input, this tier fans out
-; as wide as the runtime allows. Tier 4 is the serial one.
+; as wide as the runtime allows. Tier 4 is the serial one. Clipboard users are
+; the one exception: they are serialised against each other through a named
+; lock, because the clipboard is shared.
 ;
 ;   AutoHotkey64.exe GateDryRun.ahk <script.ahk> [more.ahk ...] [options]
 ;
@@ -26,17 +28,19 @@
 ;     --out <dir>        scratch dir, default %A_Temp%\ahk-harness\<run>\<label>
 ;     --timeout <s>      deadline before the script is killed, default 20
 ;     --maxsleep <ms>    longest honoured Sleep, default 50; 0 skips sleeping
+;     --memory <MB>      per-process memory cap, default 1024; 0 disables it
 ;     --quiet            suppress the trailing human summary on stderr
 ;
+; Relative paths resolve against the directory the command was run from.
 ; Exit: 0 = every script passed, 1 = at least one failed, 2 = usage/tool error.
 
 if !A_Args.Length {
-    Print("usage: GateDryRun.ahk <script.ahk> [more.ahk ...] [--label N] [--run ID] [--out DIR] [--timeout S] [--maxsleep MS] [--quiet]")
+    Print("usage: GateDryRun.ahk <script.ahk> [more.ahk ...] [--label N] [--run ID] [--out DIR] [--timeout S] [--maxsleep MS] [--memory MB] [--quiet]")
     ExitApp(0)
 }
 
 scripts := [], label := "dryrun", runId := "", outDir := ""
-timeout := 20, maxSleep := 50, quiet := false
+timeout := 20, maxSleep := 50, memory := 1024, quiet := false
 i := 0
 while (++i <= A_Args.Length) {
     arg := A_Args[i]
@@ -45,7 +49,7 @@ while (++i <= A_Args.Length) {
         continue
     }
     if (arg = "--label" || arg = "--run" || arg = "--out"
-        || arg = "--timeout" || arg = "--maxsleep") {
+        || arg = "--timeout" || arg = "--maxsleep" || arg = "--memory") {
         if (i = A_Args.Length) {
             Print("missing value for " arg)
             ExitApp(2)
@@ -65,6 +69,12 @@ while (++i <= A_Args.Length) {
                 ExitApp(2)
             }
             timeout := Integer(value)
+        } else if (arg = "--memory") {
+            if (!IsInteger(value) || Integer(value) < 0) {
+                Print("invalid value for --memory: " value " (whole megabytes, 0 disables the cap)")
+                ExitApp(2)
+            }
+            memory := Integer(value)
         } else {
             ; An explicit 0 is meaningful — the shim skips sleeping entirely —
             ; so it must reach the child as 0, never be defaulted away.
@@ -96,6 +106,7 @@ catch Error as err {
 }
 ctx["timeout"] := timeout
 ctx["maxsleep"] := maxSleep
+ctx["memory"] := memory
 
 failed := 0
 for path in scripts {
@@ -112,11 +123,9 @@ if !quiet
 ExitApp(failed ? 1 : 0)
 
 class DryRunGate {
-    static Shim := A_LineFile "\..\DryRunShim.ahk"
-
     static Grade(path, ctx, index) {
         started := A_TickCount
-        full := Harness.FullPath(path)
+        full := Harness.ResolveArg(path)
         res := Harness.Result(ctx, "dryrun", full)
         checks := [], findings := []
 
@@ -128,179 +137,229 @@ class DryRunGate {
             checks.Push(Harness.CheckRow("exists", "error", -1, 0, "file not found"))
             findings.Push(Harness.Finding("critical", "missing-file", 0
                 , "script not found: " path))
-            return this.Done(res, checks, findings, "error", started, "", [], "not-parsed")
+            return this.Done(res, checks, findings, "error", started, "", Map(), "not-parsed")
         }
         checks.Push(Harness.CheckRow("exists", "pass", 0, 0, ""))
 
-        stem := ctx["out"] "\" Format("{:03}", index) "-" Harness.Slug(Harness.NameOf(full))
-        logFile := stem ".intent.tsv"
-        errFile := stem ".stderr.txt"
-        safeCopy := stem ".candidate.ahk"
-        SplitPath(full, , &candDir)
-        ; Next to the candidate so A_ScriptDir resolves to the candidate's own
-        ; directory. Dot-prefixed to stay out of most globs; label plus pid
-        ; keeps two agents grading the same directory apart.
-        wrapper := candDir "\.harness-" Harness.Slug(ctx["label"]) "-" ProcessExist() ".wrapper.ahk"
-        scratchWrapper := stem ".wrapper.ahk"
+        opts := Map()
+        opts["stem"] := ctx["out"] "\" Format("{:03}", index) "-" Harness.Slug(Harness.NameOf(full))
+        opts["timeoutMs"] := ctx["timeout"] * 1000
+        opts["maxSleep"] := ctx["maxsleep"]
+        opts["memoryMB"] := ctx["memory"]
+        run := ShimRun.Run(full, opts)
 
-        for stale in [wrapper, scratchWrapper, safeCopy, logFile, errFile] {
-            if FileExist(stale) {
-                try {
-                    FileDelete(stale)
-                } catch Error as err {
-                    OutputDebug("GateDryRun: cannot clear " stale ": " err.Message)
-                }
-            }
+        if (run["refused"] != "") {
+            checks.Push(Harness.CheckRow("preflight", "error", -1, 0, run["refused"]))
+            findings.Push(Harness.Finding("high", "shim-bypass", 0, run["refused"], "dryrun"))
+            return this.Done(res, checks, findings, "error", started, "", run, "not-parsed")
+        }
+        checks.Push(Harness.CheckRow("preflight", "pass", 0, 0
+            , run["scan"]["clipboard"] ? "uses the clipboard — serialised against other agents' clipboard users" : ""))
+
+        if run["dropped"].Length {
+            names := ""
+            for name in run["dropped"]
+                names .= (A_Index = 1 ? "" : ", ") name
+            checks.Push(Harness.CheckRow("shim", "pass", 0, 0
+                , "the candidate defines " names " itself; those shadows were dropped (its own definition already hides the built-in)"))
         }
 
-        ; #Include dereferences a paired %...% even inside quotes (verified:
-        ; a directory named pre%A_ScriptDir%post expands and the load fails),
-        ; so a candidate path carrying a literal % cannot be included in place.
-        ; A copy under a %-free scratch name is included instead; the wrapper
-        ; still sets the working directory to the candidate's real home.
-        include := full, copied := ""
-        if InStr(full, "%") {
-            if InStr(safeCopy, "%") {
-                checks.Push(Harness.CheckRow("wrapper", "error", -1, 0
-                    , "candidate and scratch paths both contain % — nowhere to include from"))
-                return this.Done(res, checks, findings, "error", started, "", [], "not-parsed")
-            }
-            try {
-                FileCopy(full, safeCopy, 1)
-            } catch Error as err {
-                checks.Push(Harness.CheckRow("wrapper", "error", -1, 0
-                    , "cannot copy %-path candidate to scratch: " err.Message))
-                return this.Done(res, checks, findings, "error", started, "", [], "not-parsed")
-            }
-            include := safeCopy, copied := safeCopy
+        if run.Has("note") {
+            checks.Push(Harness.CheckRow("launch", "error", run.Get("exit", -1), run.Get("ms", 0), run["note"]))
+            checks.Push(Harness.CheckRow("stderr", "pass", 0, 0, run.Get("stderr", "")))
+            return this.Done(res, checks, findings, "error", started, "", run, "not-parsed")
         }
 
-        wrote := ""
-        try {
-            try {
-                this.WriteWrapper(wrapper, include, candDir)
-                wrote := wrapper
-                checks.Push(Harness.CheckRow("wrapper", "pass", 0, 0, ""))
-            } catch Error as err {
-                try {
-                    this.WriteWrapper(scratchWrapper, include, candDir)
-                    wrote := scratchWrapper
-                    checks.Push(Harness.CheckRow("wrapper", "pass", 0, 0
-                        , "candidate dir not writable (" err.Message ") — wrapper in scratch"))
-                } catch Error as err2 {
-                    checks.Push(Harness.CheckRow("wrapper", "error", -1, 0, err2.Message))
-                    return this.Done(res, checks, findings, "error", started, "", [], "not-parsed")
-                }
+        exitCode := run["exit"]
+        status := "pass"
+        residency := "exited"
+        toolError := ""
+
+        ; Diagnostics raised inside the shim are the tool's, not the
+        ; candidate's: a warning there is noise to drop, an error there means
+        ; this run cannot be trusted either way.
+        shimFile := run["shim"]
+        shimNotes := 0
+        diag := []
+        for entry in Harness.DiagEntries(run["stderr"]) {
+            if (shimFile != "" && entry["file"] = shimFile) {
+                shimNotes++
+                if !entry["warning"]
+                    toolError := "the shim itself raised: " entry["message"]
+                continue
             }
+            message := entry["message"]
+            if (entry["file"] != full)
+                message .= " [in " Harness.NameOf(entry["file"]) "]"
+            if entry["warning"]
+                diag.Push(Harness.Finding("medium", "warn", entry["line"], message, "dryrun"))
+            else
+                diag.Push(Harness.Finding("critical", "runtime", entry["line"], message, "dryrun"))
+        }
 
-            EnvSet("AHK_HARNESS_LOG", logFile)
-            EnvSet("AHK_HARNESS_MAXSLEEP", ctx["maxsleep"])
+        if (exitCode = 137 && run["timedOut"]) {
+            ; We had to terminate it: its message loop never came back, so its
+            ; own watchdog could not fire either.
+            status := "timeout"
+            residency := "wedged"
+            findings.Push(Harness.Finding("critical", "hung", 0
+                , Format("no response for {} s — hard killed; message loop blocked"
+                    , ctx["timeout"]), "dryrun"))
+        } else if (exitCode = 124 && run["timedOut"]) {
+            ; Its own message loop was still answering at the deadline. That is
+            ; what a hotkey or GUI script is supposed to do, so it is only a
+            ; failure if it also reported a problem — and warnings alone do not
+            ; condemn a resident script: #Warn fires on every suspicious
+            ; variable, and staying resident is the job.
+            residency := "idle"
+        } else if (exitCode != 0) {
+            status := "fail"
+        }
 
-            ; A_Clipboard is a built-in variable the shim cannot shadow, so a
-            ; clipboard-writing candidate reaches the real clipboard. Snapshot
-            ; here, restore in the finally below. Accepted residual race:
-            ; parallel dryrun agents share the one system clipboard, so a
-            ; concurrent agent's candidate can still interleave between this
-            ; snapshot and its restore.
-            try {
-                clipSaved := ClipboardAll()
-            } catch Error as err {
-                OutputDebug("GateDryRun: clipboard snapshot failed: " err.Message)
+        for f in diag
+            findings.Push(f)
+        this.ErrorFindings(run, full, diag, exitCode, findings, &toolError)
+        this.WatchFindings(run, findings)
+
+        guard := run["guard"]
+        if (guard.State = "restore-failed")
+            findings.Push(Harness.Finding("high", "clipboard-restore-failed", 0
+                , "the candidate wrote the clipboard and the user's data could not be put back: " guard.Note, "dryrun"))
+
+        if (run["killed"] && !run["timedOut"])
+            status := "fail"
+        if (status = "pass" && Harness.HasCritical(findings))
+            status := "fail"
+        if (status = "fail" && exitCode != 0 && !Harness.HasCritical(findings))
+            findings.Push(Harness.Finding("high", "nonzero-exit", 0
+                , Format("exited {} with no diagnostic output", exitCode), "dryrun"))
+        if (toolError != "")
+            status := "error"
+
+        detail := Format("residency={} actions={} exit={}", residency, this.ActionCount(run), exitCode)
+        if (run["killReason"] != "")
+            detail .= " killed: " run["killReason"]
+        checks.Push(Harness.CheckRow("execute"
+            , status = "pass" ? "pass" : (status = "timeout" ? "fail" : status)
+            , exitCode, run["ms"], detail))
+
+        watchDetail := Format("dialogs={} windows={} focus={} clipboard={} lock={}"
+            , run["watch"].Dialogs, run["watch"].Windows, run["watch"].FocusStolen ? "stolen" : "kept"
+            , guard.State, guard.LockState)
+        if run.Has("tickError")
+            watchDetail .= " watcher error: " run["tickError"]
+        if !run["jobbed"]
+            watchDetail .= " — not jobbed: descendants are not contained"
+        checks.Push(Harness.CheckRow("watch", run.Has("tickError") ? "error" : "pass"
+            , run.Has("tickError") ? -1 : 0, 0, watchDetail))
+        if run.Has("tickError")
+            status := "error"
+        if (toolError != "")
+            checks.Push(Harness.CheckRow("shim", "error", -1, 0, toolError))
+        else if shimNotes
+            checks.Push(Harness.CheckRow("shim-notes", "pass", 0, 0
+                , shimNotes " warning(s) raised inside the shim were dropped"))
+
+        ; The raw streams travel in their own informational rows — status pass
+        ; with exit 0 keeps the checker from reading them as contradictions;
+        ; CheckRow clips them.
+        checks.Push(Harness.CheckRow("stdout", "pass", 0, 0, run["stdout"]))
+        checks.Push(Harness.CheckRow("stderr", "pass", 0, 0, run["stderr"]))
+
+        return this.Done(res, checks, findings, status, started, residency, run
+            , exitCode = 12 ? "failed" : "not-parsed")
+    }
+
+    ; The shim's OnError records carry the exact file and line of every error
+    ; the candidate raised. One that also reached stderr is already a
+    ; critical finding. One that did not was hidden by the candidate's own
+    ; OnError handler. Hiding it does not save the thread it was raised in:
+    ; in the auto-execute section the fork still exits 10 (measured), so a
+    ; failed run with nothing on stderr makes these records the critical
+    ; findings. In a later thread of a script that stays resident, the error
+    ; ended only that thread — reported, not fatal. An error raised inside the
+    ; shim is a tool fault.
+    static ErrorFindings(run, full, diag, exitCode, findings, &toolError) {
+        shimFile := run["shim"]
+        unmatched := []
+        for err in run["errors"] {
+            if (shimFile != "" && err["file"] = shimFile) {
+                toolError := "the shim itself threw " err["type"] ": " err["message"]
+                continue
             }
-
-            launch := Harness.RunTimed(Format('/ErrorStdOut "/StdErrFile={}" "{}"', errFile, wrote)
-                , ctx["timeout"] * 1000)
-
-            stderr := Harness.ReadOutput(errFile)
-            actions := this.ReadLog(logFile)
-            diag := Harness.DiagFindings(stderr, "dryrun", "runtime")
-
-            exitCode := launch["exit"]
-            status := "pass"
-            residency := "exited"
-
-            if launch.Has("note") {
-                checks.Push(Harness.CheckRow("launch", "error", exitCode, launch["ms"], launch["note"]))
-                checks.Push(Harness.CheckRow("stderr", "pass", 0, 0, stderr))
-                return this.Done(res, checks, findings, "error", started, "", actions, "not-parsed")
+            matched := false
+            for f in diag {
+                if (f.Get("severity") = "critical" && f.Get("line") = err["line"])
+                    matched := true
             }
-
-            if (exitCode = 137) {
-                ; We had to terminate it: its message loop never came back, so its
-                ; own watchdog could not fire either.
-                status := "timeout"
-                residency := "wedged"
-                findings.Push(Harness.Finding("critical", "hung", 0
-                    , Format("no response for {} s — hard killed; message loop blocked"
-                        , ctx["timeout"]), "dryrun"))
-            } else if (exitCode = 124) {
-                ; Its own watchdog fired, which proves it was still pumping
-                ; messages. That is what a hotkey or GUI script is supposed to do,
-                ; so it is only a failure if it also reported a problem.
-                residency := "idle"
-                ; Warnings alone do not condemn a resident script — #Warn fires on
-                ; every suspicious variable, and staying resident is the job.
-                if Harness.HasCritical(diag) {
-                    status := "fail"
-                } else {
-                    status := "pass"
-                }
-            } else if (exitCode != 0) {
-                status := "fail"
-            }
-
-            checks.Push(Harness.CheckRow("execute"
-                , status = "pass" ? "pass" : (status = "timeout" ? "fail" : status)
-                , exitCode, launch["ms"]
-                , Format("residency={} actions={}", residency, actions.Length)))
-
-            ; GateStatic keeps each tool's raw output in its check rows;
-            ; DiagFindings keeps only the headlines it can fold, so the raw
-            ; stderr — the "Specifically:" detail included — travels in its own
-            ; informational row. Status pass with exit 0 keeps the checker from
-            ; reading it as a contradiction; CheckRow clips it to 2000 chars.
-            checks.Push(Harness.CheckRow("stderr", "pass", 0, 0, stderr))
-
-            for f in diag
-                findings.Push(f)
-
-            if (status = "fail" && !Harness.HasCritical(findings))
-                findings.Push(Harness.Finding("high", "nonzero-exit", 0
-                    , Format("exited {} with no diagnostic output", exitCode), "dryrun"))
-
-            return this.Done(res, checks, findings, status, started, residency, actions
-                , exitCode = 12 ? "failed" : "not-parsed")
-        } finally {
-            if IsSet(clipSaved) {
-                try {
-                    A_Clipboard := clipSaved
-                } catch Error as err {
-                    OutputDebug("GateDryRun: clipboard restore failed: " err.Message)
-                }
-            }
-            ; RunTimed only returns once the child is dead or was never started,
-            ; so deleting here covers every path, kill paths included. Both
-            ; wrapper names go: a half-written first attempt must not linger
-            ; next to the candidate.
-            for leftover in [wrapper, scratchWrapper, copied] {
-                if (leftover = "" || !FileExist(leftover))
-                    continue
-                try {
-                    FileDelete(leftover)
-                } catch Error as err {
-                    OutputDebug("GateDryRun: cannot remove " leftover ": " err.Message)
-                }
-            }
+            if !matched
+                unmatched.Push(err)
+        }
+        promote := (exitCode != 0 && exitCode != 124 && !Harness.HasCritical(diag))
+        for err in unmatched {
+            message := err["type"] ": " err["message"]
+            if (err["extra"] != "")
+                message .= " | Specifically: " err["extra"]
+            if (err["file"] != "" && err["file"] != full)
+                message .= " [in " Harness.NameOf(err["file"]) "]"
+            if promote
+                findings.Push(Harness.Finding("critical", "runtime", err["line"]
+                    , message " — hidden from stderr by the script's own OnError handler, but the thread still died"
+                    , "dryrun"))
+            else
+                findings.Push(Harness.Finding("medium", "error-suppressed", err["line"]
+                    , message " — suppressed by the script's own OnError handler; the thread it was raised in ended"
+                    , "dryrun"))
         }
     }
 
-    static Done(res, checks, findings, status, started, residency, actions, parse) {
+    ; In a dry run every visible window is unexpected — Gui is stubbed and
+    ; dialogs are shimmed — so each one is reported by what it was.
+    static WatchFindings(run, findings) {
+        for event in run["events"] {
+            what := Format("{} `"{}`" ({}): {}", event["kind"], event["title"], event["class"]
+                , Harness.Clip(event["text"], 400))
+            switch event["kind"] {
+                case "ahk-error":
+                    findings.Push(Harness.Finding("critical", "error-dialog", 0
+                        , "AutoHotkey error dialog — run ended: " what, "dryrun"))
+                case "ahk-warning":
+                    findings.Push(Harness.Finding("medium", "warn-dialog", 0
+                        , "AutoHotkey warning dialog, " event["action"] ": " what, "dryrun"))
+                case "msgbox", "inputbox", "fileselect":
+                    findings.Push(Harness.Finding("high", "dialog", 0
+                        , "a dialog got past the shim, " event["action"] ": " what, "dryrun"))
+                default:
+                    findings.Push(Harness.Finding("medium", "window-leak", 0
+                        , "a window appeared despite the stubbed Gui, " event["action"] ": " what, "dryrun"))
+            }
+        }
+        if run["watch"].FocusStolen
+            findings.Push(Harness.Finding("high", "focus-stolen", 0
+                , "the candidate's process took the foreground window during a dry run", "dryrun"))
+    }
+
+    static ActionCount(run) {
+        return run.Has("actions") ? run["actions"].Length : 0
+    }
+
+    static Done(res, checks, findings, status, started, residency, run, parse) {
         kinds := JObj()
         seen := Map()
-        for action in actions
-            seen[action["kind"]] := seen.Get(action["kind"], 0) + 1
+        if run.Has("actions") {
+            for action in run["actions"]
+                seen[action["kind"]] := seen.Get(action["kind"], 0) + 1
+        }
+        if (run.Has("guard") && run["guard"].Touches)
+            seen["clipboard"] := run["guard"].Touches
         for kind, total in seen
             kinds.Set(kind, total)
+
+        guard := JObj()
+        guard.Set("clipboard", run.Has("guard") ? run["guard"].State : "untouched")
+        guard.Set("dialogs", run.Has("watch") ? run["watch"].Dialogs : 0)
+        guard.Set("windows", run.Has("watch") ? run["watch"].Windows : 0)
+        guard.Set("focus", (run.Has("watch") && run["watch"].FocusStolen) ? "stolen" : "kept")
 
         extra := []
         ; This tier never parses the candidate itself: "failed" is the child's
@@ -310,71 +369,9 @@ class DryRunGate {
         ; ran or its exit was unobservable; every real outcome maps to
         ; exited / idle / wedged.
         extra.Push(["residency", residency != "" ? residency : "unknown"])
-        extra.Push(["actions", actions.Length])
+        extra.Push(["actions", this.ActionCount(run)])
         extra.Push(["intent", kinds])
+        extra.Push(["guard", guard])
         return Harness.Finish(res, checks, findings, status, started, extra)
     }
-
-    ; #SingleInstance Off keeps two dry runs of the same file from replacing
-    ; each other. A candidate that sets the directive itself still wins, which
-    ; is why agents are handed disjoint script lists.
-    ;
-    ; SetWorkingDir points at the candidate's directory unconditionally, so a
-    ; candidate that resolves paths against the working directory behaves the
-    ; same whether the wrapper sits next to it or fell back to scratch.
-    static WriteWrapper(wrapperPath, includePath, workDir) {
-        body := "#Requires AutoHotkey v2.1-alpha.30`n"
-            . "#SingleInstance Off`n"
-            . "SetWorkingDir(" this.StrLit(workDir) ")`n"
-            . "#Include " this.IncLit(this.Shim) "`n"
-            . "#Include " this.IncLit(includePath) "`n"
-        file := FileOpen(wrapperPath, "w", "UTF-8")
-        if !IsObject(file)
-            throw OSError("cannot write wrapper: " wrapperPath)
-        try {
-            file.Write(body)
-        } finally {
-            file.Close()
-        }
-    }
-
-    ; A double-quoted AHK expression literal. Backtick first so later escapes
-    ; are not double-escaped; the semicolon needs its escape because the loader
-    ; eats a whitespace-preceded ; as a comment even inside a quoted string
-    ; (verified: a raw " ; " in the literal fails the load with Missing ").
-    static StrLit(text) {
-        out := StrReplace(text, "``", "````")
-        out := StrReplace(out, '"', '``"')
-        out := StrReplace(out, ";", "``;")
-        return '"' out '"'
-    }
-
-    ; A quoted #Include path. The quotes carry spaces, but the loader still
-    ; cuts the line at a whitespace-preceded ; unless it is escaped (verified:
-    ; a directory named "a ; b" loads escaped and fails raw).
-    static IncLit(path) {
-        return '"' StrReplace(path, ";", "``;") '"'
-    }
-
-    static ReadLog(logFile) {
-        actions := []
-        text := Harness.ReadOutput(logFile)
-        if (text = "")
-            return actions
-        for line in StrSplit(text, "`n", "`r") {
-            if (line = "")
-                continue
-            parts := StrSplit(line, "`t")
-            if (parts.Length < 3)
-                continue
-            if (parts[2] = "meta")
-                continue
-            entry := Map()
-            entry["kind"] := parts[2]
-            entry["name"] := parts[3]
-            actions.Push(entry)
-        }
-        return actions
-    }
-
 }

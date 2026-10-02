@@ -1,0 +1,131 @@
+{
+  "verdict": "PASS",
+  "summary": "PASS  {{LABEL}}  (1.61s)  0 error(s), 2 warning(s), 2 dialog(s), 2 shot(s)\n  ! ahk-warning: Warning: This local variable appears to never be assigned a value. | | Specifically: notDefinedAnywhere | | 004: FileAppend(\"before-warn`n\", \"*\", \"UTF-8\") | ▶ 005: y := notDefinedAnywhere + 1 | 006: FileAppend(\"after-war… (+75)\n  ! clipboard-touched: target emptied the clipboard; your clipboard content was restored\n  shots: 2  (shots/001_000538ms_ahk-warning.png, shots/002_000905ms_msgbox.png)\n  run: {{RUNDIR}}",
+  "data": {
+    "run": "{{RUN}}",
+    "kind": "run",
+    "label": "{{LABEL}}",
+    "verdict": "PASS",
+    "summary": "0 error(s), 2 warning(s), 2 dialog(s), 2 shot(s)",
+    "durationMs": 1608,
+    "startedAt": "2026-10-01T21:14:03.112Z",
+    "finishedAt": "2026-10-01T21:14:11.530Z",
+    "findings": [
+      {
+        "id": 1,
+        "t": 540,
+        "severity": "warn",
+        "proc": "main",
+        "dialog": 1,
+        "shot": "{{RUNDIR}}\\shots\\001_000538ms_ahk-warning.png",
+        "title": "{{SCRIPT_NAME}}",
+        "action": "pressed:System.Collections.Generic.Dictionary`2[System.String,System.Object]",
+        "kind": "ahk-warning",
+        "message": "Warning: This local variable appears to never be assigned a value. |  | \tSpecifically: notDefinedAnywhere |  | \t004: FileAppend(\"before-warn`n\", \"*\", \"UTF-8\") | ▶\t005: y := notDefinedAnywhere + 1 | \t006: FileAppend(\"after-warn`n\", \"*\", \"UTF-8\") |  | For more details, read the documentation for #Warn.",
+        "signature": "ahk-warning: Warning: This local variable appears to never be assigned a value. | | Specifically: notDefinedAnywhere | | N: FileAppend(\"befo"
+      },
+      {
+        "id": 2,
+        "t": 910,
+        "severity": "info",
+        "proc": "main",
+        "dialog": 2,
+        "shot": "{{RUNDIR}}\\shots\\002_000905ms_msgbox.png",
+        "title": "Notice",
+        "action": "pressed:default",
+        "kind": "dialog",
+        "message": "msgbox \"Notice\": Settings saved. [buttons: OK] -> pressed:default",
+        "signature": "dialog: msgbox \"Notice\": Settings saved. [buttons: OK] -> pressed:default"
+      },
+      {
+        "id": 3,
+        "t": 1302,
+        "severity": "warn",
+        "kind": "clipboard-touched",
+        "message": "target emptied the clipboard; your clipboard content was restored",
+        "signature": "clipboard-touched"
+      }
+    ],
+    "artifacts": [
+      {
+        "kind": "shot",
+        "path": "{{RUNDIR}}\\shots\\001_000538ms_ahk-warning.png",
+        "rel": "shots/001_000538ms_ahk-warning.png",
+        "label": "ahk-warning",
+        "technique": "printwindow-full",
+        "blank": false
+      },
+      {
+        "kind": "dialog",
+        "path": "{{RUNDIR}}\\dialogs\\001.json",
+        "rel": "dialogs/001.json",
+        "kindOf": "ahk-warning"
+      },
+      {
+        "kind": "shot",
+        "path": "{{RUNDIR}}\\shots\\002_000905ms_msgbox.png",
+        "rel": "shots/002_000905ms_msgbox.png",
+        "label": "msgbox",
+        "technique": "printwindow-full",
+        "blank": false
+      },
+      {
+        "kind": "dialog",
+        "path": "{{RUNDIR}}\\dialogs\\002.json",
+        "rel": "dialogs/002.json",
+        "kindOf": "msgbox"
+      }
+    ],
+    "meta": {
+      "script": "{{SCRIPT}}",
+      "ahk": "{{AHK}}",
+      "args": [],
+      "harness": "ahkh 0.1.0",
+      "desktop": "AHKH_18204_7c1e",
+      "screen": [
+        1920,
+        1080
+      ]
+    },
+    "procs": {
+      "main": {
+        "pid": 23140,
+        "exitCode": 0,
+        "exitName": null,
+        "elapsedMs": 1540,
+        "stdout": "procs/main/stdout.txt",
+        "stderr": "procs/main/stderr.txt"
+      }
+    },
+    "guard": {
+      "violations": [
+        {
+          "kind": "clipboard-touched",
+          "t": 1302,
+          "restored": true,
+          "owner": "0x0",
+          "note": "the user's clipboard was put back"
+        }
+      ],
+      "count": 1,
+      "cursorMoved": false,
+      "clipboardChangedByTarget": 1,
+      "clipboardSeqDelta": 2,
+      "clipboard": {
+        "snapshotFormats": 1,
+        "restores": 1,
+        "restoreFailures": 0,
+        "note": null
+      },
+      "foregroundChanged": false,
+      "error": null
+    },
+    "dialogs": 2,
+    "shots": 2,
+    "exitCode": 0,
+    "runDir": "{{RUNDIR}}"
+  },
+  "runDir": "{{RUNDIR}}",
+  "exitCode": 0,
+  "images": []
+}

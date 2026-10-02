@@ -1,0 +1,2 @@
+{"t":212,"ts":"2026-10-01T21:14:03.810Z","kind":"host.out","proc":"main","stream":"out","text":"before-error"}
+{"t":598,"ts":"2026-10-01T21:14:03.543Z","kind":"host.win.new","hwnd":"0x40D2A6","pid":23140,"proc":"main","class":"#32770","title":"{{SCRIPT_NAME}}","rect":[700,380,1220,700]}

@@ -1,0 +1,115 @@
+{
+  "verdict": "DIALOG",
+  "summary": "DIALOG  {{LABEL}}  (1.98s)  2 error(s), 0 warning(s), 2 dialog(s), 2 shot(s)\n  ✗ dialog: msgbox \"Confirm\": Really erase all data? [buttons: &Yes/&No] -> pressed:default\n  ✗ dialog: fileselect \"Open a log file\": [buttons: &Open/Cancel] -> closed\n  shots: 2  (shots/001_000598ms_msgbox.png, shots/002_001477ms_fileselect.png)\n  run: {{RUNDIR}}",
+  "data": {
+    "run": "{{RUN}}",
+    "kind": "run",
+    "label": "{{LABEL}}",
+    "verdict": "DIALOG",
+    "summary": "2 error(s), 0 warning(s), 2 dialog(s), 2 shot(s)",
+    "durationMs": 1983,
+    "startedAt": "2026-10-01T21:14:03.112Z",
+    "finishedAt": "2026-10-01T21:14:11.530Z",
+    "findings": [
+      {
+        "id": 1,
+        "t": 612,
+        "severity": "error",
+        "proc": "main",
+        "dialog": 1,
+        "shot": "{{RUNDIR}}\\shots\\001_000598ms_msgbox.png",
+        "title": "Confirm",
+        "action": "pressed:default",
+        "kind": "dialog",
+        "message": "msgbox \"Confirm\": Really erase all data? [buttons: &Yes/&No] -> pressed:default",
+        "signature": "dialog: msgbox \"Confirm\": Really erase all data? [buttons: &Yes/&No] -> pressed:default"
+      },
+      {
+        "id": 2,
+        "t": 1490,
+        "severity": "error",
+        "proc": "main",
+        "dialog": 2,
+        "shot": "{{RUNDIR}}\\shots\\002_001477ms_fileselect.png",
+        "title": "Open a log file",
+        "action": "closed",
+        "kind": "dialog",
+        "message": "fileselect \"Open a log file\":  [buttons: &Open/Cancel] -> closed",
+        "signature": "dialog: fileselect \"Open a log file\": [buttons: &Open/Cancel] -> closed"
+      }
+    ],
+    "artifacts": [
+      {
+        "kind": "shot",
+        "path": "{{RUNDIR}}\\shots\\001_000598ms_msgbox.png",
+        "rel": "shots/001_000598ms_msgbox.png",
+        "label": "msgbox",
+        "technique": "printwindow-full",
+        "blank": false
+      },
+      {
+        "kind": "dialog",
+        "path": "{{RUNDIR}}\\dialogs\\001.json",
+        "rel": "dialogs/001.json",
+        "kindOf": "msgbox"
+      },
+      {
+        "kind": "shot",
+        "path": "{{RUNDIR}}\\shots\\002_001477ms_fileselect.png",
+        "rel": "shots/002_001477ms_fileselect.png",
+        "label": "fileselect",
+        "technique": "printwindow-full",
+        "blank": false
+      },
+      {
+        "kind": "dialog",
+        "path": "{{RUNDIR}}\\dialogs\\002.json",
+        "rel": "dialogs/002.json",
+        "kindOf": "fileselect"
+      }
+    ],
+    "meta": {
+      "script": "{{SCRIPT}}",
+      "ahk": "{{AHK}}",
+      "args": [],
+      "harness": "ahkh 0.1.0",
+      "desktop": "AHKH_18204_7c1e",
+      "screen": [
+        1920,
+        1080
+      ]
+    },
+    "procs": {
+      "main": {
+        "pid": 23140,
+        "exitCode": 0,
+        "exitName": null,
+        "elapsedMs": 1702,
+        "stdout": "procs/main/stdout.txt",
+        "stderr": "procs/main/stderr.txt"
+      }
+    },
+    "guard": {
+      "violations": [],
+      "count": 0,
+      "cursorMoved": false,
+      "clipboardChangedByTarget": 0,
+      "clipboardSeqDelta": 0,
+      "clipboard": {
+        "snapshotFormats": 1,
+        "restores": 0,
+        "restoreFailures": 0,
+        "note": null
+      },
+      "foregroundChanged": false,
+      "error": null
+    },
+    "dialogs": 2,
+    "shots": 2,
+    "exitCode": 8,
+    "runDir": "{{RUNDIR}}"
+  },
+  "runDir": "{{RUNDIR}}",
+  "exitCode": 8,
+  "images": []
+}

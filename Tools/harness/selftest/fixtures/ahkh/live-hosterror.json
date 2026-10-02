@@ -1,0 +1,51 @@
+{
+  "verdict": "ERROR",
+  "summary": "ERROR  {{LABEL}}  (30.41s)  1 error(s), 0 warning(s), 0 dialog(s), 0 shot(s)\n  ✗ host-error: host request timed out: proc.start\n  run: {{RUNDIR}}",
+  "data": {
+    "run": "{{RUN}}",
+    "kind": "run",
+    "label": "{{LABEL}}",
+    "verdict": "ERROR",
+    "summary": "1 error(s), 0 warning(s), 0 dialog(s), 0 shot(s)",
+    "durationMs": 30410,
+    "startedAt": "2026-10-01T21:14:03.112Z",
+    "finishedAt": "2026-10-01T21:14:11.530Z",
+    "findings": [
+      {
+        "id": 1,
+        "t": 30188,
+        "severity": "error",
+        "kind": "host-error",
+        "message": "host request timed out: proc.start",
+        "signature": "host-error: host request timed out: proc.start"
+      }
+    ],
+    "artifacts": [],
+    "meta": {
+      "script": "{{SCRIPT}}",
+      "ahk": "{{AHK}}",
+      "args": [],
+      "harness": "ahkh 0.1.0",
+      "desktop": "AHKH_18204_7c1e",
+      "screen": [
+        1920,
+        1080
+      ]
+    },
+    "procs": {
+      "main": {
+        "killedBy": "end-of-session",
+        "stdout": "procs/main/stdout.txt",
+        "stderr": "procs/main/stderr.txt"
+      }
+    },
+    "guard": null,
+    "dialogs": 0,
+    "shots": 0,
+    "exitCode": 2,
+    "runDir": "{{RUNDIR}}"
+  },
+  "runDir": "{{RUNDIR}}",
+  "exitCode": 2,
+  "images": []
+}
