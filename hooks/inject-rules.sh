@@ -7,6 +7,7 @@
 source "$(dirname "${BASH_SOURCE[0]}")/_harness-env.sh"
 
 input=$(cat)
+harness_need_jq || exit 1
 file_path=$(echo "$input" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
 session_id=$(echo "$input" | jq -r '.session_id // "default"' 2>/dev/null)
 [[ -z "$file_path" ]] && exit 0
@@ -14,11 +15,16 @@ session_id=$(echo "$input" | jq -r '.session_id // "default"' 2>/dev/null)
 RULES_DIR="$(dirname "${BASH_SOURCE[0]}")/../rules"
 [[ -d "$RULES_DIR" ]] || exit 0
 
-# Normalize the edited path to a project-relative WSL path.
-fp="$file_path"
-case "$fp" in [A-Za-z]:*|*\\*) fp=$(wslpath -u "$fp" 2>/dev/null) ;; esac
-proj="${CLAUDE_PROJECT_DIR:-${PROJECT_DIR:-$PWD}}"
-relpath="${fp#"$proj"/}"
+# Normalize the edited path to a project-relative path. Both sides go through the
+# same helper, so C:\... (Git Bash), /mnt/c/... (WSL) and a mix of the two line up;
+# the prefix test ignores case because Windows paths do.
+fp="$(harness_to_unix "$file_path")"
+proj="$(harness_to_unix "${CLAUDE_PROJECT_DIR:-${PROJECT_DIR:-$PWD}}")"
+proj="${proj%/}"
+relpath="$fp"
+if [[ -n "$proj" && "${fp,,}" == "${proj,,}/"* ]]; then
+    relpath="${fp:${#proj}+1}"
+fi
 
 seen="/tmp/claude-rules-injected-$session_id"
 touch "$seen" 2>/dev/null

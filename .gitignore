@@ -44,6 +44,7 @@ $RECYCLE.BIN/
 
 # Claude harness (machine-local config + runtime logs)
 harness.env
+harness.local.env
 .claude/error-log.jsonl
 .claude/session-events.jsonl
 .verify.*

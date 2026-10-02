@@ -13,6 +13,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/_harness-env.sh"
 IFS=',' read -ra BLOCKLISTED_ACCOUNTS <<< "${GIT_BLOCKLIST:-}"
 
 input=$(cat)
+harness_need_jq || exit 1
 cmd=$(echo "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)
 
 [[ -z "$cmd" ]] && exit 0
@@ -53,6 +54,8 @@ fi
 # prefix, use that; otherwise use the current shell cwd.
 target_dir=""
 cd_match=$(echo "$cmd" | grep -oE '(^|&&|;)[[:space:]]*cd[[:space:]]+[^&;|]+' | head -1 | sed -E 's/^(&&|;)?[[:space:]]*cd[[:space:]]+//' | tr -d '"' | tr -d "'" | sed 's/[[:space:]]*$//')
+# The cd target may be spelled for another shell (C:\..., /mnt/c/...).
+[[ -n "$cd_match" ]] && cd_match="$(harness_to_unix "$cd_match")"
 if [[ -n "$cd_match" && -d "$cd_match" ]]; then
     target_dir="$cd_match"
 else

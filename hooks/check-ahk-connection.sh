@@ -3,8 +3,11 @@
 # Checks if AutoHotkey is likely connected by testing port 9000.
 # Provides helpful context if the debugger isn't reachable.
 
+source "$(dirname "${BASH_SOURCE[0]}")/_harness-env.sh"
+
 # Read tool input from stdin
 INPUT=$(cat)
+harness_need_jq || exit 1
 TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)
 
 # Only check for debug-related MCP tools

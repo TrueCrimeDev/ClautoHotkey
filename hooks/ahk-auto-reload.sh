@@ -8,6 +8,7 @@
 source "$(dirname "${BASH_SOURCE[0]}")/_harness-env.sh"
 
 input=$(cat)
+harness_need_jq || exit 1
 tool_name=$(echo "$input" | jq -r '.tool_name // empty' 2>/dev/null)
 session_id=$(echo "$input" | jq -r '.session_id // "default"' 2>/dev/null)
 
@@ -41,12 +42,19 @@ esac
 
 [[ ${#file_paths[@]} -eq 0 ]] && exit 0
 
+# Restarting means stopping a script and starting it again with the interpreter;
+# without one, stop before stopping anything.
+harness_need_ahk || exit 1
+
+# A value for a single-quoted PowerShell string, where only ' is special. Doubling
+# backslashes (what this used to do) breaks [regex]::Escape, which then looks for
+# C:\\Users and never matches a real command line.
+ps_quote() { printf '%s' "${1//\'/\'\'}"; }
+
 # Process each detected path (most edits only touch one)
 for file_path in "${file_paths[@]}"; do
-    # Normalize Windows-style paths to WSL paths if needed
-    case "$file_path" in
-        [A-Za-z]:*|*\\*) file_path=$(wslpath -u "$file_path" 2>/dev/null) ;;
-    esac
+    # One spelling for this shell, whatever the tool or command used.
+    file_path=$(harness_to_unix "$file_path")
     [[ -z "$file_path" || ! "$file_path" == *.ahk ]] && continue
 
 filename=$(basename "$file_path")
@@ -57,8 +65,8 @@ IFS=',' read -ra _noreload <<< "${NO_AUTO_RELOAD:-}"
 for n in "${_noreload[@]}"; do [[ -n "$n" && "$filename" == "$(echo "$n" | xargs)" ]] && skip_reload=true; done
 [[ "$skip_reload" == true ]] && continue
 
-AHK_EXE="${AHK_EXE:-$AHK_BIN_WSL}"
-AHK_WIN=$(wslpath -w "$AHK_EXE" 2>/dev/null | sed 's/\\/\\\\/g')
+AHK_EXE="${AHK_EXE:-$AHK_BIN_SH}"
+AHK_WIN=$(ps_quote "$(harness_to_win "$AHK_EXE")")
 
 D="\x1b[90m"
 C="\x1b[36m"
@@ -68,7 +76,7 @@ Z="\x1b[0m"
 if [[ "$file_path" == *"/Lib/"* ]]; then
     lib_dir=$(dirname "$file_path")
     script_dir=$(dirname "$lib_dir")
-    search_dir=$(wslpath -w "$script_dir" 2>/dev/null | sed 's/\\/\\\\/g')
+    search_dir=$(ps_quote "$(harness_to_win "$script_dir")")
 
     result=$(powershell.exe -NoProfile -Command "
         \$procs = Get-CimInstance Win32_Process -Filter \"Name='AutoHotkey64.exe'\" |
@@ -92,11 +100,11 @@ if [[ "$file_path" == *"/Lib/"* ]]; then
         echo -e "${D}──────────────────────────────────────────${Z}" >&2
     fi
 else
-    win_filename=$(basename "$file_path" | sed 's/\\/\\\\/g')
+    win_filename=$(ps_quote "$(basename "$file_path")")
 
     result=$(powershell.exe -NoProfile -Command "
         \$proc = Get-CimInstance Win32_Process -Filter \"Name='AutoHotkey64.exe'\" |
-            Where-Object { \$_.CommandLine -like '*$win_filename*' } |
+            Where-Object { \$_.CommandLine -like ('*' + [WildcardPattern]::Escape('$win_filename') + '*') } |
             Select-Object -First 1
         if (\$proc) {
             \$cmd = \$proc.CommandLine

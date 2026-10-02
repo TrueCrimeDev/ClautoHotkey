@@ -4,9 +4,36 @@
 # Rules in the plugin's `rules/` are path-scoped references the model reads when editing matching files.
 # Debugger docs load on demand via /ahk-fix or /ahk-debug-dashboard skills.
 
+source "$(dirname "${BASH_SOURCE[0]}")/_harness-env.sh"
+
+# Problems that leave hooks doing nothing are stated here, at the start, where both
+# the user (stderr) and the model (stdout context) see them.
+problems=()
+if [[ -z "${HARNESS_JQ:-}" ]]; then
+    problems+=("ClautoHotkey hooks inactive: install jq or Python 3. Until then edits are not validated, rules are not injected and the interpreter guard is off.")
+fi
+if [[ -z "${AHK_BIN_WIN:-}" ]]; then
+    problems+=("No AutoHotkey v2 interpreter configured or found: set AHK_BIN_WIN in harness.env (or harness.local.env). .ahk edits are not validated until then.")
+elif [[ "${AHK_BIN_MISSING:-0}" == 1 ]]; then
+    problems+=("Configured AutoHotkey binary not found: $AHK_BIN_WIN. Fix AHK_BIN_WIN in harness.env or harness.local.env; .ahk edits are not validated until then.")
+fi
+
 echo -e "\x1b[1;92m┌─ HOOK ▸ ahk-session-primer ─────────────────────────────\x1b[0m" >&2
 echo -e "\x1b[1;92m│\x1b[0m AHK v2 session context loaded" >&2
+for p in "${problems[@]}"; do
+    echo -e "\x1b[1;92m│\x1b[0m \x1b[1;91m${p}\x1b[0m" >&2
+done
 echo -e "\x1b[1;92m└─────────────────────────────────────────────────────────\x1b[0m" >&2
+
+if [[ ${#problems[@]} -gt 0 ]]; then
+    echo "## ClautoHotkey harness status"
+    echo
+    for p in "${problems[@]}"; do
+        echo "- $p"
+    done
+    echo "Tell the user about this before relying on automatic validation."
+    echo
+fi
 
 cat <<'CONTEXT'
 ## AHK v2 Session Context

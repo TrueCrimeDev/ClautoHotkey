@@ -7,7 +7,10 @@
 
 set -u
 
+source "$(dirname "${BASH_SOURCE[0]}")/_harness-env.sh"
+
 input=$(cat)
+harness_need_jq || exit 1
 
 event=$(echo "$input"   | jq -r '.hook_event_name // "unknown"' 2>/dev/null)
 session=$(echo "$input" | jq -r '.session_id      // empty'     2>/dev/null)

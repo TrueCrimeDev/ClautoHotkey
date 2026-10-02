@@ -7,9 +7,10 @@
 # Timing
 start_ns=$(date +%s%N)
 
-# Load config (AHK_BIN_WSL, AHK_DIAG_JSON, MAIN_SCRIPT, dependency lists).
+# Load config (AHK_BIN_SH, AHK_DIAG_JSON, MAIN_SCRIPT, dependency lists) and the
+# path helpers; on a machine without jq it also provides the jqlite fallback.
 source "$(dirname "${BASH_SOURCE[0]}")/_harness-env.sh"
-AHK_EXE="${AHK_EXE:-$AHK_BIN_WSL}"
+AHK_EXE="${AHK_EXE:-$AHK_BIN_SH}"
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${PROJECT_DIR:-$(pwd)}}"
 MAIN_SCRIPT="${MAIN_SCRIPT:-main.ahk}"
@@ -26,6 +27,7 @@ ahk_validate() {
 
 # Parse JSON from stdin to get the edited file path
 input=$(cat)
+harness_need_jq || exit 1
 file_path=$(echo "$input" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
 session_id=$(echo "$input" | jq -r '.session_id // "default"' 2>/dev/null)
 
@@ -34,7 +36,17 @@ if [[ ! "$file_path" == *.ahk ]] || [[ "$file_path" == *.d.ahk ]]; then
     exit 0
 fi
 
-filename=$(basename "$file_path")
+# Nothing below can work without the interpreter; say so instead of passing silently.
+harness_need_ahk || exit 1
+
+# The edited path arrives as C:\x\y.ahk on Windows and /mnt/c/x/y.ahk or /home/... on
+# WSL. Normalise it once: a forward-slash copy for pattern checks (*/Lib/*), this
+# shell's spelling for file tests, and the Windows spelling the interpreter needs.
+fp_fwd="${file_path//\\//}"
+fp_unix="$(harness_to_unix "$file_path")"
+win_path="$(harness_to_win "$file_path")"
+
+filename="${fp_fwd##*/}"
 
 # Sentinel for auto-reload coordination. Cleared on entry; re-touched on any
 # failure path so ahk-auto-reload.sh (next in the PostToolUse chain) bails
@@ -59,7 +71,7 @@ log_error() {
         --arg type "$err_type" \
         --arg msg "$err_msg" \
         '{timestamp: $ts, tool: $tool, file: $file, line: ($line | tonumber? // 0), type: $type, message: $msg}' \
-        >> "$log_file" 2>/dev/null || true
+        2>/dev/null >> "$log_file" || true
 }
 
 # ── Colors ──
@@ -103,13 +115,6 @@ block_response() {
     echo "$context" >&2
 }
 
-# Convert WSL path to Windows path for the AHK engine
-if [[ "$file_path" == /mnt/* ]]; then
-    win_path=$(wslpath -w "$file_path" 2>/dev/null)
-else
-    win_path="$file_path"
-fi
-
 # Track which steps passed
 passed_steps=""
 
@@ -151,12 +156,13 @@ is_dependency=false
 IFS=',' read -ra _deps <<< "${DEPENDENCY_SCRIPTS:-}"
 for d in "${_deps[@]}"; do [[ -n "$d" && "$filename" == "$(echo "$d" | xargs)" ]] && is_dependency=true; done
 
-if [[ "$file_path" == *"/Lib/"* ]]; then
+if [[ "$fp_fwd" == *"/Lib/"* ]]; then
     is_dependency=true
 fi
 
-if [[ "$is_dependency" == true && -n "$MAIN_SCRIPT" && -f "$PROJECT_DIR/$MAIN_SCRIPT" ]]; then
-    main_win_path=$(wslpath -w "$PROJECT_DIR/$MAIN_SCRIPT" 2>/dev/null)
+main_unix="$(harness_to_unix "$PROJECT_DIR/$MAIN_SCRIPT")"
+if [[ "$is_dependency" == true && -n "$MAIN_SCRIPT" && -f "$main_unix" ]]; then
+    main_win_path="$(harness_to_win "$main_unix")"
 
     main_output=$(ahk_validate "$main_win_path")
     main_exit=$?
@@ -195,7 +201,7 @@ run_runtime_check=true
 # never launch GUI windows or trip on an unknown switch.
 [[ "${AHK_DIAG_JSON:-0}" != "1" ]] && run_runtime_check=false
 
-if [[ "$file_path" == *"/Lib/"* ]]; then
+if [[ "$fp_fwd" == *"/Lib/"* ]]; then
     run_runtime_check=false
 fi
 
@@ -203,16 +209,55 @@ fi
 IFS=',' read -ra _norun <<< "${NO_RUNTIME_CHECK:-}"
 for n in "${_norun[@]}"; do [[ -n "$n" && "$filename" == "$(echo "$n" | xargs)" ]] && run_runtime_check=false; done
 
+# The probe really runs the script, so when the harness ships its dry-run shim the
+# script runs with it injected: deletes, registry writes, Run, Send and window
+# changes are recorded instead of performed, label hotkeys stay suspended and
+# FileOpen writes land in a scratch sink. A script that does `#Import AHK` can
+# reach the real built-ins past the shim, so it is not run at all.
+DRY_RUN_SHIM="$_HARNESS_INSTALL_ROOT/Tools/harness/DryRunShim.ahk"
+[[ -f "$DRY_RUN_SHIM" ]] || DRY_RUN_SHIM=""
+if [[ "$run_runtime_check" == true && -n "$DRY_RUN_SHIM" ]] \
+        && grep -qiE '^\s*#Import\s+"?AHK\b' "$fp_unix" 2>/dev/null; then
+    run_runtime_check=false
+    passed_steps="$passed_steps  ${Y}runtime${D}(skipped: #Import AHK would bypass the dry-run shim)"
+fi
+
 if [[ "$run_runtime_check" == true ]]; then
     runtime_err_tmp="/tmp/ahk_runtime_err-$session_id.txt"
-    runtime_stdout=$(timeout 2 "$AHK_EXE" /ErrorStdOut /Headless "$win_path" 2>"$runtime_err_tmp")
-    runtime_exit=$?
+    if [[ -n "$DRY_RUN_SHIM" ]]; then
+        probe_dir="$(mktemp -d "${TMPDIR:-/tmp}/ahk-probe.XXXXXX" 2>/dev/null)" \
+            || probe_dir="${TMPDIR:-/tmp}/ahk-probe-$session_id-$$"
+        mkdir -p "$probe_dir/sink"
+        AHK_HARNESS_LOG="$(harness_to_win "$probe_dir/intent.log")"
+        AHK_HARNESS_SINK="$(harness_to_win "$probe_dir/sink")"
+        AHK_HARNESS_MAXSLEEP=50
+        export AHK_HARNESS_LOG AHK_HARNESS_SINK AHK_HARNESS_MAXSLEEP
+        # WSL hands a Windows program only the variables WSLENV lists.
+        [[ "$HARNESS_PLATFORM" == wsl ]] \
+            && export WSLENV="${WSLENV:+$WSLENV:}AHK_HARNESS_LOG:AHK_HARNESS_SINK:AHK_HARNESS_MAXSLEEP"
+        runtime_stdout=$(timeout 2 "$AHK_EXE" /ErrorStdOut=UTF-8 /force /Headless \
+            /include "$(harness_to_win "$DRY_RUN_SHIM")" "$win_path" 2>"$runtime_err_tmp")
+        runtime_exit=$?
+        [[ -n "$probe_dir" ]] && rm -rf "$probe_dir"
+    else
+        runtime_stdout=$(timeout 2 "$AHK_EXE" /ErrorStdOut /Headless "$win_path" 2>"$runtime_err_tmp")
+        runtime_exit=$?
+    fi
     runtime_stderr=$(cat "$runtime_err_tmp" 2>/dev/null)
     rm -f "$runtime_err_tmp"
 
     if [[ $runtime_exit -eq 124 ]]; then
         # Timeout — normal for persistent scripts
         passed_steps="$passed_steps  ${Y}runtime${D}(persistent)"
+    elif [[ -n "$DRY_RUN_SHIM" && $runtime_exit -eq 12 ]]; then
+        # Load failure under the shim, though step 1 loaded the script fine on its
+        # own: the script defines a function the shim also defines (two definitions
+        # of one name will not load). Not the script's fault - report, don't block.
+        if [[ "$runtime_stderr" == *"conflicts with an existing"* ]]; then
+            passed_steps="$passed_steps  ${Y}runtime${D}(skipped: script redefines a built-in the dry-run shim shadows)"
+        else
+            passed_steps="$passed_steps  ${Y}runtime${D}(skipped: script does not load under the dry-run shim)"
+        fi
     elif [[ $runtime_exit -ne 0 ]]; then
         if [[ -n "$runtime_stderr" ]]; then
             rt_diag_msg=$(echo "$runtime_stderr" | jq -r '.message // empty' 2>/dev/null)

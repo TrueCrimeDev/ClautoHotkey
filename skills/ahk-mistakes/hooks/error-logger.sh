@@ -11,7 +11,12 @@
 
 set -u
 
+# The shared loader lives in the plugin's hooks/ (this file is bundled with the
+# skill); it supplies the jqlite fallback when jq is not installed.
+source "$(dirname "${BASH_SOURCE[0]}")/../../../hooks/_harness-env.sh"
+
 input=$(cat)
+harness_need_jq || exit 1
 
 tool_name=$(echo "$input"  | jq -r '.tool_name  // empty'     2>/dev/null)
 session=$(echo "$input"    | jq -r '.session_id // "default"' 2>/dev/null)

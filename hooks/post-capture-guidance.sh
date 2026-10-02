@@ -2,7 +2,10 @@
 # PostToolUse hook for capture_error and analyze_error.
 # Provides workflow guidance after key tools complete.
 
+source "$(dirname "${BASH_SOURCE[0]}")/_harness-env.sh"
+
 INPUT=$(cat)
+harness_need_jq || exit 1
 TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)
 TOOL_OUTPUT=$(echo "$INPUT" | jq -r '.tool_output // empty' 2>/dev/null)
 

@@ -3,8 +3,9 @@
 # Long sessions lose awareness of what's running — this restores it.
 
 source "$(dirname "${BASH_SOURCE[0]}")/_harness-env.sh"
+harness_need_jq || exit 1
 
-# Get running AHK processes
+# Get running AHK processes (powershell.exe is on PATH under WSL and Git Bash alike)
 processes=$(powershell.exe -NoProfile -Command "
     Get-CimInstance Win32_Process -Filter \"Name='AutoHotkey64.exe'\" |
     ForEach-Object {

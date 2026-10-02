@@ -2,7 +2,10 @@
 # UserPromptSubmit hook: Detect AHK v1 syntax in user prompts
 # Non-blocking — adds context warning when v1 patterns are found.
 
+source "$(dirname "${BASH_SOURCE[0]}")/_harness-env.sh"
+
 input=$(cat)
+harness_need_jq || exit 1
 user_prompt=$(echo "$input" | jq -r '.prompt // .user_prompt // empty' 2>/dev/null)
 
 if [[ -z "$user_prompt" ]]; then
