@@ -119,9 +119,20 @@ routing table there maps keywords to the modules that exist:
 | com, comobject, excel, wmi, idispatch | `Module_COM.md` |
 | onmessage, sendmessage, subclass, winapi, winrt | `Module_WinAPI.md` |
 | version, fork, Print/Eval, portable, #Requires | `Module_Versions.md` |
+| timer, settimer, debounce, critical, async | `Module_AsyncAndTimers.md` |
+| function, parameter, scope, variadic, closure, byref | `Module_Functions.md` |
+| validate, guard clause, defensive, type check | `Module_Validation.md` |
+| review, audit, code review, find bugs | `Module_CodeReview.md` |
+| file, fileread, csv, ini, encoding | `Module_FileSystem.md` |
+| clipboard, run, process, registry, environment | `Module_System.md` |
+| #Include, #SingleInstance, tray, onexit, elevation | `Module_ScriptEnvironment.md` |
+| http, download, rest, winhttp, url | `Module_NetworkAndHTTP.md` |
+| hotkey, hotstring, send, inputhook, key state | `Module_InputAndHotkeys.md` |
+| winwait, winactivate, control, wintitle, window group | `Module_WindowAndControl.md` |
+| pixel, imagesearch, screenshot, monitor, dpi | `Module_GraphicsAndScreen.md` |
+| struct layout, rtl, virtualalloc, hresult, handle | `Module_DllCallMemory.md` |
 
-Domains without a dedicated module (files, hotkeys, timers, networking, screen) fall
-back to built-in AHK v2 knowledge. Each module carries YAML frontmatter (`name` +
+Each module carries YAML frontmatter (`name` +
 trigger-rich `description`) and is surfaced by a matching skill — the harness routes
 on those descriptions natively, so there is no manual routing table to maintain.
 
@@ -148,7 +159,7 @@ runs automatically as a `pre-commit` hook over staged modules.
 
 ```
 /Modules/      - Structured AHK v2 knowledge, one per domain (frontmatter + body)
-/skills/       - 19 skills (9 load a knowledge module, 10 drive the tooling)
+/skills/       - 25 skills (15 load a knowledge module, 10 drive the tooling)
 /agents/       - 9 fresh-context investigators
 /rules/        - 10 path-triggered rules
 /hooks/        - 12 lifecycle hooks, wired by hooks/hooks.json

@@ -124,7 +124,7 @@ It lives in four directories at the repo root, which is also the plugin layout:
 
 | Directory | Contents |
 |-----------|----------|
-| `skills/` | 19 skills — 9 that load a knowledge module, 10 that drive the interpreter |
+| `skills/` | 25 skills — 15 that load a knowledge module, 10 that drive the interpreter |
 | `agents/` | 9 fresh-context investigators |
 | `rules/` | 10 path-triggered rules, injected on first edit of a matching file |
 | `hooks/` | 12 lifecycle hooks, wired by `hooks/hooks.json` |

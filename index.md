@@ -19,9 +19,15 @@ module and apply its rules; tool skills drive the interpreter or the repo direct
 | `/ahk-fix` | Diagnose errors, debug | `Module_Errors.md` |
 | `/ahk-ref` | Broad multi-domain reference | `Module_Instructions.md` + 5 more |
 | `/ahk-com` | COM automation (Excel / WMI / events) | `Module_COM.md` |
-| `/ahk-dllcall` | DllCall, Buffer, Struct, callbacks | `Module_DllCall.md` |
+| `/ahk-dllcall` | DllCall, Buffer, Struct, callbacks | `Module_DllCall.md`, `Module_DllCallMemory.md` |
 | `/ahk-winapi` | Messages, subclassing, DWM, WinRT | `Module_WinAPI.md` |
 | `/ahk-versions` | Version / portability, fork features | `Module_Versions.md` |
+| `/ahk-async` | Timers, debounce, Critical, scope, closures | `Module_AsyncAndTimers.md`, `Module_Functions.md` |
+| `/ahk-input` | Hotkeys, Send, InputHook, windows and controls | `Module_InputAndHotkeys.md`, `Module_WindowAndControl.md` |
+| `/ahk-screen` | Pixels, images, monitors, DPI, capture | `Module_GraphicsAndScreen.md` |
+| `/ahk-system` | Files, clipboard, Run, registry, directives, tray | `Module_FileSystem.md`, `Module_System.md`, `Module_ScriptEnvironment.md` |
+| `/ahk-net` | HTTP, downloads, JSON over the wire | `Module_NetworkAndHTTP.md` |
+| `/ahk-review` | Script review, guard clauses, validation | `Module_CodeReview.md`, `Module_Validation.md` |
 
 **Tool skills**
 
@@ -49,6 +55,12 @@ subject-leading, trigger-rich `description`).
 - [Module_GUI.md](Modules/Module_GUI.md) · [Module_Errors.md](Modules/Module_Errors.md) — GUI construction through form validation; the whole error and diagnostic domain.
 - [Module_DllCall.md](Modules/Module_DllCall.md) · [Module_COM.md](Modules/Module_COM.md) · [Module_WinAPI.md](Modules/Module_WinAPI.md) — native interop.
 - [Module_Versions.md](Modules/Module_Versions.md) — v2.0 / v2.1-alpha / +Console fork capability matrix and portable fallbacks.
+- [Module_DllCallMemory.md](Modules/Module_DllCallMemory.md) — struct layout, block memory, HRESULT checks, handle ownership, hook procedures.
+- [Module_AsyncAndTimers.md](Modules/Module_AsyncAndTimers.md) · [Module_Functions.md](Modules/Module_Functions.md) — timer lifecycle, Critical, debounce; scope, variadics, closures.
+- [Module_Validation.md](Modules/Module_Validation.md) · [Module_CodeReview.md](Modules/Module_CodeReview.md) — guard clauses and validators; a method for reviewing scripts.
+- [Module_FileSystem.md](Modules/Module_FileSystem.md) · [Module_System.md](Modules/Module_System.md) · [Module_ScriptEnvironment.md](Modules/Module_ScriptEnvironment.md) — files, OS integration, the script shell.
+- [Module_NetworkAndHTTP.md](Modules/Module_NetworkAndHTTP.md) — HTTP, downloads, async and parallel requests.
+- [Module_InputAndHotkeys.md](Modules/Module_InputAndHotkeys.md) · [Module_WindowAndControl.md](Modules/Module_WindowAndControl.md) · [Module_GraphicsAndScreen.md](Modules/Module_GraphicsAndScreen.md) — input, windows and controls, screen and DPI.
 
 ### Supplemental (`Modules/Supplemental/`)
 

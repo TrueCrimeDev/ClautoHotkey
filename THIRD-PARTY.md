@@ -26,6 +26,23 @@ describes the library; it does not ship it.
 | `Modules/Supplemental/Module_TapHold.md` | TapHoldManager | evilC |
 | `Modules/Supplemental/Module_JSDOC.md` | JSDoc dialect + LSP hover behaviour | Nich-Cebolla (dialect), thqby (ahk2-lsp) |
 
+## Adapted from other repositories
+
+These modules were adapted from <https://github.com/hsinming/AutoHotkey-V2-vibe-coding-tools>
+(author hsinming). That repository carries no license file, so its text was not copied as-is: each
+module was rewritten, corrected against the +Console fork and checked with the real parser. Each file
+ends with an attribution comment. The upstream repository is itself derived from earlier ClautoHotkey
+modules; only its additional modules are listed.
+
+| Module | Notes |
+|---|---|
+| `Modules/Module_AsyncAndTimers.md`, `Module_Functions.md` | timer lifecycle, scope and closures |
+| `Modules/Module_Validation.md`, `Module_CodeReview.md` | guard clauses; review method |
+| `Modules/Module_DllCallMemory.md` | struct layout and handle ownership (partly merged into `Module_DllCall.md`, `Module_WinAPI.md`) |
+| `Modules/Module_System.md`, `Module_ScriptEnvironment.md` | OS integration and script shell (partly merged into `Module_COM.md`) |
+| `Modules/Module_FileSystem.md`, `Module_NetworkAndHTTP.md` | files and HTTP |
+| `Modules/Module_InputAndHotkeys.md`, `Module_WindowAndControl.md`, `Module_GraphicsAndScreen.md` | input, windows, screen |
+
 ## Interpreter
 
 The `+Console` fork referenced throughout `Module_Versions.md` and the `ahk-interpreter`

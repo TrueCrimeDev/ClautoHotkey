@@ -1,6 +1,6 @@
 {
   "name": "clautohotkey",
-  "description": "AutoHotkey v2 coding companion: 23 knowledge modules, 19 skills, 9 agents, path-triggered rules, a post-edit validator that blocks broken code before it lands, and a four-tier grading harness that runs scripts without letting them touch the machine.",
+  "description": "AutoHotkey v2 coding companion: 35 knowledge modules, 25 skills, 9 agents, path-triggered rules, a post-edit validator that blocks broken code before it lands, and a four-tier grading harness that runs scripts without letting them touch the machine.",
   "version": "1.2.0",
   "author": {
     "name": "TrueCrimeDev"

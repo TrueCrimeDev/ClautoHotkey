@@ -3,11 +3,13 @@ name: Module_COM
 description: 'Classic COM in AHK v2 — IDispatch late-binding automation (Excel, Word, WMI, Shell),
   ComObjConnect event sinks, ComValue/VARIANT typing, SafeArrays, and direct vtable ComCall.
   TRIGGER when the request involves: COM, ComObject, ComObjGet, ComCall, ComValue, ComObjArray,
-  ComObjConnect, ComObjQuery, ComObjFromPtr, IDispatch, IUnknown, vtable, "Excel automation",
-  "Word automation", "WMI", "Shell.Application", "Internet Explorer", "COM event", "SafeArray", "VARIANT",
-  "automation object", "CLSID", "ProgID", "QueryInterface". Not covered: raw DllCall, Buffer and
-  Struct marshalling - see Module_DllCall.md; WinRT activation and the IInspectable ABI -
-  see Module_WinAPI.md.'
+  ComObjConnect, ComObjQuery, ComObjFromPtr, ComObjActive, IDispatch, IUnknown, vtable,
+  "Excel automation", "Word automation", "WMI", "WQL", "winmgmts", "Shell.Application",
+  "Internet Explorer", "COM event", "SafeArray", "VARIANT", "automation object", "CLSID", "ProgID",
+  "QueryInterface", "zombie Excel process", "attach to running instance", "bulk Excel write".
+  Not covered: raw DllCall, Buffer and Struct marshalling - see Module_DllCall.md; WinRT activation
+  and the IInspectable ABI - see Module_WinAPI.md; clipboard, Run/RunWait, process and registry
+  work - see Module_System.md.'
 ---
 
 # Module_COM
@@ -178,12 +180,130 @@ if ComCall(0, baseObj, "Ptr", riid, "Ptr*", &pNext := 0, "Int") = 0 {   ; QueryI
 }
 ```
 
+## TIER 6 — Owned versus attached instances, and teardown
+> COVERED: ComObject · ComObjActive · try/finally · Quit · reference release
+
+Two lifecycles look alike and must not be mixed. A script that **created** the application
+with `ComObject` owns it and is responsible for `Quit()`. A script that **attached** to a
+running instance with `ComObjActive` borrowed the user's session: it releases its reference and
+never calls `Quit()`.
+
+Order matters for the owner. Dropping the last reference does not tell Excel to exit, so a
+hidden `EXCEL.EXE` stays alive (locking files) unless `Quit()` runs first. Put the teardown in
+`finally` so an exception on the way out cannot skip it, and guard each call because a COM
+failure throws an ordinary catchable `Error`.
+
+```ahk
+OwnedLifecycle() {
+    xl := ""
+    wb := ""
+    try {
+        xl := ComObject("Excel.Application")
+        xl.Visible := false
+        wb := xl.Workbooks.Add()
+        wb.ActiveSheet.Range("A1").Value := "Hello"
+    } catch Error as err {
+        Print("COM failed: {}", err.Message)
+    } finally {
+        if wb
+            try wb.Close(false)
+        if xl
+            try xl.Quit()                    ; ask the host to exit BEFORE dropping refs
+        wb := ""
+        xl := ""
+    }
+}
+
+AttachedLifecycle() {
+    try {
+        xl := ComObjActive("Excel.Application")   ; the user's running session
+        xl.ActiveSheet.Range("A1").Value := "Updated"
+        ; xl.Quit() here would close the user's own Excel window
+    } catch Error as err {
+        Print("no running Excel: {}", err.Message)
+    }
+}
+```
+
+Office object models also accept locale-independent numeric constants — prefer
+`xl.Calculation := -4135` (`xlCalculationManual`) over a localized name string.
+
+## TIER 7 — Bulk transfer with a 2D SafeArray
+> COVERED: ComObjArray with two dimensions · Range.Value · restoring application state
+
+Every property access on a COM object crosses a process boundary. Writing 10,000 cells one
+`Cells(i, 1).Value := v` at a time is 10,000 crossings; assigning one SafeArray to
+`Range.Value` is one. SafeArray indices are **0-based** here, unlike an AHK `Array`. A 2D
+array read back from `Range.Value` is 1-based in each dimension — use
+`arr.MinIndex(dim)` and `arr.MaxIndex(dim)` rather than assuming either.
+
+```ahk
+WriteMapToExcel(data) {
+    xl := ComObject("Excel.Application")
+    try {
+        xl.ScreenUpdating := false
+        xl.Calculation := -4135                 ; xlCalculationManual
+        sheet := xl.Workbooks.Add().ActiveSheet
+
+        block := ComObjArray(12, data.Count, 2) ; VT_VARIANT, rows x columns
+        row := 0
+        for key, val in data {
+            block[row, 0] := key
+            block[row, 1] := val
+            row++
+        }
+        sheet.Range("A1:B" data.Count).Value := block   ; single crossing
+    } finally {
+        xl.Calculation := -4105                 ; xlCalculationAutomatic
+        xl.ScreenUpdating := true
+        xl.Visible := true                      ; hand the workbook to the user
+    }
+}
+```
+
+Leaving `ScreenUpdating` or `Calculation` changed after an error makes the workbook look frozen,
+which is why the restore sits in `finally`.
+
+## TIER 8 — WMI results into a Map
+> COVERED: winmgmts moniker with impersonation · WQL column lists · Map.Has
+
+Service, hardware and many process queries need the impersonation level in the moniker. Select
+only the columns you read — `SELECT *` marshals every property. Copy the result into a `Map` so
+later lookups are plain AHK, and test with `Has()` before indexing (a missing key throws).
+Wrap the connection in `try`: WMI availability and permissions vary by machine.
+
+```ahk
+RunningServices() {
+    services := Map()
+    try {
+        wmi := ComObjGet("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
+        for svc in wmi.ExecQuery("SELECT Name, DisplayName FROM Win32_Service WHERE State='Running'")
+            services[svc.Name] := svc.DisplayName
+    } catch Error as err {
+        Print("WMI query failed: {}", err.Message)
+    }
+    return services
+}
+
+running := RunningServices()
+if running.Has("Spooler")
+    Print("Print spooler is running: {}", running["Spooler"])
+```
+
+Starting, stopping or reconfiguring a service is a state change that needs an elevated
+process (`A_IsAdmin`); see `Module_System.md` for the guard and for process, registry and
+clipboard work that is not COM.
+
 ## SEE ALSO
 
 > This module does NOT cover: raw `DllCall`, `Buffer`, and `Struct` marshalling → see Module_DllCall.md
 > This module does NOT cover: WinRT activation (`RoActivateInstance`) and the IInspectable ABI → see Module_WinAPI.md
+> This module does NOT cover: clipboard, process, registry and `Run`/`RunWait` → see Module_System.md
 
+- `Module_System.md` — clipboard, `Run`/`RunWait` exit codes, process and registry operations that need no COM; the `A_IsAdmin` guard for elevated WMI changes.
 - `Module_DllCall.md` — `ComCall` shares `DllCall`'s type strings; `Buffer`/`Struct` build the IIDs and structs COM passes.
 - `Module_WinAPI.md` — WinRT is COM under the hood: same `ComCall`-by-vtable pattern, plus factory activation and HSTRING marshalling.
 - `Module_Errors.md` — catching COM exceptions (`Error` with HRESULT/`.Extra`) and OSError patterns.
 - `Module_Objects.md` — event-sink classes and `.Bind(this)` for COM callback context.
+
+<!-- Adapted in part from hsinming/AutoHotkey-V2-vibe-coding-tools (no license file upstream); see THIRD-PARTY.md -->
