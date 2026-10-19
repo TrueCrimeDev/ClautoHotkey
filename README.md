@@ -126,7 +126,7 @@ It lives in four directories at the repo root, which is also the plugin layout:
 |-----------|----------|
 | `skills/` | 19 skills — 9 that load a knowledge module, 10 that drive the interpreter |
 | `agents/` | 9 fresh-context investigators |
-| `rules/` | 10 path-triggered rules, injected on first edit of a matching file |
+| `rules/` | 11 path-triggered rules, injected on first edit of a matching file |
 | `hooks/` | 12 lifecycle hooks, wired by `hooks/hooks.json` |
 
 A leaner, AHK-agnostic version of the same harness is published separately as
@@ -144,7 +144,7 @@ Invoke with `/<name>`:
 | `/ahk-text` | Strings, regex, escaping, parsing | `/ahk-docs` | Search the AHK v2 docs |
 | `/ahk-fix` | Diagnose errors, debug, fix | `/ahk-ref` | Broad multi-domain reference |
 | `/ahk-run` | Run headlessly, capture output | `/ahk-audit-errors` | Find silent failures / empty catches |
-| `/ahk-eval` | Live REPL via the fork's `repl` subcommand | `/ahk-mistakes` | Recurring mistakes from the log |
+| `/ahk-eval` | Live REPL via the fork's `repl` subcommand | `/ahk-mistakes` | Recurring mistakes from the log, recorded as lessons |
 | `/ahk-com` | COM automation (Excel / WMI / events) | `/ahk-debug-dashboard` | Live debug state in a session |
 | `/ahk-dllcall` | DllCall, Buffer, Struct, callbacks | `/ahk-winapi` | Messages, subclassing, DWM, WinRT |
 | `/ahk-versions` | Version / portability, fork features | | |
@@ -170,8 +170,9 @@ Fresh-context investigators — launched when a task needs its own window:
 Path-scoped notes in `rules/` that auto-load when you edit a matching file:
 `ahk-v2-syntax` (any `.ahk`), `ahk-target` (keeps generated code on the build you have),
 `gui-work` (GUI files), `lib-development` (`Lib/`), `main-script`, `test-scripts`,
-`demo-location`, `no-banner-comments`, `ahk-interpreter`, and `ahk-fork-features`
-(the +Console fork).
+`demo-location`, `no-banner-comments`, `ahk-interpreter`, `ahk-fork-features`
+(the +Console fork), and `harness-surface` (editing the harness itself: the cost order
+for new instruction and the lint that must pass).
 
 ### Hooks
 
@@ -214,6 +215,9 @@ dry-run → live** — and a failed tier ends that script's branch.
 | `Tools/harness/Reduce.ahk` | Delta-debugs a failing script down to the fewest lines that still fail the same way |
 | `Tools/harness/SelfTest.ahk` | `--run` proves the harness works on this machine: every gate against canaries with known verdicts, including that their attempted side effects never landed |
 | `Tools/harness/CONTRACT.md` | The result schema every tier obeys |
+| `Tools/harness/ADAPT.md` | How the harness improves from evidence: propose, probe, compose over the runway benchmark, with lessons as the library |
+| `Tools/lint_harness.py` | Validates the harness tree itself: skill and agent wiring, hook scripts that exist, rule paths, lesson fields, doc counts and the always-on budget |
+| `Tools/lessons.py` | The lesson library under `lessons/`: `propose` turns the error log into candidate rows, `add` refuses an entry without cue, lesson, evidence and confidence, `index` rebuilds `lessons/INDEX.md` |
 
 ```bash
 AutoHotkey64.exe Tools/harness/GateStatic.ahk MyScript.ahk        # tier 1

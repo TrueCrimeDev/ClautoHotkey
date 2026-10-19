@@ -48,6 +48,13 @@ win_path="$(harness_to_win "$file_path")"
 
 filename="${fp_fwd##*/}"
 
+# The edited file may have been renamed or deleted before this hook runs (a
+# transient probe script cleaned up mid-edit). Nothing to validate: bail quietly
+# instead of blocking the edit and logging a spurious "Script file not found".
+if [[ ! -f "$fp_unix" ]]; then
+    exit 0
+fi
+
 # Sentinel for auto-reload coordination. Cleared on entry; re-touched on any
 # failure path so ahk-auto-reload.sh (next in the PostToolUse chain) bails
 # rather than restarting a script that just failed validation.
@@ -70,7 +77,8 @@ log_error() {
         --arg line "$err_line" \
         --arg type "$err_type" \
         --arg msg "$err_msg" \
-        '{timestamp: $ts, tool: $tool, file: $file, line: ($line | tonumber? // 0), type: $type, message: $msg}' \
+        --arg session "$session_id" \
+        '{timestamp: $ts, session: $session, tool: $tool, file: $file, line: ($line | tonumber? // 0), type: $type, message: $msg}' \
         2>/dev/null >> "$log_file" || true
 }
 
@@ -114,6 +122,30 @@ block_response() {
     echo "$reason" >&2
     echo "$context" >&2
 }
+
+# The first script in the edited file's folder, or its parent, whose #Include
+# names the file. Followed up to three levels so a module reached through another
+# module still resolves to the script that actually runs. Bounded to those two
+# folders so the hook stays fast on a large tree.
+find_includer() {
+    local target="$1" depth=0 dir base found
+    while (( depth < 3 )); do
+        dir="${target%/*}"; base="${target##*/}"
+        # One grep over both folders: a process per file costs 20ms each on
+        # Git Bash, which is 16 seconds on a folder of 800 scripts.
+        found="$(grep -liE "^[[:space:]]*#Include[[:space:]]+(\*i[[:space:]]+)?[\"']?([^\"';]*[\\/])?${base//./\\.}[\"']?[[:space:]]*(;.*)?\$" \
+                    "$dir"/*.ahk "${dir%/*}"/*.ahk 2>/dev/null | grep -vFx "$target" | head -1)"
+        [[ -n "$found" ]] || break
+        target="$found"; depth=$((depth + 1))
+    done
+    (( depth > 0 )) && printf '%s\n' "$target"
+}
+
+# A file another script includes is a module, and its real verdict is the
+# includer's. Found once here: step 2 uses it to decide whether the main script
+# needs rechecking, step 3 to decide what to run.
+includer="$(find_includer "$fp_unix")"
+includer_name="${includer##*/}"
 
 # Track which steps passed
 passed_steps=""
@@ -159,6 +191,7 @@ for d in "${_deps[@]}"; do [[ -n "$d" && "$filename" == "$(echo "$d" | xargs)" ]
 if [[ "$fp_fwd" == *"/Lib/"* ]]; then
     is_dependency=true
 fi
+[[ -n "$includer" && "$includer_name" == "$MAIN_SCRIPT" ]] && is_dependency=true
 
 main_unix="$(harness_to_unix "$PROJECT_DIR/$MAIN_SCRIPT")"
 if [[ "$is_dependency" == true && -n "$MAIN_SCRIPT" && -f "$main_unix" ]]; then
@@ -209,6 +242,23 @@ fi
 IFS=',' read -ra _norun <<< "${NO_RUNTIME_CHECK:-}"
 for n in "${_norun[@]}"; do [[ -n "$n" && "$filename" == "$(echo "$n" | xargs)" ]] && run_runtime_check=false; done
 
+# A module run on its own has no auto-execute section and reports every class
+# from a sibling file as a never-assigned variable, so the includer is what gets
+# run, and the verdict is reported under its name. The main script is never
+# probed; a module it includes already had its verdict in step 2.
+probe_unix="$fp_unix"
+probe_name="$filename"
+if [[ "$run_runtime_check" == true && -n "$includer" ]]; then
+    if [[ "$includer_name" == "$MAIN_SCRIPT" ]]; then
+        run_runtime_check=false
+        passed_steps="$passed_steps  ${Y}runtime${D}(skipped: included by $MAIN_SCRIPT)"
+    else
+        probe_unix="$includer"
+        probe_name="$includer_name"
+    fi
+fi
+probe_win="$(harness_to_win "$probe_unix")"
+
 # The probe really runs the script, so when the harness ships its dry-run shim the
 # script runs with it injected: deletes, registry writes, Run, Send and window
 # changes are recorded instead of performed, label hotkeys stay suspended and
@@ -217,7 +267,7 @@ for n in "${_norun[@]}"; do [[ -n "$n" && "$filename" == "$(echo "$n" | xargs)" 
 DRY_RUN_SHIM="$_HARNESS_INSTALL_ROOT/Tools/harness/DryRunShim.ahk"
 [[ -f "$DRY_RUN_SHIM" ]] || DRY_RUN_SHIM=""
 if [[ "$run_runtime_check" == true && -n "$DRY_RUN_SHIM" ]] \
-        && grep -qiE '^\s*#Import\s+"?AHK\b' "$fp_unix" 2>/dev/null; then
+        && grep -qiE '^\s*#Import\s+"?AHK\b' "$probe_unix" 2>/dev/null; then
     run_runtime_check=false
     passed_steps="$passed_steps  ${Y}runtime${D}(skipped: #Import AHK would bypass the dry-run shim)"
 fi
@@ -236,11 +286,13 @@ if [[ "$run_runtime_check" == true ]]; then
         [[ "$HARNESS_PLATFORM" == wsl ]] \
             && export WSLENV="${WSLENV:+$WSLENV:}AHK_HARNESS_LOG:AHK_HARNESS_SINK:AHK_HARNESS_MAXSLEEP"
         runtime_stdout=$(timeout 2 "$AHK_EXE" /ErrorStdOut=UTF-8 /force /Headless \
-            /include "$(harness_to_win "$DRY_RUN_SHIM")" "$win_path" 2>"$runtime_err_tmp")
+            /include "$(harness_to_win "$DRY_RUN_SHIM")" "$probe_win" 2>"$runtime_err_tmp")
         runtime_exit=$?
         [[ -n "$probe_dir" ]] && rm -rf "$probe_dir"
     else
-        runtime_stdout=$(timeout 2 "$AHK_EXE" /ErrorStdOut /Headless "$win_path" 2>"$runtime_err_tmp")
+        # /force means #SingleInstance Off: the probe runs beside a copy the user
+        # already has running instead of failing with "Another instance".
+        runtime_stdout=$(timeout 2 "$AHK_EXE" /ErrorStdOut /force /Headless "$probe_win" 2>"$runtime_err_tmp")
         runtime_exit=$?
     fi
     runtime_stderr=$(cat "$runtime_err_tmp" 2>/dev/null)
@@ -248,7 +300,9 @@ if [[ "$run_runtime_check" == true ]]; then
 
     if [[ $runtime_exit -eq 124 ]]; then
         # Timeout — normal for persistent scripts
-        passed_steps="$passed_steps  ${Y}runtime${D}(persistent)"
+        via=""
+        [[ "$probe_name" != "$filename" ]] && via=", via $probe_name"
+        passed_steps="$passed_steps  ${Y}runtime${D}(persistent$via)"
     elif [[ -n "$DRY_RUN_SHIM" && $runtime_exit -eq 12 ]]; then
         # Load failure under the shim, though step 1 loaded the script fine on its
         # own: the script defines a function the shim also defines (two definitions
@@ -274,13 +328,17 @@ if [[ "$run_runtime_check" == true ]]; then
             rt_error_detail="Exit code $runtime_exit (no output)"
         fi
 
+        via=""
+        [[ "$probe_name" != "$filename" ]] && via=" (run through $probe_name, which includes it)"
         mark_failed
         log_error "runtime" "${rt_diag_line:-0}" "${rt_diag_msg:-$rt_error_detail}"
         fail_block "runtime error" "$rt_error_detail"
         block_response \
-            "AHK v2 runtime error in $filename: $rt_error_detail" \
+            "AHK v2 runtime error in $filename$via: $rt_error_detail" \
             "Syntax was OK but the script hit a runtime error (exit $runtime_exit). Fix the error and retry. Common causes: undefined variables, wrong function signatures, missing #Include files, type mismatches. Use get_source_context to read the code around the error line."
         exit 2
+    elif [[ "$probe_name" != "$filename" ]]; then
+        passed_steps="$passed_steps  runtime${D}(via $probe_name)"
     else
         passed_steps="$passed_steps  runtime"
     fi

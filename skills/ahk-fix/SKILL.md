@@ -19,6 +19,26 @@ When this skill is invoked, load the following module files:
 2. **Read** `${CLAUDE_PLUGIN_ROOT}/Modules/Module_Versions.md` when the symptom looks version-dependent — a
    construct that works on one build and not another.
 
+## Get the facts before reading code
+
+A diagnosis built on a paraphrase is a guess. Before opening the module or the script,
+collect what the record actually shows, and ask for what it does not:
+
+1. **The error as the interpreter printed it**: the full text with the `Specifically:`
+   line and the call stack, or a screenshot of the dialog. If the user summarised it,
+   ask for the verbatim text; if the hook blocked an edit, the block message has it.
+2. **Repro steps in the user's own words**: what they did, what they expected, what
+   happened instead. Ask follow-up questions while the description is vague. Good repro
+   steps are the most valuable thing this step yields.
+3. **The build**: `A_AhkVersion` for the interpreter that produced the error, and the
+   script's `#Requires` line. A construct that works on one build and not another is a
+   version question, not a code question.
+4. **The log**: `python "${CLAUDE_PLUGIN_ROOT}/Tools/lessons.py" propose --min 1` shows
+   whether this error has recurred in the project, and `lessons/INDEX.md` whether a
+   lesson already names its cause. Apply a matching lesson instead of rediscovering it.
+
+Skip a question only when its answer is already in front of you.
+
 ## Diagnosis Workflow
 
 Follow this exact sequence for every error:

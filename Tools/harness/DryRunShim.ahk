@@ -573,6 +573,10 @@ Sleep(ms) {
 ; Everything not on the deny-list is forwarded untouched, output VarRefs
 ; included. A denied call is recorded and answered with what success looks
 ; like, so the candidate stays on the path it would take for real.
+; A call declared with the alpha.30 "Void" return type yields no value, and
+; returning that through this wrapper would throw UnsetError ("No value was
+; returned") where the candidate's own call would not, so it is forwarded
+; without a return.
 DllCall(fn, args*) {
     if (fn is String) {
         name := HarnessDllDenied(fn)
@@ -581,7 +585,22 @@ DllCall(fn, args*) {
             return HarnessDllAnswer(name, args)
         }
     }
+    if (HarnessDllIsVoid(args)) {
+        HarnessReal_DllCall(fn, args*)
+        return
+    }
     return HarnessReal_DllCall(fn, args*)
+}
+
+; The return type is the odd trailing argument; "Void" (optionally
+; "Cdecl Void") is the alpha.30 form that produces no value.
+HarnessDllIsVoid(args) {
+    if !(args.Length & 1)
+        return false
+    last := args[args.Length]
+    if !(last is String)
+        return false
+    return RegExMatch(last, "i)^\s*(cdecl\s+)?void\s*$") > 0
 }
 
 HarnessDllDenied(fn) {

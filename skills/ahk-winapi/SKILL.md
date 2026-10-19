@@ -18,7 +18,7 @@ Apply native calls to the window/message system and modern Windows APIs.
 1. Load the full reference from `${CLAUDE_PLUGIN_ROOT}/Modules/Module_WinAPI.md` — messages, subclassing, owner-draw, DWM, WinRT activation.
 2. Intercept messages with `OnMessage(num, cb)`; the callback is `cb(wParam, lParam, msg, hwnd)` — keep it short and re-entrancy-safe.
 3. Subclass via `comctl32\SetWindowSubclass` + a `CallbackCreate` proc kept alive on a long-lived object; defer to `DefSubclassProc`.
-4. Frame styling (dark title bar, Mica/Acrylic, rounded corners) is `dwmapi\DwmSetWindowAttribute`; full control theming is `Lib/DarkModeModular.ahk`.
+4. Frame styling (dark title bar, Mica/Acrylic, rounded corners) is `dwmapi\DwmSetWindowAttribute`; full control theming is `Lib/_Dark.ahk`.
 
 ## Quick answers
 

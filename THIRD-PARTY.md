@@ -26,6 +26,12 @@ describes the library; it does not ship it.
 | `Modules/Supplemental/Module_TapHold.md` | TapHoldManager | evilC |
 | `Modules/Supplemental/Module_JSDOC.md` | JSDoc dialect + LSP hover behaviour | Nich-Cebolla (dialect), thqby (ahk2-lsp) |
 
+## Design derived from
+
+| Part | Source | Notes |
+|---|---|---|
+| `Tools/lint_harness.py`, `Tools/lessons.py`, `lessons/`, `rules/harness-surface.md`, `Tools/harness/ADAPT.md` | [Harness²](https://github.com/google-research/harness2) by Google Research (Apache-2.0) | The propose, probe, compose loop, the lesson record (cue, lesson, evidence, confidence), the edit-verdict vocabulary and the component cost order follow its design. No code or prompt text is copied; everything here is written for this repo. |
+
 ## Interpreter
 
 The `+Console` fork referenced throughout `Module_Versions.md` and the `ahk-interpreter`

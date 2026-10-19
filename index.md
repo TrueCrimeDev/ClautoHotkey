@@ -30,7 +30,7 @@ module and apply its rules; tool skills drive the interpreter or the repo direct
 | `/ahk-run` | Run headlessly, capture output | `/ahk-convert` | Convert v1 → v2 |
 | `/ahk-eval` | Live REPL via the fork's `repl` subcommand | `/ahk-modernize` | Upgrade outdated v2 patterns |
 | `/ahk-gui-gen` | Generate a GUI from a description | `/ahk-new-class` | Scaffold a new class |
-| `/ahk-docs` | Search the AHK v2 docs | `/ahk-mistakes` | Recurring mistakes from the log |
+| `/ahk-docs` | Search the AHK v2 docs | `/ahk-mistakes` | Recurring mistakes from the log, recorded as lessons |
 | `/ahk-audit-errors` | Find silent failures | `/ahk-debug-dashboard` | Live debug state |
 
 These ship as a Claude Code plugin, so they apply to your AutoHotkey scripts wherever

@@ -10,7 +10,8 @@ paths:
 - `Map()` for key-value data. Never object literals `{}` for data storage.
 - Assign Map entries individually: `m["key"] := "val"`. Never pass pairs to constructor.
 - Arrays are 1-indexed. Never index at 0.
-- Fat arrow `=>` for single expressions only. Never `=> { }` with braces.
+- Fat arrow `=>` for single expressions only. Never `=> { }` with braces. The expression must yield a value: a void body such as `(*) => this.Toggle()` returns unset, and any caller that reads the result (an assignment, a menu or `OnEvent` callback) throws `No value was returned` on the fork, so use a method and `.Bind(this)`.
+- A field cannot share a method's name (names are case-insensitive): `this.quickAdd := 0` in a class with `QuickAdd()` throws `Property is read-only`.
 - Event handlers: extract to method + `.Bind(this)`. Never inline multi-line callbacks.
 - Semicolons for comments. Never `//` C-style comments.
 - Backtick for escapes inside strings. Never backslash.

@@ -2,6 +2,43 @@
 
 All notable changes to the ClautoHotkey project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- **Lesson library** (`lessons/`, `Tools/lessons.py`): what recorded mistakes
+  taught about the harness, one entry per lesson with cue, lesson, evidence and
+  confidence; an entry missing any of them is refused. `propose` turns the error
+  log into candidate rows that no lesson covers yet. Seeded with five entries
+  from the 2026 log.
+- **Harness lint** (`Tools/lint_harness.py`, also run by `verify.sh`): validates
+  the tree the way a proposal would be validated before it runs: skill and agent
+  wiring, hook scripts that exist, rule paths, references to missing files,
+  lesson fields, the counts the docs quote, and the always-on budget.
+- `rules/harness-surface.md`: loads when the harness itself is edited; states the
+  cost order for new instruction (hook, script, skill, agent, then always-on
+  text) and the lint that must pass.
+- `Tools/harness/ADAPT.md`: the propose, probe, compose loop over the runway
+  benchmark, after Google Research's Harness² (design only, see THIRD-PARTY.md).
+- `/ahk-mistakes` now ends in a reflection: one row per edit with a verdict, then
+  at most one lesson, written through `lessons.py add`.
+- `rules/ahk-v2-syntax.md`: a fat arrow's expression must yield a value (void
+  bodies throw `No value was returned` on the fork); a field cannot share a
+  method's name.
+- `/ahk-fix` opens by collecting the facts: the verbatim error, repro steps in
+  the user's words, the build, and whether the log or a lesson already names
+  the cause.
+- `ahk-post-edit.sh`: a module that another script includes is probed through
+  that script (`runtime(via app.ahk)`) instead of on its own, where every
+  sibling class read as a never-assigned variable; a file deleted before the
+  hook ran is ignored; the fallback launch passes `/force` (`#SingleInstance
+  Off`) like the shim launch; log records carry the session id. Three smoke
+  cases cover the new paths.
+
+### Fixed
+- `DryRunShim.ahk`: a candidate's `DllCall(..., "Void")` no longer fails the
+  dry-run tier with `No value was returned`; the wrapper forwards a void call
+  without returning it.
+
 ## [1.2.0] - 2026-10-01
 
 ### Added

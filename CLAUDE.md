@@ -38,7 +38,9 @@ The harness has three layers — use them in priority order. The full tables liv
    generated code on the build the user actually has); editing under `Lib/` pulls in
    `lib-development`; editing a GUI file pulls in `gui-work`. Also: `main-script`,
    `test-scripts`, `demo-location`, `no-banner-comments`, `ahk-interpreter`,
-   `ahk-fork-features`.
+   `ahk-fork-features`. Editing the harness itself (`CLAUDE.md`, `skills/`, `agents/`,
+   `rules/`, `hooks/`, `commands/`, `lessons/`) pulls in `harness-surface`, which states
+   the cost order for new instruction and the lint that must pass.
 
 2. **Skills** (`skills/`) handle most routine work — invoke with `/<name>`. Nineteen
    of them, in two groups.
@@ -150,17 +152,23 @@ runs automatically as a `pre-commit` hook over staged modules.
 /Modules/      - Structured AHK v2 knowledge, one per domain (frontmatter + body)
 /skills/       - 19 skills (9 load a knowledge module, 10 drive the tooling)
 /agents/       - 9 fresh-context investigators
-/rules/        - 10 path-triggered rules
+/rules/        - 11 path-triggered rules
 /hooks/        - 12 lifecycle hooks, wired by hooks/hooks.json
+/lessons/      - What recorded mistakes taught about this harness: one entry per
+                 lesson (cue, lesson, evidence, confidence); INDEX.md is generated
 /.claude-plugin/ - plugin + marketplace manifests (this repo installs as a plugin)
 /Lib/          - Shared libraries you can #Include: _Dark.ahk (dark mode), cJSON.ahk,
                  XHotstring.ahk, DarkListView.ahk, and the analysis harness
                  (TreeSitter.ahk, Lint.ahk, CodeIntel.ahk + tree-sitter-ahk.dll)
-/Tools/        - lint_modules.py (corpus lint, also a pre-commit hook), verify.sh
+/Tools/        - lint_modules.py (corpus lint, also a pre-commit hook),
+                 lint_harness.py (validates the harness tree: wiring, missing
+                 scripts, lesson fields, doc counts, always-on budget), lessons.py
+                 (the lesson library: propose from the error log, add, index), verify.sh
                  (install self-test), CaptureWindow.ahk (PNG capture by PID/title),
                  harness/ (the four-tier grading gates — static, pure, dry-run, live —
                  plus CheckResults.py, Report.py, Reduce.ahk and SelfTest.ahk;
-                 contract in harness/CONTRACT.md)
+                 contract in harness/CONTRACT.md; the evidence-driven improvement
+                 loop in harness/ADAPT.md)
 /Assets/       - README diagrams and screenshots
 ```
 

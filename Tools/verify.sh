@@ -239,6 +239,20 @@ else
 fi
 
 echo
+echo "Harness surface"
+if [[ "$have_python" == 1 && -f Tools/lint_harness.py ]]; then
+    out=$("$_HARNESS_PY" Tools/lint_harness.py --summary 2>&1); rc=$?
+    case "$rc" in
+        0) ok "harness lint clean ($(printf '%s\n' "$out" | head -1))" ;;
+        2) soft "harness lint warnings — run ./Tools/lint_harness.py" ;;
+        *) bad "harness lint reported errors — run ./Tools/lint_harness.py"
+           printf '%s\n' "$out" | tail -4 | sed 's/^/          /' ;;
+    esac
+else
+    soft "skipped — needs Python 3"
+fi
+
+echo
 printf '%d passed, %d failed, %d warning(s)\n' "$pass" "$fail" "$warn"
 [[ "$fail" -gt 0 ]] && exit 1
 exit 0

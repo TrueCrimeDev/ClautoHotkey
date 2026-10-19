@@ -268,6 +268,21 @@ if [[ -n "${AHK_BIN_WIN:-}" && "${AHK_BIN_MISSING:-0}" != 1 ]]; then
         edit_case 0 "a script redefining a shimmed built-in is not blocked" "$e/redefines.ahk" "skipped"
         [[ -f "$e/sentinel.txt" ]] || bad "sentinel vanished during the redefinition case"
 
+        rm -f "$e/gone.ahk"
+        edit_case 0 "ignores a file deleted before the hook ran" "$e/gone.ahk"
+
+        # A module only reached through another script's #Include: run on its own it
+        # reports Helper as never assigned; through its includer it passes, and a
+        # real error in it is reported through the includer.
+        mkdir -p "$e/app"
+        printf '%s\n' 'class Helper {' '    static Y := 1' '}' > "$e/app/Helper.ahk"
+        printf '%s\n' 'class Mod {' '    static X := Helper.Y' '}' > "$e/app/Mod.ahk"
+        printf '%s\n' '#Requires AutoHotkey v2.0' '#Include Helper.ahk' '#Include Mod.ahk' \
+            'FileAppend(Mod.X "`n", "*")' > "$e/app/app.ahk"
+        edit_case 0 "probes the includer instead of a module on its own" "$e/app/Mod.ahk" "via app.ahk"
+        printf '%s\n' 'class Mod {' '    static X := Helper.Z' '}' > "$e/app/Mod.ahk"
+        edit_case 2 "a module's real error surfaces through its includer" "$e/app/Mod.ahk" "through app.ahk"
+
         stray="$(ls -d "${TMPDIR:-/tmp}"/ahk-probe.* 2>/dev/null | wc -l)"
         [[ "$stray" -eq 0 ]] && ok "no probe scratch directories left behind" \
                              || bad "$stray ahk-probe.* scratch directories left in ${TMPDIR:-/tmp}"
