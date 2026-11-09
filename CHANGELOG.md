@@ -5,6 +5,15 @@ All notable changes to the ClautoHotkey project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **OpenCode install** (`opencode/`): `install.sh` writes one `plugin` entry into
+  `opencode.json` (global, or `--project DIR` with an `AGENTS.md` and `harness.env`)
+  and copies the skills where OpenCode's skill tool reads them. The plugin,
+  `clautohotkey.ts`, is loaded from the clone: it registers the agents, every
+  skill and command as a `/<name>` command, puts the session primer in the
+  system prompt, and bridges the existing hook scripts (post-edit validation
+  appended to the tool result, path-scoped rules, interpreter and git-identity
+  guards, v1-syntax detection, auto-reload, error log). `selftest.mjs` drives
+  the hooks under Node without a model. OpenCode 1.x API, tested on 1.1.25.
 - **Lesson library** (`lessons/`, `Tools/lessons.py`): what recorded mistakes
   taught about the harness, one entry per lesson with cue, lesson, evidence and
   confidence; an entry missing any of them is refused. `propose` turns the error

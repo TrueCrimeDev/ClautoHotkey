@@ -1,0 +1,6 @@
+{
+  "name": "clautohotkey-opencode",
+  "private": true,
+  "type": "module",
+  "description": "OpenCode (1.x) plugin for ClautoHotkey. Loaded straight from the clone; see install.sh."
+}

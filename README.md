@@ -36,7 +36,7 @@ structured knowledge modules, and an MCP docs server.
 
 <div align="center">
   <h2>Install</h2>
-  <p><em>Two routes. The plugin is the one you want.</em></p>
+  <p><em>Three routes. The Claude Code plugin is the one you want; OpenCode users clone.</em></p>
 </div>
 
 ### As a Claude Code plugin (recommended)
@@ -79,6 +79,30 @@ you what to fill in.
 **Requires** Git Bash or WSL, AutoHotkey v2, and `jq` or Python 3.8+ (without `jq` the
 hooks fall back to the bundled `hooks/_jqlite.py`). Python 3 also runs the module lint
 and the harness checker. `./Tools/verify.sh` confirms the hooks really block a broken edit.
+
+### In OpenCode
+
+Clone, then point OpenCode at the clone:
+
+```bash
+git clone https://github.com/TrueCrimeDev/ClautoHotkey.git
+cd ClautoHotkey && ./opencode/install.sh            # every project
+./opencode/install.sh --project ~/path/to/MyScripts  # or just one project
+```
+
+The installer adds one `plugin` entry to `opencode.json` that loads
+[`opencode/clautohotkey.ts`](opencode/clautohotkey.ts) straight from the clone, and copies
+the skills where OpenCode's skill tool finds them. The plugin registers the agents, turns
+every skill into a `/<name>` command (`/ahk-gui`, `/ahk-fix`, `/ahk-oop`, …), and runs the
+same hook scripts Claude Code runs: each `.ahk` edit is validated and a failure lands in
+the tool result for the model to fix, path-scoped rules load on the first matching edit,
+the interpreter guard blocks stray `AutoHotkey*.exe` runs, and v1 syntax in a prompt is
+flagged. `--project` also renders an `AGENTS.md` and a `harness.env` into that project.
+`git pull` is the upgrade; re-run the installer to refresh the skill copies.
+
+Targets the OpenCode **1.x** API (tested on 1.1.25). `node opencode/selftest.mjs` drives
+the plugin's hooks against a scratch project without a model. Details:
+[`opencode/README.md`](opencode/README.md).
 
 > [!NOTE]
 > The knowledge modules were written and verified against the **v2.1-alpha.30 +Console

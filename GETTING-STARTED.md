@@ -62,6 +62,18 @@ Open this folder as the project. The harness activates on session start: every
 Tell your assistant to start with `Modules/Module_Instructions.md`, then pull
 keyword-triggered modules (`Module_GUI.md`, `Module_Classes.md`, …) as needed.
 
+## 5b. Using OpenCode instead of Claude Code
+
+```bash
+./opencode/install.sh                      # all projects (~/.config/opencode)
+./opencode/install.sh --project ~/MyScripts  # one project (.opencode/ + AGENTS.md + harness.env)
+```
+
+Skills become `/ahk-*` commands, the agents appear under their own names, and the
+hook scripts run through a plugin loaded from this clone. Step 3's `harness.env`
+still decides the interpreter. `node opencode/selftest.mjs` proves the validator
+fires without spending a model call. OpenCode 1.x only; see `opencode/README.md`.
+
 ## 6. Optional — wire the MCP docs server
 
 Install [ahk-mcp](https://github.com/TrueCrimeDev/ahk-mcp) for live docs, code
