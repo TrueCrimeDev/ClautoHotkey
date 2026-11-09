@@ -1,0 +1,8 @@
+# package.json "files" whitelists the folders; these are dropped from inside them.
+__pycache__/
+*.pyc
+*.log
+.verify.*
+.test-tmp.*
+harness.env
+harness.local.env

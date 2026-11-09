@@ -82,7 +82,14 @@ and the harness checker. `./Tools/verify.sh` confirms the hooks really block a b
 
 ### In OpenCode
 
-Clone, then point OpenCode at the clone:
+One line in `opencode.json` installs it from npm:
+
+```json
+{ "plugin": ["opencode-clautohotkey"] }
+```
+
+then `npx opencode-clautohotkey skills` copies the skills where OpenCode's skill tool
+looks. Or clone and point OpenCode at the clone, which makes `git pull` the upgrade:
 
 ```bash
 git clone https://github.com/TrueCrimeDev/ClautoHotkey.git

@@ -1,0 +1,46 @@
+{
+  "name": "opencode-clautohotkey",
+  "version": "1.3.0",
+  "description": "AutoHotkey v2 companion for OpenCode: knowledge modules, /ahk-* commands, investigation agents, path-scoped rules, and a validator that catches a broken .ahk edit before you run it.",
+  "keywords": ["opencode", "opencode-plugin", "autohotkey", "ahk", "ahk-v2", "windows", "automation"],
+  "homepage": "https://github.com/TrueCrimeDev/ClautoHotkey#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TrueCrimeDev/ClautoHotkey.git"
+  },
+  "bugs": "https://github.com/TrueCrimeDev/ClautoHotkey/issues",
+  "license": "MIT",
+  "author": "TrueCrimeDev",
+  "type": "module",
+  "main": "opencode/clautohotkey.ts",
+  "exports": {
+    ".": "./opencode/clautohotkey.ts",
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "opencode-clautohotkey": "opencode/cli.mjs"
+  },
+  "files": [
+    "opencode/",
+    "agents/",
+    "commands/",
+    "skills/",
+    "rules/",
+    "hooks/",
+    "Modules/",
+    "Lib/",
+    "Tools/",
+    "lessons/",
+    "CLAUDE.md.template",
+    "harness.env.example",
+    "GETTING-STARTED.md",
+    "CHANGELOG.md",
+    "THIRD-PARTY.md"
+  ],
+  "engines": {
+    "node": ">=22.6"
+  },
+  "scripts": {
+    "test": "node opencode/selftest.mjs"
+  }
+}

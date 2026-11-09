@@ -1,7 +1,31 @@
 # ClautoHotkey in OpenCode
 
 The same harness, driven by [OpenCode](https://opencode.ai) instead of Claude Code.
-Everything is read from this clone, so `git pull` is the whole upgrade.
+
+## From npm (no clone)
+
+Add the package to `opencode.json` (global `~/.config/opencode/opencode.json`, or a
+project's `.opencode/opencode.json`). OpenCode installs it on the next start:
+
+```json
+{ "plugin": ["opencode-clautohotkey"] }
+```
+
+That registers the agents and the `/ahk-*` commands and turns on the hooks. OpenCode
+does not look inside `node_modules` for skills, so one more line gives the model its
+own skill picks too:
+
+```bash
+npx opencode-clautohotkey skills            # copies them to ~/.config/opencode/skill
+npx opencode-clautohotkey skills --project ~/MyScripts
+```
+
+OpenCode 1.x keeps the version it first installed; to upgrade, pin a version
+(`"opencode-clautohotkey@1.4.0"`) or delete it from `~/.config/opencode/node_modules`.
+
+## From a clone
+
+Everything is read from the clone, so `git pull` is the whole upgrade.
 
 ```bash
 ./opencode/install.sh                        # every project: ~/.config/opencode
@@ -9,9 +33,10 @@ Everything is read from this clone, so `git pull` is the whole upgrade.
 ./opencode/install.sh --uninstall            # either, add --project DIR for a project
 ```
 
-Requires OpenCode **1.x** on PATH (tested on 1.1.25), bash (Git Bash on Windows, or
-WSL), AutoHotkey v2, and `jq` or Python 3 to edit `opencode.json`. The installer
-refuses OpenCode 2.x, whose plugin API and config keys are different.
+Both routes need OpenCode **1.x** (tested on 1.1.25), bash (Git Bash on Windows, or
+WSL), AutoHotkey v2, and, for the clone installer, `jq` or Python 3 to edit
+`opencode.json`. The installer refuses OpenCode 2.x, whose plugin API and config keys
+are different.
 
 ## What the installer writes
 

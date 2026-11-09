@@ -14,6 +14,10 @@ All notable changes to the ClautoHotkey project will be documented in this file.
   appended to the tool result, path-scoped rules, interpreter and git-identity
   guards, v1-syntax detection, auto-reload, error log). `selftest.mjs` drives
   the hooks under Node without a model. OpenCode 1.x API, tested on 1.1.25.
+- **npm package** `opencode-clautohotkey`: the same plugin installable with
+  `"plugin": ["opencode-clautohotkey"]` and no clone; `npx opencode-clautohotkey
+  skills` copies the skills for OpenCode's skill tool. Root `package.json` whitelists
+  what ships (813 kB packed). Plugin version 1.3.0.
 - **Lesson library** (`lessons/`, `Tools/lessons.py`): what recorded mistakes
   taught about the harness, one entry per lesson with cue, lesson, evidence and
   confidence; an entry missing any of them is refused. `propose` turns the error
