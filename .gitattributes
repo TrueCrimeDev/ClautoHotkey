@@ -1,0 +1,4 @@
+# Scripts bash runs must stay LF on a Windows checkout (core.autocrlf=true would CRLF them).
+*.sh text eol=lf
+*.mjs text eol=lf
+*.ts text eol=lf
