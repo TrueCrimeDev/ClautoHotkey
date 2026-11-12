@@ -16,9 +16,26 @@ read as fact.
         Write one entry and rebuild INDEX.md.
     ./Tools/lessons.py check          validate every entry (exit 1 on a problem)
     ./Tools/lessons.py index          rebuild INDEX.md from what is on disk
+    ./Tools/lessons.py where          print the folders lessons are read from and
+                                      the one `add` writes to
 
 The error log is `.claude/error-log.jsonl` in the project the hooks ran in
 (CLAUDE_PROJECT_DIR), one JSON object per line as `error-logger.sh` writes it.
+
+Two folders hold lessons. `lessons/` beside this script ships with the harness.
+A lesson recorded on a machine where the harness is installed rather than
+developed (a plugin cache, node_modules) must not go there: the next update
+replaces that folder. Such a lesson goes to the first of these that applies:
+
+    $CLAUTOHOTKEY_LESSONS_DIR            an explicit choice
+    $CLAUDE_PLUGIN_DATA/lessons          the plugin's data folder, kept across updates
+    lessons/ beside this script          when run from inside this checkout: the
+                                         harness is being developed, the lesson
+                                         is part of it
+    <project>/.claude/lessons            otherwise, with the project being
+                                         CLAUDE_PROJECT_DIR or the working directory
+
+`propose`, `check` and coverage read both folders; `--dir` overrides the second.
 """
 
 from __future__ import annotations
@@ -106,10 +123,54 @@ def validate(entry: dict) -> list[str]:
     return problems
 
 
-def entries() -> list[dict]:
-    if not LESSONS.is_dir():
+def _inside(path: pathlib.Path, root: pathlib.Path) -> bool:
+    try:
+        path.resolve().relative_to(root)
+    except (OSError, ValueError):
+        return False
+    return True
+
+
+def local_dir(explicit: str | None = None) -> pathlib.Path:
+    """Where a lesson recorded on this machine goes; see the module docstring.
+    Returns LESSONS itself when the harness is being developed in place."""
+    if explicit:
+        return pathlib.Path(explicit)
+    chosen = os.environ.get("CLAUTOHOTKEY_LESSONS_DIR")
+    if chosen:
+        return pathlib.Path(chosen)
+    data = os.environ.get("CLAUDE_PLUGIN_DATA")
+    if data:
+        return pathlib.Path(data) / "lessons"
+    project = os.environ.get("CLAUDE_PROJECT_DIR") or os.environ.get("PROJECT_DIR")
+    base = pathlib.Path(project) if project else pathlib.Path.cwd()
+    if _inside(base, ROOT):
+        return LESSONS
+    return base / ".claude" / "lessons"
+
+
+def entries(directory: pathlib.Path | None = None) -> list[dict]:
+    """The lessons in one folder; the shipped library when none is named."""
+    directory = directory or LESSONS
+    if not directory.is_dir():
         return []
-    return [parse(p) for p in sorted(LESSONS.glob("*.md")) if p.name != "INDEX.md"]
+    return [parse(p) for p in sorted(directory.glob("*.md")) if p.name != "INDEX.md"]
+
+
+def all_entries(local: pathlib.Path | None = None) -> list[dict]:
+    """Shipped lessons, then the ones recorded on this machine. A local entry
+    with a shipped entry's name is that lesson revised here, and replaces it."""
+    local = local or local_dir()
+    shipped = entries(LESSONS)
+    try:
+        same = local.resolve() == LESSONS.resolve()
+    except OSError:
+        same = False
+    if same:
+        return shipped
+    mine = entries(local)
+    names = {item["path"].stem for item in mine}
+    return [item for item in shipped if item["path"].stem not in names] + mine
 
 
 def render_index(items: list[dict]) -> str:
@@ -144,18 +205,20 @@ def render_index(items: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def write_index() -> pathlib.Path:
-    LESSONS.mkdir(parents=True, exist_ok=True)
-    index = LESSONS / "INDEX.md"
-    index.write_text(render_index(entries()), encoding="utf-8", newline="\n")
+def write_index(directory: pathlib.Path | None = None) -> pathlib.Path:
+    directory = directory or LESSONS
+    directory.mkdir(parents=True, exist_ok=True)
+    index = directory / "INDEX.md"
+    index.write_text(render_index(entries(directory)), encoding="utf-8", newline="\n")
     return index
 
 
-def index_is_current() -> bool:
-    index = LESSONS / "INDEX.md"
+def index_is_current(directory: pathlib.Path | None = None) -> bool:
+    directory = directory or LESSONS
+    index = directory / "INDEX.md"
     if not index.is_file():
-        return not entries()
-    return index.read_text(encoding="utf-8").replace("\r\n", "\n") == render_index(entries())
+        return not entries(directory)
+    return index.read_text(encoding="utf-8").replace("\r\n", "\n") == render_index(entries(directory))
 
 
 def default_log() -> pathlib.Path:
@@ -203,10 +266,16 @@ def propose(args: argparse.Namespace) -> int:
     cutoff = None
     if args.since:
         cutoff = (dt.datetime.now() - dt.timedelta(days=args.since)).strftime("%Y-%m-%dT%H:%M:%S")
+    library = all_entries(pathlib.Path(args.dir) if args.dir else None)
     covered = [(e["fields"]["name"], re.compile(e["fields"]["signature"], re.I))
-               for e in entries() if e["fields"].get("signature")]
+               for e in library if e["fields"].get("signature")]
+    recorded = {e["fields"]["name"]: e["fields"].get("recorded", "")[:10] for e in library}
     groups: dict[str, dict] = {}
     covered_counts: collections.Counter = collections.Counter()
+    # Rows a lesson claims that are dated after the day it was recorded. A
+    # signature matches a headline, not a cause: rows that keep arriving mean
+    # the fix did not hold, or something new fails with the same message.
+    covered_after: collections.Counter = collections.Counter()
     for row in rows:
         ts = str(row.get("timestamp", ""))
         if cutoff and ts < cutoff:
@@ -218,6 +287,8 @@ def propose(args: argparse.Namespace) -> int:
         owner = next((name for name, rx in covered if rx.search(key) or rx.search(message)), None)
         if owner:
             covered_counts[owner] += 1
+            if recorded.get(owner) and ts[:10] > recorded[owner]:
+                covered_after[owner] += 1
             continue
         g = groups.setdefault(key, {"count": 0, "last": "", "files": collections.Counter(), "sample": ""})
         g["count"] += 1
@@ -231,7 +302,8 @@ def propose(args: argparse.Namespace) -> int:
         out = [{"headline": k, "count": g["count"], "last": g["last"],
                 "files": g["files"].most_common(5), "sample": g["sample"]} for k, g in ranked]
         print(json.dumps({"log": str(log), "rows": len(rows), "uncovered": out,
-                          "covered": dict(covered_counts)}, indent=2))
+                          "covered": dict(covered_counts),
+                          "covered_after_recorded": dict(covered_after)}, indent=2))
         return 0
     print(f"Error log: {log} ({len(rows)} rows)")
     print()
@@ -247,7 +319,12 @@ def propose(args: argparse.Namespace) -> int:
         print()
         print("Already covered by a lesson:")
         for name, n in covered_counts.most_common():
-            print(f"- `{name}`: {n} rows")
+            later = covered_after.get(name, 0)
+            if later:
+                print(f"- `{name}`: {n} rows, {later} of them after it was recorded ({recorded[name]}): "
+                      "the fix did not hold, or a new cause shares the headline. Open those rows.")
+            else:
+                print(f"- `{name}`: {n} rows")
     return 0
 
 
@@ -259,7 +336,8 @@ def add(args: argparse.Namespace) -> int:
     if not SLUG.match(args.name):
         print("refused: --name must be a lower-case slug", file=sys.stderr)
         return 1
-    path = LESSONS / f"{args.name}.md"
+    target = local_dir(args.dir)
+    path = target / f"{args.name}.md"
     if path.exists() and not args.force:
         print(f"refused: {path} exists (pass --force to overwrite)", file=sys.stderr)
         return 1
@@ -286,7 +364,7 @@ def add(args: argparse.Namespace) -> int:
         "",
     ]
     text = "\n".join(front + body)
-    LESSONS.mkdir(parents=True, exist_ok=True)
+    target.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8", newline="\n")
     problems = validate(parse(path))
     if problems:
@@ -294,24 +372,54 @@ def add(args: argparse.Namespace) -> int:
         for p in problems:
             print(f"refused: {p}", file=sys.stderr)
         return 1
-    write_index()
-    print(f"wrote {path.relative_to(ROOT)} and rebuilt lessons/INDEX.md")
+    index = write_index(target)
+    print(f"wrote {path} and rebuilt {index}")
     return 0
+
+
+def _folders(explicit: str | None) -> list[pathlib.Path]:
+    """The shipped folder, then the local one when it is a different place."""
+    local = local_dir(explicit)
+    try:
+        same = local.resolve() == LESSONS.resolve()
+    except OSError:
+        same = False
+    return [LESSONS] if same else [LESSONS, local]
 
 
 def check(args: argparse.Namespace) -> int:
     bad = 0
-    items = entries()
-    for item in items:
-        for p in validate(item):
-            print(f"{item['path'].relative_to(ROOT)}: {p}")
+    total = 0
+    for folder in _folders(args.dir):
+        items = entries(folder)
+        total += len(items)
+        for item in items:
+            for p in validate(item):
+                print(f"{item['path']}: {p}")
+                bad += 1
+        if not index_is_current(folder):
+            print(f"{folder / 'INDEX.md'} is stale; run `Tools/lessons.py index`")
             bad += 1
-    if not index_is_current():
-        print("lessons/INDEX.md is stale; run `Tools/lessons.py index`")
-        bad += 1
     if not bad:
-        print(f"{len(items)} lesson(s) valid, index current")
+        print(f"{total} lesson(s) valid, index current")
     return 1 if bad else 0
+
+
+def index(args: argparse.Namespace) -> int:
+    for folder in _folders(args.dir):
+        if folder == LESSONS or entries(folder):
+            print(f"wrote {write_index(folder)}")
+    return 0
+
+
+def where(args: argparse.Namespace) -> int:
+    local = local_dir(args.dir)
+    print(f"shipped:  {LESSONS} ({len(entries(LESSONS))} lesson(s))")
+    if len(_folders(args.dir)) == 1:
+        print("recorded: the same folder (run from inside the harness checkout)")
+    else:
+        print(f"recorded: {local} ({len(entries(local))} lesson(s)); `add` writes here")
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -322,6 +430,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--min", type=int, default=2, help="minimum occurrences (default 2)")
     p.add_argument("--since", type=int, default=0, help="only rows from the last N days")
     p.add_argument("--json", action="store_true")
+    p.add_argument("--dir", default="", help="folder of lessons recorded on this machine (default: see `where`)")
     p.set_defaults(fn=propose)
     a = sub.add_parser("add", help="write one lesson")
     a.add_argument("--name", required=True)
@@ -333,9 +442,14 @@ def main(argv: list[str] | None = None) -> int:
     a.add_argument("--status", choices=STATUS, default="proposed")
     a.add_argument("--signature", default="", help="regex that matches the error headline this lesson covers")
     a.add_argument("--force", action="store_true")
+    a.add_argument("--dir", default="", help="folder to write the lesson to (default: see `where`)")
     a.set_defaults(fn=add)
-    sub.add_parser("check", help="validate every entry").set_defaults(fn=check)
-    sub.add_parser("index", help="rebuild INDEX.md").set_defaults(fn=lambda _a: (print(f"wrote {write_index().relative_to(ROOT)}"), 0)[1])
+    for name, fn, text in (("check", check, "validate every entry"),
+                           ("index", index, "rebuild INDEX.md"),
+                           ("where", where, "print the lesson folders")):
+        c = sub.add_parser(name, help=text)
+        c.add_argument("--dir", default="", help="folder of lessons recorded on this machine")
+        c.set_defaults(fn=fn)
     args = ap.parse_args(argv)
     return args.fn(args)
 

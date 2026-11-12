@@ -509,6 +509,68 @@ class CheckerRunTests(TempDirCase):
         code, report, _ = self.check(rows)
         self.assertEqual((code, report["uncovered"]), (0, ["C:\\Scripts\\A.ahk"]))
 
+    def test_expected_tiers_name_a_branch_that_stopped_without_failing(self):
+        rows = [make_row("static", script=SCRIPT_A), make_row("pure", script=SCRIPT_A),
+                make_row("dryrun", script=SCRIPT_A),
+                make_row("static", script=SCRIPT_B)]
+        code, report, _ = self.check(rows, "--expect-tiers", "static,pure,dryrun")
+        self.assertEqual(code, 1)
+        self.assertEqual(report["flagged"], [])
+        self.assertEqual(report["clean"], 4)
+        self.assertEqual(report["unfinished"],
+                         [{"script": SCRIPT_B, "run": "run-1", "reached": ["static"],
+                           "missing": ["pure", "dryrun"]}])
+
+    def test_a_branch_that_ended_at_a_failure_is_finished(self):
+        rows = [make_row("static", script=SCRIPT_A),
+                make_row("pure", "fail", script=SCRIPT_A),
+                make_row("static", "fail", script=SCRIPT_B)]
+        code, report, _ = self.check(rows, "--expect-tiers", "static,pure,dryrun")
+        self.assertEqual((code, report["unfinished"]), (0, []))
+
+    def test_a_withheld_row_still_ends_its_branch(self):
+        # The dry-run row timed out, so it is flagged and kept from synthesis,
+        # but it is the reason there is no live row: nothing is missing.
+        rows = [make_row("static"), make_row("pure"), make_row("dryrun", "timeout")]
+        code, report, _ = self.check(rows, "--expect-tiers", "static,pure,dryrun,live")
+        self.assertEqual((code, len(report["flagged"]), report["unfinished"]), (1, 1, []))
+
+    def test_expected_tiers_are_judged_per_run(self):
+        rows = [make_row("static", run="run-1"), make_row("pure", run="run-1"),
+                make_row("static", run="run-2")]
+        code, report, _ = self.check(rows, "--expect-tiers", "pure,static")
+        self.assertEqual(code, 1)
+        self.assertEqual([(u["run"], u["missing"]) for u in report["unfinished"]],
+                         [("run-2", ["pure"])])
+
+    def test_without_expectations_the_report_and_exit_are_unchanged(self):
+        code, report, _ = self.check([make_row("static")])
+        self.assertEqual((code, sorted(report)), (0, ["clean", "flagged", "uncovered"]))
+
+    def test_expected_count_reports_scripts_that_never_got_a_row(self):
+        rows = [make_row("static", script=SCRIPT_A), make_row("static", script=SCRIPT_B),
+                make_row("pure", script="c:/scripts/A.AHK")]
+        code, report, _ = self.check(rows, "--expect-count", "3")
+        self.assertEqual((code, report["expected"], report["covered"]), (1, 3, 2))
+        code, report, _ = self.check(rows, "--expect-count", "2")
+        self.assertEqual((code, report["expected"], report["covered"]), (0, 2, 2))
+
+    def test_expectations_in_text_mode(self):
+        path = self.write_ndjson("results.ndjson", [make_row("static")])
+        code, out, _ = call(CheckResults.main,
+                            [path, "--expect-tiers", "static,pure", "--expect-count", "2"])
+        self.assertEqual(code, 1)
+        self.assertIn("UNFINISHED 1 script(s) passed what they reached but never got to static/pure", out)
+        self.assertIn("  a.ahk: reached static; no row for pure", out)
+        self.assertIn("COVERAGE the run was handed 2 script(s); results exist for 1", out)
+        self.assertEqual(out.strip().splitlines()[-1], "1 clean, 0 flagged")
+
+    def test_an_unknown_expected_tier_is_a_usage_error(self):
+        path = self.write_ndjson("results.ndjson", [make_row("static")])
+        code, out, err = call(CheckResults.main, [path, "--expect-tiers", "static,dry-run"])
+        self.assertEqual(code, 2)
+        self.assertIn("unknown tier(s) dry-run", err)
+
     def test_withheld_rows_never_count_toward_coverage(self):
         rows = [make_row("pure", tests=0, assertions={"passed": 0, "failed": 0}, sentinel=DROP)]
         code, report, _ = self.check(rows)

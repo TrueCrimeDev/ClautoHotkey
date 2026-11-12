@@ -6,7 +6,7 @@ description: >
   Examples:
   <example>Context: User wants to restart the full script stack
   user: 'Restart all my AHK scripts'
-  assistant: 'I'll stop all running scripts, validate them, and restart _.ahk'
+  assistant: 'I'll stop all running scripts, validate them, and restart the main script'
   <commentary>Multi-script management requires process tracking and dependency awareness</commentary></example>
   <example>Context: User wants to see running scripts
   user: 'What AHK scripts are currently running?'
@@ -42,23 +42,32 @@ if ($proc) { Stop-Process -Id $proc.ProcessId -Force }
 ```
 
 ### Start Main Script
-```powershell
-Start-Process $env:AHK_EXE "$env:CLAUDE_PROJECT_DIR\_.ahk"
+The interpreter and the entry script come from `harness.env`, not from this file. Read
+them in Bash and hand both to PowerShell as Windows paths:
+
+```bash
+source "${CLAUDE_PLUGIN_ROOT}/hooks/_harness-env.sh"
+main="$(harness_to_win "$PROJECT_DIR/${MAIN_SCRIPT:-main.ahk}")"
+powershell.exe -NoProfile -Command "Start-Process -FilePath '$AHK_BIN_WIN' -ArgumentList ([char]34 + '$main' + [char]34)"
 ```
+
+The path is wrapped in quotes by hand (`[char]34`): `Start-Process` joins its arguments
+with spaces and adds none, so a script under `C:\My Scripts\` would arrive as two
+arguments.
 
 ## Orchestration Workflow
 
 ### Full Restart
 1. **List** all running AutoHotkey processes
 2. **Stop** all gracefully (with 1s grace period)
-3. **Validate** `_.ahk` with `check /Diag=json`
-4. **Start** `_.ahk` (which loads all dependencies via #Include)
+3. **Validate** the main script with `check /Diag=json` (`/ErrorStdOut /validate` on stock AutoHotkey)
+4. **Start** the main script (which loads all dependencies via #Include)
 5. **Verify** process is running after 2s
 
 ### Selective Restart
 1. **Identify** which script was edited
-2. **Check** if it's a dependency of `_.ahk` (use dependency graph)
-3. If yes: restart `_.ahk`
+2. **Check** if it's a dependency of the main script (use dependency graph)
+3. If yes: restart the main script
 4. If no: restart only the standalone script
 
 ### Orphan Detection
@@ -77,22 +86,19 @@ Get-WmiObject Win32_Process | Where-Object { $_.Name -like 'AutoHotkey*' } | For
 
 ## Integration Points
 
-- **ahk-post-edit.sh**: Already restarts `_.ahk` when dependencies change (lines 219-226)
+- **ahk-post-edit.sh**: Revalidates the main script when a dependency changes, then restarts running copies through `ahk-auto-reload.sh`
 - **ahk-dependency-graph**: Use to determine if a file is a dependency
 - **autohotkey-debug MCP**: Scripts launched with `/Debug` connect to the MCP server
 
-## Known Entry Points
+## Entry Points
 
-| Script | Role |
-|--------|------|
-| `_.ahk` | Main entry — loads Lib/, DarkMode, Clip, menus |
-| `_ClipboardHistory.ahk` | Clipboard history standalone |
-| `_Transformer.ahk` | Text transformation |
-| `_UHQ_Bambu.ahk` | Bambu automation |
-| `_UHQ_Snipping.ahk` | Screen capture |
-| `_UHQ_Fusion.ahk` | Fusion automation |
+The always-running entry script is `MAIN_SCRIPT` in `harness.env` (default `main.ahk`),
+resolved against the project root. Standalone scripts are whatever else is running:
+list the processes above before assuming a script exists.
 
-## Custom Engine Path
+## Interpreter Path
 
-The custom AHK engine path is defined in `CLAUDE.md` and available via the `AHK_EXE` environment
-variable. Do not hardcode user-specific paths.
+Use the interpreter configured in `harness.env`: after
+`source "${CLAUDE_PLUGIN_ROOT}/hooks/_harness-env.sh"`, `$AHK_BIN_WIN` is its Windows
+path and `$AHK_EXE` the same binary as the shell spells it. Do not hardcode
+user-specific paths.

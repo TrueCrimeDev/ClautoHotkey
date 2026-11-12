@@ -1,6 +1,10 @@
 #!/bin/bash
 # UserPromptSubmit hook: Detect AHK v1 syntax in user prompts
 # Non-blocking — adds context warning when v1 patterns are found.
+#
+# The warning goes out twice. Plain stdout is what Claude Code adds to the model's
+# context for this event; stderr from a hook that exits 0 reaches nobody there. The
+# stderr box is what the OpenCode bridge reads (it looks for "v1 patterns found:").
 
 source "$(dirname "${BASH_SOURCE[0]}")/_harness-env.sh"
 
@@ -58,6 +62,7 @@ if [[ $v1_patterns -ge 2 ]]; then
     echo -e "\x1b[1;91m│\x1b[0m v1 patterns found: \x1b[1;33m${v1_found}\x1b[0m" >&2
     echo -e "\x1b[1;91m│\x1b[0m This project is \x1b[1mAHK v2 ONLY\x1b[0m — use /ahk-fix to convert" >&2
     echo -e "\x1b[1;91m└─────────────────────────────────────────────────────────\x1b[0m" >&2
+    echo "ClautoHotkey: the prompt contains AutoHotkey v1 syntax (${v1_found% }). This project is AHK v2 only: write v2, and offer /ahk-convert for the old code."
 fi
 
 exit 0

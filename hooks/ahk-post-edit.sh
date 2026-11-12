@@ -2,7 +2,8 @@
 # Post-edit hook for AutoHotkey v2 scripts
 # Validates syntax after edits using the custom engine's check command
 # with structured JSON diagnostics. Blocks on syntax errors.
-# Also runs standalone scripts briefly to catch runtime errors.
+# Also runs standalone scripts briefly to catch runtime errors, and restarts a
+# running copy of the script once the edit has passed.
 
 # Timing
 start_ns=$(date +%s%N)
@@ -55,20 +56,13 @@ if [[ ! -f "$fp_unix" ]]; then
     exit 0
 fi
 
-# Sentinel for auto-reload coordination. Cleared on entry; re-touched on any
-# failure path so ahk-auto-reload.sh (next in the PostToolUse chain) bails
-# rather than restarting a script that just failed validation.
-EDIT_FAIL_SENTINEL="/tmp/ahk-edit-failed-$session_id"
-rm -f "$EDIT_FAIL_SENTINEL" 2>/dev/null
-
-mark_failed() { touch "$EDIT_FAIL_SENTINEL" 2>/dev/null; }
-
 # Append a structured error record to .claude/error-log.jsonl so /ahk-mistakes
 # can surface recurring patterns. Hook-blocked failures don't surface a tool
 # .error field, so the standalone error-logger hook misses them — log here.
 log_error() {
     local err_type="$1" err_line="$2" err_msg="$3"
-    local log_file="${CLAUDE_PROJECT_DIR:-$(pwd)}/.claude/error-log.jsonl"
+    local log_file
+    log_file="$(harness_log_file error-log.jsonl)"
     local ts=$(date -u +"%Y-%m-%dT%H:%M:%S")
     jq -nc \
         --arg ts "$ts" \
@@ -123,6 +117,18 @@ block_response() {
     echo "$context" >&2
 }
 
+# Split a failed validation's output into diag_line and diag_msg: one JSON object
+# from the fork, "file (line) : ==> message" from stock AutoHotkey.
+parse_diag() {
+    if [[ "${AHK_DIAG_JSON:-0}" == "1" ]]; then
+        diag_msg=$(echo "$1" | jq -r '.message // empty' 2>/dev/null)
+        diag_line=$(echo "$1" | jq -r '.line // empty' 2>/dev/null)
+    else
+        diag_line=$(echo "$1" | grep -oE '\(([0-9]+)\)' | head -1 | tr -d '()')
+        diag_msg=$(echo "$1" | sed -n 's/.*==> //p' | head -1)
+    fi
+}
+
 # The first script in the edited file's folder, or its parent, whose #Include
 # names the file. Followed up to three levels so a module reached through another
 # module still resolves to the script that actually runs. Bounded to those two
@@ -131,9 +137,12 @@ find_includer() {
     local target="$1" depth=0 dir base found
     while (( depth < 3 )); do
         dir="${target%/*}"; base="${target##*/}"
+        # The name goes into a regular expression: "C++ Tools (old).ahk" has to
+        # match as written.
+        base="$(printf '%s' "$base" | sed -e 's/[][(){}.^$*+?|\\]/\\&/g')"
         # One grep over both folders: a process per file costs 20ms each on
         # Git Bash, which is 16 seconds on a folder of 800 scripts.
-        found="$(grep -liE "^[[:space:]]*#Include[[:space:]]+(\*i[[:space:]]+)?[\"']?([^\"';]*[\\/])?${base//./\\.}[\"']?[[:space:]]*(;.*)?\$" \
+        found="$(grep -liE "^[[:space:]]*#Include[[:space:]]+(\*i[[:space:]]+)?[\"']?([^\"';]*[\\/])?${base}[\"']?[[:space:]]*(;.*)?\$" \
                     "$dir"/*.ahk "${dir%/*}"/*.ahk 2>/dev/null | grep -vFx "$target" | head -1)"
         [[ -n "$found" ]] || break
         target="$found"; depth=$((depth + 1))
@@ -156,13 +165,7 @@ validation_output=$(ahk_validate "$win_path")
 validation_exit=$?
 
 if [[ $validation_exit -ne 0 ]]; then
-    if [[ "${AHK_DIAG_JSON:-0}" == "1" ]]; then
-        diag_msg=$(echo "$validation_output" | jq -r '.message // empty' 2>/dev/null)
-        diag_line=$(echo "$validation_output" | jq -r '.line // empty' 2>/dev/null)
-    else
-        diag_line=$(echo "$validation_output" | grep -oE '\(([0-9]+)\)' | head -1 | tr -d '()')
-        diag_msg=$(echo "$validation_output" | sed -n 's/.*==> //p' | head -1)
-    fi
+    parse_diag "$validation_output"
 
     if [[ -n "$diag_msg" ]]; then
         error_detail="Line ${diag_line:-?}: $diag_msg"
@@ -170,7 +173,6 @@ if [[ $validation_exit -ne 0 ]]; then
         error_detail="$validation_output"
     fi
 
-    mark_failed
     log_error "syntax" "${diag_line:-0}" "${diag_msg:-$error_detail}"
     fail_block "syntax error" "$error_detail"
     block_response \
@@ -201,17 +203,15 @@ if [[ "$is_dependency" == true && -n "$MAIN_SCRIPT" && -f "$main_unix" ]]; then
     main_exit=$?
 
     if [[ $main_exit -ne 0 ]]; then
-        diag_msg=$(echo "$main_output" | jq -r '.message // empty' 2>/dev/null)
-        diag_line=$(echo "$main_output" | jq -r '.line // empty' 2>/dev/null)
+        parse_diag "$main_output"
 
         if [[ -n "$diag_msg" ]]; then
-            error_detail="Line $diag_line: $diag_msg"
+            error_detail="Line ${diag_line:-?}: $diag_msg"
         else
             error_detail="$main_output"
         fi
 
-        mark_failed
-        log_error "main-script-broken" "${diag_line:-0}" "broke $MAIN_SCRIPT: ${diag_msg:-$error_detail}"
+            log_error "main-script-broken" "${diag_line:-0}" "broke $MAIN_SCRIPT: ${diag_msg:-$error_detail}"
         fail_block "broke $MAIN_SCRIPT" "$error_detail"
         block_response \
             "Main script ($MAIN_SCRIPT) validation failed after editing $filename: $error_detail" \
@@ -259,17 +259,63 @@ if [[ "$run_runtime_check" == true && -n "$includer" ]]; then
 fi
 probe_win="$(harness_to_win "$probe_unix")"
 
+# True when the script, or a file it #Includes (three levels deep, 60 files at
+# most), uses the module system: #Import, #Module, or an Import statement. The
+# shim's shadows live in the main module. Code in any other module resolves Send
+# or FileDelete straight to the built-in, and an import from the AHK module hands
+# the original to the main module too, so such a script would run unshimmed. The
+# gate applies the same test (Harness.ScanSource); this is its shell twin.
+MODULE_RE='^[[:space:]]*(#(Import|Module)([[:space:]]|$)|(export[[:space:]]+)?import[[:space:]]+["'"'"'{*A-Za-z_])'
+uses_modules() {
+    local -a level=("$1") nextlevel
+    local root="${1%/*}" seen=$'\n'"${1,,}"$'\n' depth=0 count=1 f dir line target
+    while (( ${#level[@]} )); do
+        grep -qiE "$MODULE_RE" "${level[@]}" 2>/dev/null && return 0
+        (( ++depth > 3 )) && break
+        nextlevel=()
+        for f in "${level[@]}"; do
+            dir="${f%/*}"
+            while IFS= read -r line; do
+                line="${line%$'\r'}"
+                target="$(printf '%s' "$line" | sed -E -e 's/^[[:space:]]*#[Ii][Nn][Cc][Ll][Uu][Dd][Ee]([Aa][Gg][Aa][Ii][Nn])?[[:space:]]+//' \
+                            -e 's/^\*[Ii][[:space:]]+//' -e 's/[[:space:]]+;.*$//' -e 's/[[:space:]]+$//' -e "s/^[\"']//" -e "s/[\"']\$//")"
+                [[ -n "$target" ]] || continue
+                if [[ "$target" == "<"*">" ]]; then
+                    target="${target#<}"; target="$root/Lib/${target%>}.ahk"
+                else
+                    target="${target//\\//}"
+                    target="${target//%A_LineFile%\/..\//${f%/*}/}"
+                    target="${target//%A_ScriptDir%/$root}"
+                    [[ "$target" == *%* ]] && continue
+                    case "$target" in
+                        /*) ;;
+                        [A-Za-z]:*) _harness_unix_into target "$target" ;;
+                        *) target="$dir/$target" ;;
+                    esac
+                fi
+                # "#Include SomeFolder" only changes where later includes are looked for.
+                if [[ -d "$target" ]]; then dir="${target%/}"; continue; fi
+                [[ -f "$target" && "$seen" != *$'\n'"${target,,}"$'\n'* ]] || continue
+                seen+="${target,,}"$'\n'
+                nextlevel+=("$target")
+                (( ++count >= 60 )) && break 2
+            done < <(grep -iE '^[[:space:]]*#Include(Again)?[[:space:]]' "$f" 2>/dev/null)
+        done
+        level=("${nextlevel[@]}")
+    done
+    return 1
+}
+
 # The probe really runs the script, so when the harness ships its dry-run shim the
 # script runs with it injected: deletes, registry writes, Run, Send and window
 # changes are recorded instead of performed, label hotkeys stay suspended and
-# FileOpen writes land in a scratch sink. A script that does `#Import AHK` can
-# reach the real built-ins past the shim, so it is not run at all.
+# FileOpen writes land in a scratch sink. A script that uses modules can reach the
+# real built-ins past the shim, so it is not run at all.
 DRY_RUN_SHIM="$_HARNESS_INSTALL_ROOT/Tools/harness/DryRunShim.ahk"
 [[ -f "$DRY_RUN_SHIM" ]] || DRY_RUN_SHIM=""
-if [[ "$run_runtime_check" == true && -n "$DRY_RUN_SHIM" ]] \
-        && grep -qiE '^\s*#Import\s+"?AHK\b' "$probe_unix" 2>/dev/null; then
+if [[ "$run_runtime_check" == true && -n "$DRY_RUN_SHIM" ]] && uses_modules "$probe_unix"; then
     run_runtime_check=false
-    passed_steps="$passed_steps  ${Y}runtime${D}(skipped: #Import AHK would bypass the dry-run shim)"
+    passed_steps="$passed_steps  ${Y}runtime${D}(skipped: #Import or #Module code would run past the dry-run shim)"
 fi
 
 if [[ "$run_runtime_check" == true ]]; then
@@ -330,8 +376,7 @@ if [[ "$run_runtime_check" == true ]]; then
 
         via=""
         [[ "$probe_name" != "$filename" ]] && via=" (run through $probe_name, which includes it)"
-        mark_failed
-        log_error "runtime" "${rt_diag_line:-0}" "${rt_diag_msg:-$rt_error_detail}"
+            log_error "runtime" "${rt_diag_line:-0}" "${rt_diag_msg:-$rt_error_detail}"
         fail_block "runtime error" "$rt_error_detail"
         block_response \
             "AHK v2 runtime error in $filename$via: $rt_error_detail" \
@@ -344,8 +389,14 @@ if [[ "$run_runtime_check" == true ]]; then
     fi
 fi
 
-# Step 4 (restart) removed — ahk-auto-reload.sh handles restarts.
-# It runs next in the PostToolUse chain and skips if the sentinel above is set.
+# --- Step 4: restart a running copy, now that the edit has passed ---
+# Called from here, not wired as a hook of its own: hooks matched to one event all
+# start at once, so a separate reload hook read the verdict before there was one.
+reloaded="$(printf '%s' "$input" | AHK_RELOAD_PLAIN=1 bash "$_HARNESS_HOOKS/ahk-auto-reload.sh" 2>/dev/null)"
+if [[ -n "$reloaded" ]]; then
+    reloaded="${reloaded//restarted /}"
+    passed_steps="$passed_steps  reload${D}(${reloaded//$'\n'/, })"
+fi
 
 # ── Success ──
 ms=$(elapsed_ms)

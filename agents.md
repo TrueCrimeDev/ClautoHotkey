@@ -262,10 +262,8 @@ Root guidance for Codex working in this AutoHotkey v2 prompt/knowledge workspace
 
 - `Modules/` - structured AHK v2 knowledge, one file per domain (start: `Module_Instructions.md`).
 - `Modules/Supplemental/` - deeper supplemental material.
-- `Lib/` - shared libraries (`_Dark.ahk` dark mode, `DarkModeModular_Alpha.ahk` (stale snapshot of the
-  parent repo's copy - never edit), `cJSON.ahk`, `XHotstring.ahk`, `DarkListView.ahk`) and the analysis
-  harness (`TreeSitter.ahk`, `Lint.ahk`, `CodeIntel.ahk`).
-- `AHK_Notes/` - examples and patterns by topic.
+- `Lib/` - shared libraries (`_Dark.ahk` dark mode, `cJSON.ahk`, `XHotstring.ahk`, `DarkListView.ahk`)
+  and the analysis harness (`TreeSitter.ahk`, `Lint.ahk`, `CodeIntel.ahk`).
 
 ## Workstyle
 

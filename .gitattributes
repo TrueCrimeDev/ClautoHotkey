@@ -2,3 +2,7 @@
 *.sh text eol=lf
 *.mjs text eol=lf
 *.ts text eol=lf
+# inject-rules.sh reads rule frontmatter with awk, and harness.env starts life as a
+# copy of the example: both must reach a Windows checkout with LF endings.
+rules/*.md text eol=lf
+harness.env.example text eol=lf

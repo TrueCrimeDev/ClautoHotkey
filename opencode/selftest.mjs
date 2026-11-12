@@ -22,6 +22,9 @@ globalThis.Bun ??= {}
 globalThis.Bun.spawn ??= (cmd, opts = {}) => {
   const child = spawn(cmd[0], cmd.slice(1), { cwd: opts.cwd, env: opts.env, stdio: ["pipe", "pipe", "pipe"] })
   const exited = new Promise((resolve) => child.on("close", (code) => resolve(code ?? 0)))
+  // A hook that never reads its stdin (the session primer) exits with the pipe
+  // still open; the write then fails with EPIPE, which says nothing about the hook.
+  child.stdin.on("error", () => {})
   if (opts.stdin && typeof opts.stdin.text === "function") {
     opts.stdin.text().then((text) => child.stdin.end(text))
   } else {

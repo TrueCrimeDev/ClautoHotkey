@@ -41,4 +41,4 @@ paths:
 
 - `Eval(expr)` — runtime expression evaluator. Enable with `#EnableEval` at top of script (or `/Eval` on the CLI). Evaluates one expression at a time against the caller's live scope, including assignments. Throws `SyntaxError` on bad input, `UnsetError` on missing identifiers.
 
-Full fork reference: `.claude/rules/ahk-fork-features.md`.
+Full fork reference: the `ahk-fork-features` rule (`rules/ahk-fork-features.md`).

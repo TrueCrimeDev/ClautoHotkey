@@ -139,9 +139,13 @@ freely, including `dryrun`:
   would not load beside the shadow. The interpreter names the collision; that
   one shadow is dropped from a per-run copy of the shim and the load retried.
   The candidate's own definition already hides the built-in, so nothing is lost.
-- A candidate that imports from the AHK module (`#Import AHK`) reaches the
-  original built-ins and walks past every shadow. It is **refused, not run**:
-  `status: "error"` with a `shim-bypass` finding.
+- A candidate that uses the module system is **refused, not run**:
+  `status: "error"` with a `shim-bypass` finding. The shadows are declarations
+  in the main module. An import that names the AHK module, in any spelling
+  (`#Import AHK {...}`, `#Import {...} from AHK`, the `Import` statement forms),
+  reaches the original built-ins past every shadow; code under `#Module`, or in
+  a module file an import loads, never sees the shadows at all. The scan follows
+  `#Include`, so one of these in an included file counts too.
 - Between wait slices a **window watch** looks at every visible top-level window
   the candidate's job owns. Any window is unexpected, so each is reported:
   an AutoHotkey error dialog (recognised by its fixed button ids, whatever the
@@ -227,7 +231,7 @@ advisory and never drives a fix on its own.
 | `harness-leak`, `focus-stolen` | critical | live | the live sandbox did not hold |
 | `assert` | high | pure | a unit-test assertion failed; the message names the test file, case and label, and `line` is in the test file |
 | `dialog`, `focus-stolen` | high | dryrun, pure | a dialog got past the shim; the candidate took the foreground |
-| `shim-bypass` | high | dryrun, pure | the script (or test) imports from the AHK module and was not run |
+| `shim-bypass` | high | dryrun, pure | the script (or test) uses `#Import`, `#Module` or an `Import` statement and was not run |
 | `clipboard-restore-failed` | high | dryrun, pure | the user's clipboard could not be put back |
 | `nonzero-exit` | high | dryrun | the candidate exited nonzero and said nothing |
 | `window-leak`, `warn-dialog`, `error-suppressed`, `warn` | medium | dryrun, pure | see the rules above |

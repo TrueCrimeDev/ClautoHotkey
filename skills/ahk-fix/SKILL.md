@@ -90,7 +90,8 @@ When live debugging is available, use the MCP tools:
 ## Console Error Checking
 
 ```bash
-source "${CLAUDE_PLUGIN_ROOT}/hooks/_harness-env.sh"   # sets AHK_BIN_WSL
+source "${CLAUDE_PLUGIN_ROOT}/hooks/_harness-env.sh"   # sets AHK_EXE (and AHK_BIN_WSL, AHK_BIN_WIN)
+JOB_DIR="${CLAUDE_JOB_DIR:-$(mktemp -d)}"
 WIN_PATH=$(wslpath -w "script.ahk")
 
 # Syntax check
@@ -100,5 +101,5 @@ WIN_PATH=$(wslpath -w "script.ahk")
 timeout 2 "$AHK_EXE" /Headless /ErrorStdOut "$WIN_PATH"
 
 # Capture stderr
-"$AHK_EXE" /ErrorStdOut "$WIN_PATH" 2>"$CLAUDE_JOB_DIR/ahk_fix_err.txt"
+"$AHK_EXE" /ErrorStdOut "$WIN_PATH" 2>"$JOB_DIR/ahk_fix_err.txt"
 ```

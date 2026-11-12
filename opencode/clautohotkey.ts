@@ -15,7 +15,8 @@
 //                                   session, appended to that edit's result)
 //   tool.execute.after   edit/write hooks/ahk-post-edit.sh (syntax + runtime check; a
 //                                   failure is appended to the result so the model
-//                                   fixes it), hooks/ahk-auto-reload.sh
+//                                   fixes it; on a pass it restarts a running copy
+//                                   through hooks/ahk-auto-reload.sh itself)
 //   tool.execute.after   bash       skills/ahk-mistakes/hooks/error-logger.sh,
 //                                   hooks/ahk-auto-reload.sh
 //   chat.message                    hooks/detect-v1-syntax.sh
@@ -210,8 +211,14 @@ const Clautohotkey: Plugin = async ({ directory }) => {
     return { edit: "Edit", write: "Write", bash: "Bash" }[tool] ?? tool
   }
 
+  // content / new_string let inject-rules.sh match a rule on what the edit writes
+  // (a new file that calls Gui() has nothing on disk to look at yet).
   function editPayload(tool: string, args: Dict, sessionID: string): Dict {
-    return { tool_name: claudeToolName(tool), tool_input: { file_path: args.filePath }, session_id: sessionID }
+    return {
+      tool_name: claudeToolName(tool),
+      tool_input: { file_path: args.filePath, content: args.content, new_string: args.newString },
+      session_id: sessionID,
+    }
   }
 
   async function sessionPrimer(): Promise<string> {
@@ -342,15 +349,13 @@ const Clautohotkey: Plugin = async ({ directory }) => {
           if (r.code === 2) {
             notes.push(`${TAG} VALIDATION FAILED. The file was written but AutoHotkey rejects it; fix this before anything else.\n${report}`)
           } else if (r.code === 0) {
-            // The script's last line is "✓ name.ahk  syntax  runtime  123ms"; keep the steps.
+            // The script's last line is "✓ name.ahk  syntax  runtime  reload(name.ahk)  123ms";
+            // keep the steps. A running copy was restarted by the script itself.
             const last = (report.split("\n").filter(Boolean).pop() ?? "").replace(/^[✓✗\s]+/, "").replace(basename(filePath), "").trim()
             notes.push(`${TAG} validated ${basename(filePath)}${last ? `: ${last}` : ""}`)
           } else if (report) {
             notes.push(`${TAG} ${report}`)
           }
-          const reload = await runHook("hooks/ahk-auto-reload.sh", payload, 15000)
-          const reloadText = clean(reload.stderr)
-          if (reloadText) notes.push(`${TAG} ${reloadText}`)
         }
         if (notes.length) output.output = `${output.output}\n\n${notes.join("\n\n")}`
         return

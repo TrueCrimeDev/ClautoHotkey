@@ -22,6 +22,17 @@ The user supplies one or more AHK expressions (or, less commonly, a multi-line b
 3. Mode B: write a temp script and run it normally.
 4. Report results; on `ok:false`, pass the error type and message through verbatim.
 
+## Setup
+
+Start every Bash call below with these two lines. The first sets `AHK_EXE` (the
+interpreter from `harness.env`, as this shell spells it) and makes `wslpath` work under
+Git Bash; the second gives the run a scratch folder of its own.
+
+```bash
+source "${CLAUDE_PLUGIN_ROOT}/hooks/_harness-env.sh"
+JOB_DIR="${CLAUDE_JOB_DIR:-$(mktemp -d)}"
+```
+
 ## Mode A — expressions via `repl` (preferred)
 
 One expression per line. Comma compounds work (`x := 1, y := 2`). Lines evaluate in global scope and **state persists between lines**, so a sequence like `x := 10` then `x * 4` works. Errors never end the session — every line gets its result line.
@@ -77,18 +88,18 @@ When the user provides a block the REPL can't take line-by-line (function defini
 Encourage `Print(...)` calls in the block — there's no implicit result to surface.
 
 ```bash
-TEMP_FILE="$CLAUDE_JOB_DIR/ahk_eval_$$.ahk"
+TEMP_FILE="$JOB_DIR/ahk_eval_$$.ahk"
 WIN_PATH=$(wslpath -w "$TEMP_FILE")
 
 timeout 5 "$AHK_EXE" /Headless /ErrorStdOut "$WIN_PATH" \
-    1>"$CLAUDE_JOB_DIR/ahk_eval_out.txt" \
-    2>"$CLAUDE_JOB_DIR/ahk_eval_err.txt"
+    1>"$JOB_DIR/ahk_eval_out.txt" \
+    2>"$JOB_DIR/ahk_eval_err.txt"
 exit_code=$?
 
-stdout=$(cat "$CLAUDE_JOB_DIR/ahk_eval_out.txt" 2>/dev/null)
-stderr=$(cat "$CLAUDE_JOB_DIR/ahk_eval_err.txt" 2>/dev/null)
+stdout=$(cat "$JOB_DIR/ahk_eval_out.txt" 2>/dev/null)
+stderr=$(cat "$JOB_DIR/ahk_eval_err.txt" 2>/dev/null)
 
-rm -f "$TEMP_FILE" "$CLAUDE_JOB_DIR/ahk_eval_out.txt" "$CLAUDE_JOB_DIR/ahk_eval_err.txt"
+rm -f "$TEMP_FILE" "$JOB_DIR/ahk_eval_out.txt" "$JOB_DIR/ahk_eval_err.txt"
 ```
 
 ## Examples (Mode A)
@@ -120,4 +131,4 @@ rm -f "$TEMP_FILE" "$CLAUDE_JOB_DIR/ahk_eval_out.txt" "$CLAUDE_JOB_DIR/ahk_eval_
 - Always use `/Diag=json` in Mode A so results map 1:1 to input lines.
 - Quote each AHK line with bash single quotes and use `"` inside the expression; for lines containing `'`, use a quoted heredoc (`<<'EOF'`) instead.
 - Default timeout: 5 seconds (10 when loading a script). Bump only if the user asks.
-- Mode B temp files go under `$CLAUDE_JOB_DIR` (never `/tmp`) and are cleaned up in every code path.
+- Mode B temp files go under `$JOB_DIR` (never a fixed name in `/tmp`) and are cleaned up in every code path.

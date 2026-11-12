@@ -35,7 +35,15 @@
     "harness.env.example",
     "GETTING-STARTED.md",
     "CHANGELOG.md",
-    "THIRD-PARTY.md"
+    "THIRD-PARTY.md",
+    "!**/__pycache__/**",
+    "!**/*.pyc",
+    "!**/*.log",
+    "!**/settings.ini",
+    "!**/harness.env",
+    "!**/harness.local.env",
+    "!**/.verify.*",
+    "!**/.test-tmp.*"
   ],
   "engines": {
     "node": ">=22.6"

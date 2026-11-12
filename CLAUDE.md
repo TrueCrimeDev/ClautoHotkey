@@ -34,13 +34,13 @@ The harness has three layers — use them in priority order. The full tables liv
 `README.md`; the essentials:
 
 1. **Auto-loading rules** (`rules/`) activate by file path — no invocation
-   needed. Editing any `.ahk` pulls in `ahk-v2-syntax` and `ahk-target` (which keeps
-   generated code on the build the user actually has); editing under `Lib/` pulls in
-   `lib-development`; editing a GUI file pulls in `gui-work`. Also: `main-script`,
-   `test-scripts`, `demo-location`, `no-banner-comments`, `ahk-interpreter`,
-   `ahk-fork-features`. Editing the harness itself (`CLAUDE.md`, `skills/`, `agents/`,
-   `rules/`, `hooks/`, `commands/`, `lessons/`) pulls in `harness-surface`, which states
-   the cost order for new instruction and the lint that must pass.
+   needed. Editing any `.ahk` pulls in `ahk-v2-syntax`, `ahk-target` (which keeps
+   generated code on the build the user actually has) and, on the fork,
+   `ahk-fork-features`; editing under `Lib/` pulls in `lib-development`; editing a
+   GUI file pulls in `gui-work`. Also: `main-script`, `test-scripts`. Three are
+   reference rules the session primer points to: `demo-location`,
+   `no-banner-comments`, `ahk-interpreter`. Editing the harness itself pulls in
+   `harness-surface`: the cost order for new instruction and the lint that must pass.
 
 2. **Skills** (`skills/`) handle most routine work — invoke with `/<name>`. Twenty-five
    of them, in two groups.
@@ -133,7 +133,7 @@ runs automatically as a `pre-commit` hook over staged modules.
 /Modules/      - Structured AHK v2 knowledge, one per domain (frontmatter + body)
 /skills/       - 25 skills (15 load a knowledge module, 10 drive the tooling)
 /agents/       - 9 fresh-context investigators
-/rules/        - 11 path-triggered rules
+/rules/        - 11 rules (8 self-loading, 3 reference)
 /hooks/        - 12 lifecycle hooks, wired by hooks/hooks.json
 /lessons/      - What recorded mistakes taught about this harness: one entry per
                  lesson (cue, lesson, evidence, confidence); INDEX.md is generated

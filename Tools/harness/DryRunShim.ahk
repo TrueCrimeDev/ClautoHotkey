@@ -41,8 +41,11 @@
 ; Residual gaps — a candidate can still reach the world through:
 ;   A_Clipboard   a built-in variable; no declaration can shadow it. The gate
 ;                 detects writes, serialises clipboard users and restores it
-;   #Import AHK   reaches the originals directly; the gate refuses to run a
-;                 candidate that does this
+;   modules       an import from the AHK module reaches the originals
+;                 directly, and code under #Module or in an imported module
+;                 file never sees these shadows (they are declarations in the
+;                 main module). The gate refuses to run a candidate that uses
+;                 #Import, #Module or an Import statement
 ;   DllCall       APIs outside the deny-list (CreateFile for writing, raw COM
 ;                 vtables, anything exotic)
 ;   ComObject     objects outside the deny-list keep their full surface
@@ -732,6 +735,13 @@ HarnessEmptyEnum(params*) => false
 ; (`class MyGui extends Gui` resolves to this stub) whose initializers and
 ; property writes route through __Set. Internal state lives in a DefineProp'd
 ; own property so the catch-alls never recurse into themselves.
+;
+; The stand-in keeps a position and size, because layout code asks for them:
+; GetPos and GetClientPos answer through ByRef parameters, and a stand-in that
+; left those unset made `gui.GetClientPos(,, &w, &h)` followed by `w - 20`
+; throw in the stub, not in the script. The numbers come from the x/y/w/h
+; options the candidate itself passed to Show, Add or Move, with a plain
+; default where it passed none.
 class Gui {
     __New(options := "", title := "", eventObj := "") {
         HarnessStubInit(this)
@@ -745,10 +755,11 @@ class Gui {
 
     Add(ctrlType, options := "", text := "") {
         HarnessRecord("gui", "Gui.Add", ctrlType (options = "" ? "" : " " options))
-        return HarnessGuiControl(this, ctrlType, text)
+        return HarnessGuiControl(this, ctrlType, text, options)
     }
 
     Show(options := "") {
+        HarnessGeometryFromOptions(this, options)
         HarnessRecord("gui", "Gui.Show"
             , this.HarnessData.Get("prop:Title", "") (options = "" ? "" : " " options))
     }
@@ -760,7 +771,9 @@ class Gui {
     __Call(name, params) {
         HarnessRecord("gui", "Gui." name, HarnessJoin(params))
         if (SubStr(name, 1, 3) = "Add")
-            return HarnessGuiControl(this, SubStr(name, 4), params.Has(2) ? params[2] : "")
+            return HarnessGuiControl(this, SubStr(name, 4), params.Has(2) ? params[2] : ""
+                , params.Has(1) ? params[1] : "")
+        HarnessGeometryCall(this, name, params)
         return ""
     }
 
@@ -772,12 +785,13 @@ class Gui {
 ; readable and writable through the catch-alls; the class-level __Get makes
 ; `ctl is Gui.Button` (and any other Gui.<Type>) hold true for stub controls.
 class HarnessGuiControl {
-    __New(owner, ctrlType, text := "") {
+    __New(owner, ctrlType, text := "", options := "") {
         HarnessStubInit(this)
         this.HarnessData["prop:Type"] := ctrlType
         this.HarnessData["prop:Text"] := text
         this.HarnessData["prop:Value"] := text
         this.HarnessData["prop:Gui"] := owner
+        HarnessGeometryFromOptions(this, options)
     }
 
     static __Get(name, params) => ""
@@ -790,11 +804,58 @@ class HarnessGuiControl {
 
     __Call(name, params) {
         HarnessRecord("gui", "Ctrl." name, HarnessJoin(params))
+        HarnessGeometryCall(this, name, params)
         return ""
     }
 
     __Get(name, params) => HarnessStubGet(this, name)
     __Set(name, params, value) => HarnessStubSet(this, name, value)
+}
+
+; A stub's stored [x, y, w, h], created on first use. Not set in __New: a
+; subclass whose own __New never calls super.__New still gets asked for it.
+HarnessGeometry(obj) {
+    HarnessStubInit(obj)
+    if !obj.HarnessData.Has("geometry")
+        obj.HarnessData["geometry"] := (obj is HarnessGuiControl) ? [0, 0, 100, 24] : [0, 0, 800, 600]
+    return obj.HarnessData["geometry"]
+}
+
+; Reads x, y, w and h out of an options string ("x10 y5 w300 h200 Center")
+; into a stub's stored geometry. Only plain numbers count: xm, x+10, wp and
+; the like are relative to things the stand-in does not model, and leave the
+; stored value alone.
+HarnessGeometryFromOptions(obj, options) {
+    if !(options is String)
+        return
+    if (options = "")
+        return
+    geometry := HarnessGeometry(obj)
+    for index, letter in ["x", "y", "w", "h"] {
+        if RegExMatch(options, "i)(?:^|\s)" letter "(\d+)(?=\s|$)", &m)
+            geometry[index] := Integer(m[1])
+    }
+}
+
+; The geometry half of a stub's __Call. GetPos and GetClientPos hand back the
+; stored x, y, w, h through whichever ByRef parameters the caller passed; Move
+; stores the numbers it was given. A ByRef parameter on any other method gets
+; 0, for the same reason: a variable the built-in would have set must not
+; reach the candidate unset.
+HarnessGeometryCall(obj, name, params) {
+    geometry := HarnessGeometry(obj)
+    if (name = "Move") {
+        for index, value in params {
+            if (index <= 4 && IsSet(value) && !IsObject(value) && IsNumber(value))
+                geometry[index] := Integer(value)
+        }
+        return
+    }
+    known := (name = "GetPos" || name = "GetClientPos")
+    for index, value in params {
+        if (IsSet(value) && value is VarRef)
+            %value% := (known && index <= 4) ? geometry[index] : 0
+    }
 }
 
 ; DefineProp, not assignment: a plain `this.x :=` in __New routes through the

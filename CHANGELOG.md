@@ -28,7 +28,7 @@ All notable changes to the ClautoHotkey project will be documented in this file.
 - **Lesson library** (`lessons/`, `Tools/lessons.py`): what recorded mistakes
   taught about the harness, one entry per lesson with cue, lesson, evidence and
   confidence; an entry missing any of them is refused. `propose` turns the error
-  log into candidate rows that no lesson covers yet. Seeded with five entries
+  log into candidate rows that no lesson covers yet. Seeded with six entries
   from the 2026 log.
 - **Harness lint** (`Tools/lint_harness.py`, also run by `verify.sh`): validates
   the tree the way a proposal would be validated before it runs: skill and agent
@@ -54,10 +54,96 @@ All notable changes to the ClautoHotkey project will be documented in this file.
   Off`) like the shim launch; log records carry the session id. Three smoke
   cases cover the new paths.
 
+- `Tools/tests/hooks_smoke.sh` now covers every hook that answers the model or
+  writes a log (rule injection on LF and CRLF rule files, the error logger, the
+  v1 detector, the compaction restore, the debug-MCP hints, the session log, bare
+  interpreter names), and `Tools/tests/reload_logic.sh` runs the reload's
+  PowerShell against recorded processes on any platform.
+- Rule frontmatter: `contains:` (strings looked for in the `.ahk` file being
+  edited, on disk or in the text the edit writes) and `build: fork` (keep the rule
+  off stock AutoHotkey). `gui-work` uses the first, `ahk-fork-features` the second.
+- `CheckResults.py --expect-tiers` and `--expect-count`: a script that passed
+  every tier it reached but stops short of the last requested one, or that never
+  got a row, is reported and makes the exit code 1. `harness-grade.js` passes both
+  and lists the gaps under "skipped", so a script dropped between tiers no longer
+  vanishes from the denominator.
+- `lessons.py where`, and a per-machine lesson folder: run from outside the
+  harness checkout, `add` writes to `$CLAUDE_PLUGIN_DATA/lessons` or the project's
+  `.claude/lessons` instead of the install folder an update replaces. `propose`
+  reports how many of a lesson's rows are dated after the lesson was recorded.
+- Selftest canaries for the names-first and statement spellings of an import
+  from AHK, a `#Module` section, an import one `#Include` away, and Gui geometry.
+
+### Changed
+- **Scripts that use the module system are refused by tiers 2 and 3, not run.**
+  The preflight used to match only `#Import AHK ...`. It now matches `#Import` in
+  any spelling, the `Import` statement and `#Module`: the shim's shadows are
+  declarations in the main module, so code in any other module calls the real
+  built-ins. Such a script comes back `error` with a `shim-bypass` finding; a unit
+  test that needs modules runs with `GatePure.ahk --no-shim`. The post-edit probe
+  applies the same test, and follows `#Include` as the gate does.
+- `hooks/hooks.json`: the error logger is wired to `PostToolUseFailure`, the
+  compaction restore to `SessionStart` (matcher `compact`), and the reload is no
+  longer a hook of its own on Write|Edit: `ahk-post-edit.sh` calls it once the edit
+  has passed. A clone install picks the new wiring up by re-running `./setup.sh`,
+  which renders `.claude/settings.json` from that file.
+- `ahk-auto-reload.sh` on Bash: a script is restarted only when the command
+  modified it and the file is newer than the process running it. Naming a script
+  (`cat`, `git diff`, a gate run) no longer bounces a copy the user has running.
+- `check-ahk-binary.sh` also blocks a bare `AutoHotkey*.exe` in command position
+  when PATH resolves it to something other than the configured binary.
+- `gui-work` matches GUI files by generic name globs and by content instead of
+  one project's folder names; path globs ignore case.
+- The session primer lists every self-loading rule, carries a line and a path for
+  the three reference rules, and routes all 19 skills and 9 agents;
+  `lint_harness.py` now requires both.
+- `_harness-env.sh` exports `AHK_EXE` and defines `harness_log_file`; `/ahk-run`,
+  `/ahk-eval` and `/ahk-fix` open with the two setup lines their snippets need.
+
 ### Fixed
 - `DryRunShim.ahk`: a candidate's `DllCall(..., "Void")` no longer fails the
   dry-run tier with `No value was returned`; the wrapper forwards a void call
   without returning it.
+- `DryRunShim.ahk`: the Gui stand-in answers `GetPos` and `GetClientPos` through
+  their ByRef parameters (from the x/y/w/h the script passed to `Show`, `Add` and
+  `Move`) instead of leaving them unset, which failed layout code inside the stub.
+- Hooks that did nothing under Claude Code, which starts the hooks matched to one
+  event together, sends a tool's result as `tool_response`, reports failed calls
+  through `PostToolUseFailure`, and reads context only from `hookSpecificOutput`
+  or, for prompt and session-start hooks, plain stdout:
+  - `ahk-auto-reload.sh` read the validator's verdict before there was one, so a
+    broken edit could be reloaded and the fix after it skipped;
+  - `error-logger.sh` waited on `PostToolUse` for an exit code and an error field
+    that event never carries;
+  - `detect-v1-syntax.sh` warned on stderr with exit 0, where nobody reads it;
+  - `post-compact-state.sh` was wired to `PreCompact`, which cannot add context;
+  - `check-ahk-connection.sh` and `post-capture-guidance.sh` answered with a
+    top-level `additionalContext`, and the latter read `tool_output`;
+  - `session-event-logger.sh` read `subagent_type` and `notification`.
+- `inject-rules.sh`: rule files with CRLF endings (a `core.autocrlf=true`
+  checkout) matched nothing; frontmatter is now read with the carriage return
+  stripped and `.gitattributes` pins `rules/*.md` to LF. The marker that stops a
+  rule loading twice is cleared after compaction, when the rule text is gone.
+- `ahk-auto-reload.sh`: the restarted script's path is quoted by hand, so a
+  script under a folder with a space in its name comes back instead of being
+  stopped and lost; the running script is matched by full path, not by a name
+  fragment.
+- Error and session logs are written when the project has no `.claude/` folder
+  yet (it is created), as in any project a plugin install first touches.
+- `package.json`: the `files` list ends in negated patterns. npm 9 and later
+  ignore the root `.npmignore` when `files` is present, so `__pycache__`, logs,
+  `settings.ini` and `harness.env` inside the listed folders would have shipped.
+- Removed `Lib/ClipboardHistory`, a submodule entry with no `.gitmodules`, which
+  made `git submodule status` and recursive clones fail.
+- `opencode/install.sh`: a commented `opencode.jsonc` holding a URL (the usual
+  `$schema` line) no longer aborts the install; `opencode/selftest.mjs` no longer
+  dies with EPIPE when a hook exits without reading its input.
+- `ahk-post-edit.sh`: a main-script failure on stock AutoHotkey is parsed like any
+  other, and a file name with regex characters still finds its includer.
+- Docs: the rule count and hook table in the README, the `AHK_DIAG_JSON` default
+  and fork-reference path in the interpreter rule, the orchestrator agent's entry
+  points (one project's scripts, now `MAIN_SCRIPT`), and two files the notices
+  listed that are not in the repo.
 
 ## [1.2.0] - 2026-10-01
 

@@ -1,13 +1,20 @@
 #!/usr/bin/env bash
-# PostToolUse hook: log AHK-related errors to .claude/error-log.jsonl
-# Merges the previous error-pattern-logger.sh + failure-error-logger.sh into
-# a single stdin-driven logger.
+# Log AHK-related tool failures to .claude/error-log.jsonl, the file /ahk-mistakes
+# and Tools/lessons.py read.
 #
-# Triggers (decided per call by inspecting tool name + payload):
-#   - Bash commands invoking AutoHotkey64.exe / AutoHotkey32.exe / `ahk check`
-#     when the command exited non-zero
+# Wired to PostToolUseFailure in Claude Code: PostToolUse fires only for calls
+# that succeeded, and its payload carries neither an exit code nor an error. A
+# failed call arrives here with the reason in `.error` - for Bash that is
+# "Exit code N" followed by the command's output. The OpenCode bridge has no such
+# event and calls this script after every bash tool with the exit code it saw, as
+# `.tool_output.exit_code`; both shapes are read.
+#
+# Logged (decided per call from the tool name and payload):
+#   - Bash commands that ran the interpreter and failed
 #   - mcp__autohotkey-debug__* / mcp__ahk* tool failures
-#   - Edit/Write of *.ahk that returned an error
+#   - Edit/Write of *.ahk that failed
+# Not logged: the grading gates. They exit 1 whenever a graded script fails, which
+# is their verdict on someone else's code, not a mistake made in this session.
 
 set -u
 
@@ -18,21 +25,26 @@ source "$(dirname "${BASH_SOURCE[0]}")/../../../hooks/_harness-env.sh"
 input=$(cat)
 harness_need_jq || exit 1
 
-tool_name=$(echo "$input"  | jq -r '.tool_name  // empty'     2>/dev/null)
-session=$(echo "$input"    | jq -r '.session_id // "default"' 2>/dev/null)
-tool_input=$(echo "$input" | jq -r '.tool_input // empty' 2>/dev/null)
-tool_output=$(echo "$input"| jq -r '.tool_output// empty' 2>/dev/null)
-err_field=$(echo "$input"  | jq -r '.error      // empty' 2>/dev/null)
+tool_name=$(echo "$input" | jq -r '.tool_name  // empty'     2>/dev/null)
+session=$(echo "$input"   | jq -r '.session_id // "default"' 2>/dev/null)
+err_field=$(echo "$input" | jq -r '.error      // empty'     2>/dev/null)
+oc_exit=$(echo "$input"   | jq -r '.tool_output.exit_code // empty' 2>/dev/null)
 
 should_log=false
 
 case "$tool_name" in
     Bash)
-        cmd=$(echo "$tool_input" | jq -r '.command // empty' 2>/dev/null)
-        case "$cmd" in
-            *AutoHotkey64.exe*|*AutoHotkey32.exe*|*ahk*check*)
-                exit_code=$(echo "$tool_output" | jq -r '.exit_code // empty' 2>/dev/null)
-                if [[ -n "$exit_code" && "$exit_code" != "0" ]]; then
+        cmd=$(echo "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)
+        # A command spells the interpreter as a path or as one of the variables the
+        # loader exports; matched in lower case because Windows paths are.
+        lc="${cmd,,}"
+        case "$lc" in
+            *gatestatic.ahk*|*gatepure.ahk*|*gatedryrun.ahk*|*gatelive.ahk*|*selftest.ahk*|*reduce.ahk*)
+                ;;
+            *autohotkey*.exe*|*ahk_bin_*|*ahk_exe*)
+                if [[ -n "$err_field" ]]; then
+                    should_log=true
+                elif [[ -n "$oc_exit" && "$oc_exit" != "0" ]]; then
                     should_log=true
                 fi
                 ;;
@@ -42,7 +54,7 @@ case "$tool_name" in
         [[ -n "$err_field" ]] && should_log=true
         ;;
     Edit|Write)
-        file_path=$(echo "$tool_input" | jq -r '.file_path // empty' 2>/dev/null)
+        file_path=$(echo "$input" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
         if [[ "$file_path" == *.ahk && -n "$err_field" ]]; then
             should_log=true
         fi
@@ -51,9 +63,16 @@ esac
 
 [[ "$should_log" == false ]] && exit 0
 
+# The text to mine: Claude Code's error string without its "Exit code N" first
+# line, else what the OpenCode bridge captured.
 err_text="$err_field"
-[[ -z "$err_text" ]] && err_text=$(echo "$tool_output" | jq -r '.stderr // empty' 2>/dev/null)
-[[ -z "$err_text" ]] && err_text=$(echo "$tool_output" | jq -r '.stdout // empty' 2>/dev/null)
+if [[ "$err_text" =~ ^Exit\ code\ [0-9]+ ]]; then
+    err_text="${err_text#*$'\n'}"
+    [[ "$err_text" == "$err_field" ]] && err_text=""
+fi
+[[ -z "$err_text" ]] && err_text=$(echo "$input" | jq -r '.tool_output.stderr // empty' 2>/dev/null)
+[[ -z "$err_text" ]] && err_text=$(echo "$input" | jq -r '.tool_output.stdout // empty' 2>/dev/null)
+[[ -z "$err_text" ]] && err_text="$err_field"
 
 file=$(echo "$err_text" | grep -oE '[A-Za-z]:\\[^ ]+\.ahk' | head -1)
 [[ -z "$file" ]] && file="unknown"
@@ -66,9 +85,9 @@ err_type=$(echo "$err_text" | grep -oE '(TypeError|ValueError|OSError|TargetErro
 
 err_msg=$(echo "$err_text" | head -3 | tr '\n' ' ' | cut -c1-200)
 
-# Always log to the project-level .claude/error-log.jsonl regardless of where
-# this script lives (skill bundles us under skills/ahk-mistakes/hooks/).
-log_file="${CLAUDE_PROJECT_DIR:-$(pwd)}/.claude/error-log.jsonl"
+# Always the project-level .claude/error-log.jsonl, wherever this script lives
+# (the skill bundles it under skills/ahk-mistakes/hooks/).
+log_file="$(harness_log_file error-log.jsonl)"
 ts=$(date -u +"%Y-%m-%dT%H:%M:%S")
 
 jq -nc \

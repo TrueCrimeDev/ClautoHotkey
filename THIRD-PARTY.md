@@ -12,7 +12,7 @@ before redistributing.
 | `XHotstring.ahk` | Descolada | Hotstring engine |
 | `DarkListView.ahk` | derived from community dark-mode ListView work | |
 | `tree-sitter-ahk.dll` | compiled from the tree-sitter AHK grammar (tree-sitter is MIT) | Binary artifact; rebuild from source if you need to audit it |
-| `_Dark.ahk`, `DarkModeModular_Alpha.ahk`, `TreeSitter.ahk`, `Lint.ahk`, `CodeIntel.ahk` | this project | MIT with the rest of the repo |
+| `_Dark.ahk`, `TreeSitter.ahk`, `Lint.ahk`, `CodeIntel.ahk` | this project | MIT with the rest of the repo |
 
 ## Documented, not bundled
 

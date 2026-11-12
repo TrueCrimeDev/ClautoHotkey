@@ -185,7 +185,8 @@ class SelfTest {
         dir := this.Canaries "\dryrun"
         FileAppend("keep me", this.Sandbox "\sentinel.txt", "UTF-8-RAW")
         names := ["clean", "runtime-error", "hang", "idle", "hotkeys", "stdout", "clipboard", "gui"
-            , "collision", "suppressed-error", "hidden-crash", "memory", "shim-bypass", "side-effects"]
+            , "gui-geometry", "collision", "suppressed-error", "hidden-crash", "memory", "shim-bypass"
+            , "import-from", "import-statement", "module", "include-import", "side-effects"]
         paths := []
         for name in names
             paths.Push(dir "\" name ".ahk")
@@ -218,6 +219,10 @@ class SelfTest {
         this.Ok(InStr(this.CheckDetail(rows, "clipboard.ahk", "stdout"), "read back: canary-clipboard")
             , "the candidate read back its own clipboard write")
         this.Expect(rows, "gui.ahk", "pass", Map("residency", "exited"), , Map("gui", 3))
+        this.Expect(rows, "gui-geometry.ahk", "pass", Map("residency", "exited"), , Map("gui", 4))
+        geometry := this.CheckDetail(rows, "gui-geometry.ahk", "stdout")
+        this.Ok(InStr(geometry, "window 640x480 client 640x480 button 80x24 moved 120x30 margin 550")
+            , "the Gui stand-in answers GetPos and GetClientPos through their ByRef parameters", geometry)
         this.Expect(rows, "collision.ahk", "pass")
         this.Ok(InStr(this.CheckDetail(rows, "collision.ahk", "shim"), "MsgBox")
             && InStr(this.CheckDetail(rows, "collision.ahk", "stdout"), "own msgbox")
@@ -226,6 +231,11 @@ class SelfTest {
         this.Expect(rows, "hidden-crash.ahk", "fail", Map(), ["runtime"])
         this.Expect(rows, "memory.ahk", "fail", Map(), ["runtime"])
         this.Expect(rows, "shim-bypass.ahk", "error", Map("residency", "unknown"), ["shim-bypass"])
+        ; Every other way past the shim is refused the same way: the names-first
+        ; and statement spellings of an import from AHK, code in a module of
+        ; its own, and an import one #Include away.
+        for bypass in ["import-from", "import-statement", "module", "include-import"]
+            this.Expect(rows, bypass ".ahk", "error", Map("residency", "unknown"), ["shim-bypass"])
         this.Expect(rows, "side-effects.ahk", "pass", Map("residency", "exited")
             , , Map("fs", 3, "registry", 1, "process", 1, "dll", 1, "com", 1))
         this.Ok(FileExist(this.Sandbox "\sentinel.txt"), "FileDelete never reached the sandbox")

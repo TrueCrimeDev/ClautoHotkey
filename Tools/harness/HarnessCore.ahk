@@ -806,9 +806,20 @@ class Harness {
 
     ; A pre-run text scan of the candidate and the files it includes. Two
     ; questions only: does it touch the clipboard (so the gate serialises it
-    ; against other agents' clipboard users), and does it import from the AHK
-    ; module (which reaches the original built-ins and walks straight past the
-    ; shim). Plain text by design — it has to answer for files that do not load.
+    ; against other agents' clipboard users), and does it use the module
+    ; system (which walks straight past the shim). Plain text by design — it
+    ; has to answer for files that do not load.
+    ;
+    ; The shim's shadows are declarations in the main module. Every module
+    ; implicitly imports the built-ins from the AHK module, and no module sees
+    ; another's names unless it imports them — so:
+    ;   - an import that names AHK, in any spelling (#Import AHK {...},
+    ;     #Import {...} from AHK, the Import statement forms), hands the main
+    ;     module the original built-in under a name no shadow covers;
+    ;   - code under #Module, or in a module file reached by an import, never
+    ;     sees the shadows at all: its Send is the real Send.
+    ; The first sets "importsAhk", the second "modules". Either one means the
+    ; candidate cannot be dry-run safely, and ShimRun refuses to run it.
     ;
     ; Includes are followed when they resolve to a plain path: relative to the
     ; including file, through %A_ScriptDir% / %A_LineFile%, or <Lib> in the
@@ -818,6 +829,7 @@ class Harness {
         found := Map()
         found["clipboard"] := false
         found["importsAhk"] := false
+        found["modules"] := false
         found["files"] := 0
         SplitPath(path, , &scriptDir)
         seen := Map()
@@ -866,8 +878,12 @@ class Harness {
                 raw := RegExReplace(trimmed, "\s;.*$")
                 if RegExMatch(raw, "i)\b(A_Clipboard|ClipboardAll|ClipWait|OnClipboardChange|OpenClipboard|SetClipboardData|EmptyClipboard)\b")
                     found["clipboard"] := true
-                if RegExMatch(raw, "i)^#Import\s+[`"']?AHK\b")
-                    found["importsAhk"] := true
+                if RegExMatch(raw, "i)^(?:#Import\b|#Module\b|(?:export\s+)?import\s+[`"'{*\w])") {
+                    if RegExMatch(raw, "i)\bAHK\b")
+                        found["importsAhk"] := true
+                    else
+                        found["modules"] := true
+                }
                 if !RegExMatch(raw, "i)^#Include(?:Again)?\s+(?:\*i\s+)?(.+)$", &m)
                     continue
                 target := Trim(m[1], " `t`"'")

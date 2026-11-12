@@ -35,17 +35,33 @@ if [[ ${#problems[@]} -gt 0 ]]; then
     echo
 fi
 
+# Where the reference rules live, as this shell spells it, and where demos go.
+rules_dir="$_HARNESS_INSTALL_ROOT/rules"
+
 cat <<'CONTEXT'
 ## AHK v2 Session Context
 
-### Rules (`rules/`)
-Path-scoped notes that auto-load when you edit a matching file (the
-`inject-rules.sh` PreToolUse hook injects each matching rule once per session).
-- `ahk-v2-syntax.md` — core syntax rules (any `.ahk` file)
-- `gui-work.md` — positioning, OnSize, dark mode (GUI files)
-- `lib-development.md` — side-effect-free constraints (`Lib/` files)
-- `main-script.md` — entry-point restart rules (your `MAIN_SCRIPT`)
-- `test-scripts.md` — standalone conventions (test files)
+### Rules that load themselves
+Path-scoped notes; `inject-rules.sh` adds each one to the first edit that matches it,
+once per session.
+- `ahk-v2-syntax` — core syntax rules (any `.ahk` file)
+- `ahk-target` — keeps generated code on the build the user has (any `.ahk` file)
+- `ahk-fork-features` — +Console fork features (any `.ahk` file, fork builds only)
+- `gui-work` — positioning, OnSize, dark mode (GUI files: by name, or because they call `Gui(`)
+- `lib-development` — side-effect-free constraints (`Lib/` files)
+- `main-script` — entry-point restart rules (`main.ahk`)
+- `test-scripts` — standalone conventions (test files)
+- `harness-surface` — editing the harness itself
+
+### Rules to read when the situation comes up
+No edit loads these. Each has one line here and the full text at the path given.
+CONTEXT
+cat <<CONTEXT
+- \`ahk-interpreter\` — run AutoHotkey only through the configured interpreter (\`"\$AHK_BIN_WSL"\`, set by \`source "$_HARNESS_HOOKS/_harness-env.sh"\`); switches, exit codes and fork notes: \`$rules_dir/ahk-interpreter.md\`
+- \`demo-location\` — a script written as a demo or feature showcase is saved under \`${DEMO_DIR:-Demo}\`, not beside the main script: \`$rules_dir/demo-location.md\`
+- \`no-banner-comments\` — no banner comment dividers (\`; ====\`, \`; ----\`) in any language: \`$rules_dir/no-banner-comments.md\`
+CONTEXT
+cat <<'CONTEXT'
 
 ### Skill & Agent Routing
 
@@ -59,6 +75,10 @@ Skills are the default entry point for routine work. Reach for an agent only whe
 | Debug dashboard | `/ahk-debug-dashboard` skill |
 | OOP / classes / objects | `/ahk-oop` skill |
 | Text / regex / strings | `/ahk-text` skill |
+| COM automation (Excel, WMI, events) | `/ahk-com` skill |
+| DllCall, Buffer, Struct, callbacks | `/ahk-dllcall` skill |
+| Window messages, subclassing, DWM, WinRT | `/ahk-winapi` skill |
+| Version and portability questions | `/ahk-versions` skill |
 | Run a script headlessly | `/ahk-run` skill |
 | Evaluate an expression | `/ahk-eval` skill |
 | Convert v1 to v2 | `/ahk-convert` skill |
@@ -69,10 +89,12 @@ Skills are the default entry point for routine work. Reach for an agent only whe
 | Recurring mistakes from error log | `/ahk-mistakes` skill |
 | Audit error handling / silent failures | `/ahk-audit-errors` skill |
 | Analyze code quality | `ahk-analysis` agent |
+| Track project state and object lifetimes | `ahk-context` agent |
 | Generate tests | `ahk-test-generator` agent |
 | Map dependencies | `ahk-dependency-graph` agent |
-| COM/WinAPI exploration | `ahk-com-explorer` agent |
+| Introspect a COM object | `ahk-com-explorer` agent |
 | Profile performance | `ahk-profiler` agent |
 | UIA automation | `ahk-uia-explorer` agent |
 | Multi-script management | `ahk-orchestrator-v2` agent |
+| Enforce an overlap-free GUI layout | `layout` agent |
 CONTEXT

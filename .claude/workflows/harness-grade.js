@@ -92,6 +92,9 @@ const CHECK_SCHEMA = {
     flagged: { type: 'integer' },
     cleanPath: { type: 'string' },
     uncovered: { type: 'array', items: { type: 'string' }, description: 'scripts whose pure tier ran 0 tests' },
+    unfinished: { type: 'array', items: { type: 'string' }, description: 'one line per entry of the checker\'s "unfinished": the script, the tiers it reached and the tiers it has no row for' },
+    expected: { type: 'integer', description: 'the checker\'s "expected": scripts this run was handed' },
+    covered: { type: 'integer', description: 'the checker\'s "covered": distinct scripts with any row' },
     flaggedReasons: { type: 'array', items: { type: 'string' } },
     reportPath: { type: 'string', description: 'Markdown report written by Report.py, if any' },
   },
@@ -317,7 +320,20 @@ if (tiers.includes('live')) {
 // Check
 // A genuine barrier: the checker compares results about the same script across
 // tiers, so it needs all of them at once.
+//
+// It is also where the denominator is settled. Which scripts move on to the
+// next tier is decided from each gate agent's passingScripts, which is an
+// agent's reading of a file; a script left out of that list simply never gets a
+// later row, and nothing downstream would notice. So the checker is told what
+// the run was supposed to cover - the tiers requested and the number of scripts
+// handed in, both known here without asking anyone - and reports every script
+// that stopped short without a failure, and any that never got a row at all.
 phase('Check')
+
+// Live rows exist only for scripts that reached tier 4, and tier 4 reports
+// "error" rows (never nothing) when its backend is missing, so it can be
+// expected like the others whenever it was requested.
+const expectedTiers = tiers.join(',')
 
 const ndjsonPaths = [
   ...completed.flatMap(r => Object.values(r.results).map(x => x?.ndjsonPath)),
@@ -329,19 +345,25 @@ const checked = await agent(
 
   ${env.python} "${env.tools}\\CheckResults.py" \\
     ${ndjsonPaths.map(p => `"${p}"`).join(' \\\n    ')} \\
-    --json --out "${OUT}\\clean.ndjson"
+    --json --out "${OUT}\\clean.ndjson" \\
+    --expect-tiers ${expectedTiers} --expect-count ${scripts.length}
 
   ${env.python} "${env.tools}\\Report.py" "${OUT}\\clean.ndjson" --format markdown \\
     --fail-on none --out "${OUT}\\report.md"
 
 The checker drops results that are unreadable, missing the end sentinel, empty,
 timed out, self-contradictory, missing a contracted field, or produced after
-their branch should have ended. Exit 1 just means something was flagged — that
-is the tool working, not failing. Exit 2 is a real tool error (bad arguments,
-unreadable input file, unwritable --out) and should be reported as such.
+their branch should have ended. Exit 1 just means something was flagged, or
+that the run fell short of what it was told to cover — that is the tool working,
+not failing. Exit 2 is a real tool error (bad arguments, unreadable input file,
+unwritable --out) and should be reported as such.
 
 Report the clean/flagged counts, the distinct reasons anything was flagged, and
 "uncovered" from the checker's JSON (scripts whose pure tier ran no tests).
+Copy "expected" and "covered" exactly, and turn each entry of "unfinished" into
+one line: the script, the tiers it reached, the tiers it has no row for. These
+are scripts that passed every gate they were given and then were never handed to
+the next one. Do NOT re-run a gate for them; report them.
 cleanPath is ${OUT}\\clean.ndjson; reportPath is ${OUT}\\report.md if Report.py
 wrote it.`,
   { label: 'checker', phase: 'Check', schema: CHECK_SCHEMA }
@@ -349,6 +371,14 @@ wrote it.`,
 
 // Synthesis
 phase('Synthesis')
+
+// Scripts handed to the run that no gate ever reported on. The checker counted
+// them; the arithmetic is done here so it does not depend on an agent's.
+const missingScripts = Number.isInteger(checked?.covered) ? scripts.length - checked.covered : 0
+if (checked?.unfinished?.length || missingScripts > 0) {
+  log(`denominator: ${checked?.unfinished?.length || 0} script(s) stopped short of a requested tier without failing, ` +
+      `${Math.max(missingScripts, 0)} never got a row`)
+}
 
 const notRun = []
 if (!tiers.includes('pure')) notRun.push('tier 2 unit tests (not requested)')
@@ -378,7 +408,10 @@ For each fix give the script, line, rule, what is actually wrong, and a concrete
 suggested change. Do NOT edit any file — this phase reports only.
 
 In "skipped", state plainly what this run did not cover: ${notRun.length ? notRun.join('; ') : 'nothing was excluded by request'};
-plus every script the checker listed as uncovered (no unit tests): ${JSON.stringify(checked?.uncovered || [])}.`,
+plus every script the checker listed as uncovered (no unit tests): ${JSON.stringify(checked?.uncovered || [])};
+plus every script that stopped before its last requested tier without failing (each one is
+ungraded there, not passed): ${JSON.stringify(checked?.unfinished || [])}${missingScripts > 0
+    ? `;\nplus ${missingScripts} of the ${scripts.length} candidate script(s) that have no result row at all` : ''}.`,
   { label: 'synthesis', phase: 'Synthesis', schema: FIXLIST_SCHEMA }
 )
 
@@ -400,6 +433,8 @@ return {
   tiers,
   totals,
   checked,
+  unfinished: checked?.unfinished || [],
+  missingScripts: Math.max(missingScripts, 0),
   fixes: fixList?.fixes || [],
   skipped: fixList?.skipped || [],
   runDir: OUT,
