@@ -27,3 +27,5 @@ Drive another application's object model from AHK.
 - **No IDispatch (low-level / WinRT):** call vtable slots with `ComCall(index, obj, ...)` — see `Module_WinAPI.md` for WinRT.
 
 For events, SafeArrays, the VARENUM table, and cleanup rules, read `${CLAUDE_PLUGIN_ROOT}/Modules/Module_COM.md`.
+
+Non-COM operating-system work (clipboard, Run/RunWait, process waits, registry, environment) is covered by `/ahk-system`, which loads `${CLAUDE_PLUGIN_ROOT}/Modules/Module_System.md`.

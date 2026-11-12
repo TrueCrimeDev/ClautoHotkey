@@ -5,6 +5,13 @@ All notable changes to the ClautoHotkey project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Twelve knowledge modules and six skills** adapted from
+  hsinming/AutoHotkey-V2-vibe-coding-tools (attribution in `THIRD-PARTY.md`):
+  async and timers, functions, validation, code review, DllCall memory, system,
+  script environment, file system, network and HTTP, input and hotkeys, windows and
+  controls, graphics and screen. New skills `/ahk-async`, `/ahk-input`, `/ahk-screen`,
+  `/ahk-system`, `/ahk-net`, `/ahk-review`; `Module_COM`, `Module_DllCall` and
+  `Module_WinAPI` gained sections from the same pass. Plugin version 1.4.0.
 - **OpenCode install** (`opencode/`): `install.sh` writes one `plugin` entry into
   `opencode.json` (global, or `--project DIR` with an `AGENTS.md` and `harness.env`)
   and copies the skills where OpenCode's skill tool reads them. The plugin,

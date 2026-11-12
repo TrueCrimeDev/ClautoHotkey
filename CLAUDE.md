@@ -42,11 +42,12 @@ The harness has three layers — use them in priority order. The full tables liv
    `rules/`, `hooks/`, `commands/`, `lessons/`) pulls in `harness-surface`, which states
    the cost order for new instruction and the lint that must pass.
 
-2. **Skills** (`skills/`) handle most routine work — invoke with `/<name>`. Nineteen
+2. **Skills** (`skills/`) handle most routine work — invoke with `/<name>`. Twenty-five
    of them, in two groups.
 
    *Knowledge skills* load a module and apply its rules: `/ahk-gui`, `/ahk-oop`, `/ahk-text`,
-   `/ahk-fix`, `/ahk-ref`, `/ahk-com`, `/ahk-dllcall`, `/ahk-winapi`, `/ahk-versions`.
+   `/ahk-fix`, `/ahk-ref`, `/ahk-com`, `/ahk-dllcall`, `/ahk-winapi`, `/ahk-versions`,
+   `/ahk-async`, `/ahk-input`, `/ahk-screen`, `/ahk-system`, `/ahk-net`, `/ahk-review`.
 
    *Tool skills* drive the interpreter or the repo directly: `/ahk-run`, `/ahk-eval`,
    `/ahk-gui-gen`, `/ahk-convert`, `/ahk-modernize`, `/ahk-new-class`, `/ahk-docs`,
@@ -102,30 +103,10 @@ Skills and rules pull the relevant knowledge module for you. Read
 
 ## Knowledge modules
 
-Structured AHK v2 knowledge lives in `Modules/` (start: `Module_Instructions.md`). The
-routing table there maps keywords to the modules that exist:
-
-| Keyword | Module |
-|---------|--------|
-| class, inheritance, extends | `Module_Classes.md` |
-| object, property, descriptor, bind | `Module_Objects.md` |
-| array, list, collection | `Module_Arrays.md` |
-| map, storage, settings, cache | `Module_DataStructures.md` |
-| gui, window, dialog, control | `Module_GUI.md` |
-| error, try, catch, debug | `Module_Errors.md` |
-| string, regex, text, parse | `Module_TextProcessing.md` |
-| escape, backtick, quote | `Module_Escapes.md` |
-| property, DefineProp, closure, fat arrow | `Module_DynamicProperties.md` |
-| prototype, runtime class, decorator | `Module_ClassPrototyping.md` |
-| dllcall, buffer, struct, callbackcreate | `Module_DllCall.md` |
-| com, comobject, excel, wmi, idispatch | `Module_COM.md` |
-| onmessage, sendmessage, subclass, winapi, winrt | `Module_WinAPI.md` |
-| version, fork, Print/Eval, portable, #Requires | `Module_Versions.md` |
-
-Domains without a dedicated module (files, hotkeys, timers, networking, screen) fall
-back to built-in AHK v2 knowledge. Each module carries YAML frontmatter (`name` +
-trigger-rich `description`) and is surfaced by a matching skill — the harness routes
-on those descriptions natively, so there is no manual routing table to maintain.
+Structured AHK v2 knowledge lives in `Modules/` (start: `Module_Instructions.md`). Each
+module carries YAML frontmatter (`name` + trigger-rich `description`) and is surfaced by a
+matching skill; the harness routes on those descriptions natively, so there is no manual
+routing table to maintain. `index.md` lists which skill loads which module.
 
 `Modules/Supplemental/` holds eight specialized modules, loaded by explicit path rather
 than by a domain skill. They carry the same frontmatter contract:
@@ -150,7 +131,7 @@ runs automatically as a `pre-commit` hook over staged modules.
 
 ```
 /Modules/      - Structured AHK v2 knowledge, one per domain (frontmatter + body)
-/skills/       - 19 skills (9 load a knowledge module, 10 drive the tooling)
+/skills/       - 25 skills (15 load a knowledge module, 10 drive the tooling)
 /agents/       - 9 fresh-context investigators
 /rules/        - 11 path-triggered rules
 /hooks/        - 12 lifecycle hooks, wired by hooks/hooks.json

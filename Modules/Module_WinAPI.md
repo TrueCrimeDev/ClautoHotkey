@@ -2,13 +2,13 @@
 name: Module_WinAPI
 description: 'The Windows message system and modern Windows ABI in AHK v2 — OnMessage/SendMessage/PostMessage,
   window and control subclassing, owner-draw and custom paint, DWM frame styling (dark title bar, Mica,
-  rounded corners), and WinRT activation via ComCall. TRIGGER when the request involves:
+  rounded corners), WM_COPYDATA script-to-script IPC, and WinRT activation via ComCall. TRIGGER when the request involves:
   OnMessage, SendMessage, PostMessage, PostThreadMessage, WM_, subclass, SetWindowSubclass, DefSubclassProc,
   WNDPROC, owner-draw, WM_PAINT, WM_DRAWITEM, NM_CUSTOMDRAW, WinRT, "Windows Runtime", IInspectable, RoActivateInstance,
   RoGetActivationFactory, HSTRING, "clipboard history", "modern Windows API", "intercept a message", "custom
   paint", "dark control", DWM, DwmSetWindowAttribute, Mica, Acrylic, "rounded corners", "title bar color",
-  "dark title bar", "immersive dark mode", backdrop. Not covered: raw DllCall/Buffer/Struct mechanics -
-  see Module_DllCall.md; classic IDispatch automation COM - see Module_COM.md.'
+  "dark title bar", "immersive dark mode", backdrop, WM_COPYDATA, COPYDATASTRUCT, "send data to another script", "script IPC".
+  Not covered: raw DllCall/Buffer/Struct mechanics - see Module_DllCall.md; classic IDispatch automation COM - see Module_COM.md.'
 ---
 
 # Module_WinAPI
@@ -265,6 +265,43 @@ loop 4
 DllCall("dwmapi\DwmExtendFrameIntoClientArea", "Ptr", myGui.Hwnd, "Ptr", margins, "Int")
 ```
 
+## TIER 7 — WM_COPYDATA: string IPC between scripts
+> COVERED: WM_COPYDATA · COPYDATASTRUCT · A_PtrSize layout · sender-side buffer lifetime
+
+`WM_COPYDATA` is the supported way to pass a block of bytes to another process's window. The
+sender builds a `COPYDATASTRUCT` and calls `SendMessage` (synchronous, so the data stays valid
+for the receiver); the receiver reads it inside its `OnMessage` handler and must copy it out
+before returning. `COPYDATASTRUCT` is `dwData` (UPtr) at 0, `cbData` (UInt) at `A_PtrSize`,
+and `lpData` (Ptr) at `2 * A_PtrSize` (padding on x64), total `3 * A_PtrSize`.
+
+```ahk
+SendText(hwnd, text, tag := 1) {
+    data := Buffer(StrPut(text, "UTF-16"))
+    StrPut(text, data, "UTF-16")
+    cds := Buffer(3 * A_PtrSize, 0)
+    NumPut("UPtr", tag, cds, 0)
+    NumPut("UInt", data.Size, cds, A_PtrSize)
+    NumPut("Ptr", data.Ptr, cds, 2 * A_PtrSize)
+    return SendMessage(0x4A, A_ScriptHwnd, cds, , hwnd)    ; 0x4A = WM_COPYDATA
+}
+
+OnCopyData(wParam, lParam, msg, hwnd) {
+    tag := NumGet(lParam, 0, "UPtr")
+    bytes := NumGet(lParam, A_PtrSize, "UInt")
+    text := StrGet(NumGet(lParam, 2 * A_PtrSize, "Ptr"), bytes // 2, "UTF-16")
+    Print("received tag {}: {}", tag, text)
+    return true                      ; a nonzero reply tells the sender it was handled
+}
+
+OnMessage(0x4A, OnCopyData)
+DetectHiddenWindows(true)
+reply := SendText(A_ScriptHwnd, "hello over WM_COPYDATA", 7)    ; the receiver is another script's A_ScriptHwnd
+Print("reply {}", reply)
+```
+
+The receiver script finds its peer with `WinExist("PeerName.ahk ahk_class AutoHotkey")`. Use
+`SendMessage`, never `PostMessage`: the sender's `Buffer`s are freed when `SendText` returns.
+
 ## SEE ALSO
 
 > This module does NOT cover: raw `DllCall`/`Buffer`/`Struct` mechanics → see Module_DllCall.md
@@ -275,3 +312,5 @@ DllCall("dwmapi\DwmExtendFrameIntoClientArea", "Ptr", myGui.Hwnd, "Ptr", margins
 - `Module_COM.md` — WinRT shares the `ComCall`-by-vtable and reference-counting model; classic automation uses the IDispatch shortcut instead.
 - `Module_GUI.md` — `Gui`/control creation and `OnEvent`; subclassing and owner-draw extend those controls. Dark theming lives in `Lib/DarkModeModular.ahk`.
 - `Module_Errors.md` — `OSError(hr)` and HRESULT handling for failed activation/`ComCall`.
+
+<!-- Adapted in part from hsinming/AutoHotkey-V2-vibe-coding-tools (no license file upstream); see THIRD-PARTY.md -->

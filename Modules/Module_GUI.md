@@ -12,7 +12,7 @@ description: 'GUI construction in AHK v2 — the Gui() object, adding and config
   ValidationRule, FieldValidator, "form validation", "validate input", "required field",
   "error message", "reusable component", "dependency injection", "inject a service". Not covered: screen graphics
   (PixelSearch, ImageSearch, screen overlays, GDI+) and WebView2/IE-based browser controls embedded in a
-  Gui — use built-in AHK v2 knowledge (no dedicated graphics/screen module yet).'
+  Gui — see Module_GraphicsAndScreen.md.'
 ---
 
 # Module_GUI
@@ -1680,13 +1680,13 @@ class ValidatedForm {
 
 ## SEE ALSO
 
-> This module does NOT cover: PixelSearch, ImageSearch, screen overlays, and GDI drawing — use built-in AHK v2 knowledge (no dedicated graphics/screen module yet).
-> This module does NOT cover: Hotkey and HotIf rules outside the GUI context (global hotkeys, context-sensitivity beyond HotIfWinExist) — use built-in AHK v2 knowledge (no dedicated input/hotkeys module yet).
+> This module does NOT cover: PixelSearch, ImageSearch, screen overlays, and GDI drawing — see Module_GraphicsAndScreen.md.
+> This module does NOT cover: Hotkey and HotIf rules outside the GUI context (global hotkeys, context-sensitivity beyond HotIfWinExist) — see Module_InputAndHotkeys.md.
 > This module does NOT cover: Class inheritance patterns, meta-functions, and OOP design for GUI base classes beyond LayoutAwareGui — see Module_Classes.md
 > This module does NOT cover: try/catch wrapping for GUI creation failures and control-access errors — see Module_Errors.md
 
-- PixelSearch, ImageSearch, GDI+, screen coordinate systems, and overlay windows — use built-in AHK v2 knowledge (no dedicated graphics/screen module yet).
-- Hotkey(), HotIf(), HotIfWinActive/Exist(), Send(), and global keyboard/mouse input outside the GUI event system — use built-in AHK v2 knowledge (no dedicated input/hotkeys module yet).
+- PixelSearch, ImageSearch, GDI+, screen coordinate systems, and overlay windows — see Module_GraphicsAndScreen.md.
+- Hotkey(), HotIf(), HotIfWinActive/Exist(), Send(), and global keyboard/mouse input outside the GUI event system — see Module_InputAndHotkeys.md.
 - `Module_Classes.md` — Full OOP patterns for extending LayoutAwareGui, meta-function design (`__Get`/`__Set`/`__Call`), and class property declarations.
 - `Module_Errors.md` — try/catch patterns for FileOpen, Gui creation failure, and catching MethodError from invalid control access.
 - Dark mode and theming — see `.claude/skills/ahk-gui/SKILL.md`, `Lib/_Dark.ahk` (build a normal `Gui()`, wrap it with `dm := _Dark(myGui)`, then add controls via `dm.AddDarkButton()` / `dm.AddDarkEdit()` / `dm.AddDarkComboBox()`), and `Lib/DarkModeModular_Alpha.ahk` (canonical for alpha.30). The DWM title-bar DllCall lives in those libraries — do not duplicate it here.
