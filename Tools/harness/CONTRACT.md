@@ -145,7 +145,9 @@ freely, including `dryrun`:
   (`#Import AHK {...}`, `#Import {...} from AHK`, the `Import` statement forms),
   reaches the original built-ins past every shadow; code under `#Module`, or in
   a module file an import loads, never sees the shadows at all. The scan follows
-  `#Include`, so one of these in an included file counts too.
+  `#Include`, so one of these in an included file counts too. It reads the text
+  and asks no interpreter, so a spelling the installed build rejects (alpha.38
+  accepts only `#Import AHK ...`) is refused the same way.
 - Between wait slices a **window watch** looks at every visible top-level window
   the candidate's job owns. Any window is unexpected, so each is reported:
   an AutoHotkey error dialog (recognised by its fixed button ids, whatever the

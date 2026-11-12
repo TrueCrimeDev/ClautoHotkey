@@ -263,12 +263,22 @@ if [[ -n "${AHK_BIN_WIN:-}" && "${AHK_BIN_MISSING:-0}" != 1 ]]; then
 
         # The other ways past the shim: the names-first spelling, the statement
         # form, code inside a module of its own, and any of them one #Include away.
+        # Builds differ on the first two (alpha.38 reads neither as an import).
+        # Where the interpreter parses the file the probe must be skipped; where
+        # it does not, the syntax step blocks the edit. The file never runs.
+        import_spelling_case() { # DESCRIPTION FILE
+            if "$AHK_BIN_SH" check /Diag=json /ErrorStdOut "$(harness_to_win "$2")" >/dev/null 2>&1; then
+                edit_case 0 "skips the probe for $1" "$2" "skipped: #Import"
+            else
+                edit_case 2 "blocks $1, which this build does not parse" "$2" "syntax error"
+            fi
+        }
         printf '%s\n' '#Requires AutoHotkey v2.1-alpha.30' '#Import {FileDelete as RealDelete} from AHK' \
             "RealDelete(\"$sentinel_win\")" > "$e/importer2.ahk"
-        edit_case 0 "skips the probe for #Import {...} from AHK" "$e/importer2.ahk" "skipped: #Import"
+        import_spelling_case "#Import {...} from AHK" "$e/importer2.ahk"
         printf '%s\n' '#Requires AutoHotkey v2.1-alpha.30' 'Import {FileDelete as RealDelete} from AHK' \
             "RealDelete(\"$sentinel_win\")" > "$e/importer3.ahk"
-        edit_case 0 "skips the probe for an Import statement" "$e/importer3.ahk" "skipped: #Import"
+        import_spelling_case "an Import statement" "$e/importer3.ahk"
         printf '%s\n' '#Requires AutoHotkey v2.1-alpha.30' '#Import Worker {Wipe}' 'Wipe()' \
             '#Module Worker' "Wipe() => FileDelete(\"$sentinel_win\")" > "$e/modular.ahk"
         edit_case 0 "skips the probe for a script with a #Module section" "$e/modular.ahk" "skipped: #Import"

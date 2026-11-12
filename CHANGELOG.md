@@ -73,6 +73,9 @@ All notable changes to the ClautoHotkey project will be documented in this file.
   reports how many of a lesson's rows are dated after the lesson was recorded.
 - Selftest canaries for the names-first and statement spellings of an import
   from AHK, a `#Module` section, an import one `#Include` away, and Gui geometry.
+  `hooks_smoke.sh` asks the interpreter whether it parses each spelling: a
+  parsed file must skip the probe, a rejected one must be blocked as a syntax
+  error (alpha.38 accepts only `#Import AHK ...`).
 
 ### Changed
 - **Scripts that use the module system are refused by tiers 2 and 3, not run.**
