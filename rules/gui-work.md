@@ -1,13 +1,12 @@
 ---
 paths:
-  - "Lib/*GUI*.ahk"
-  - "Lib/*Dark*.ahk"
-  - "Lib/GuiEnhancerKit.ahk"
-  - "Lib/GuiReSizer.ahk"
-  - "Lib/GuiLayoutHelpers.ahk"
-  - "GuiTesting/**/*.ahk"
-  - "QuickTodo/*Gui*.ahk"
-  - "QuickTodo/*Dialog*.ahk"
+  - "**/*Gui*.ahk"
+  - "**/*Dialog*.ahk"
+  - "**/*Dark*.ahk"
+  - "**/Gui*/**/*.ahk"
+contains:
+  - "Gui("
+  - "extends Gui"
 ---
 
 # GUI Rules

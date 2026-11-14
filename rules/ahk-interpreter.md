@@ -20,9 +20,9 @@ real stdout/stderr, the `Print` and `Eval` BIFs, JSON diagnostics
 (`check /Diag=json`), structured crash logs, and structured exit codes. It is the
 recommended interpreter for AI-assisted AHK v2 work here.
 
-`AHK_DIAG_JSON=1` is the default in this repo; the post-edit hook validates with
-`check /Diag=json`. Stock AutoHotkey v2 also works (`AHK_DIAG_JSON=0`) but with
-reduced diagnostics and no `Print`/`Eval`.
+Set `AHK_DIAG_JSON=1` in `harness.env` when the configured binary is the fork;
+the post-edit hook then validates with `check /Diag=json`. It defaults to `0`:
+stock AutoHotkey v2 also works, with reduced diagnostics and no `Print`/`Eval`.
 
 **The features below come from the +Console fork.**
 
@@ -44,7 +44,7 @@ reduced diagnostics and no `Print`/`Eval`.
 replaces the old `Print(Format("x={}", x))` idiom. A single-arg call with literal
 braces is preserved verbatim (no Format pass).
 
-Full reference: `.claude/rules/ahk-fork-features.md`.
+Full reference: `ahk-fork-features.md`, beside this file.
 
 ## Alpha.30 syntax changes (fork; mirrors upstream alpha.30)
 

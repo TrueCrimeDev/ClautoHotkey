@@ -1,7 +1,11 @@
-# package.json "files" whitelists the folders; these are dropped from inside them.
+# npm 9 and later ignore this file, because package.json has a "files" list: the
+# negated patterns at the end of that list are what keep these out of the tarball.
+# The same patterns are repeated here for older npm, which reads this file instead.
+# Check what ships with `npm pack --dry-run` before every publish.
 __pycache__/
 *.pyc
 *.log
+settings.ini
 .verify.*
 .test-tmp.*
 harness.env

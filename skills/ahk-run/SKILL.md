@@ -17,14 +17,25 @@ Execute AHK v2 scripts with the canonical fork interpreter and capture all outpu
 
 If no file specified, run the most recently edited `.ahk` file.
 
+## Setup
+
+Start every Bash call below with these two lines. The first sets `AHK_EXE` (the
+interpreter from `harness.env`, as this shell spells it) and makes `wslpath` work under
+Git Bash; the second gives the run a scratch folder of its own.
+
+```bash
+source "${CLAUDE_PLUGIN_ROOT}/hooks/_harness-env.sh"
+JOB_DIR="${CLAUDE_JOB_DIR:-$(mktemp -d)}"
+```
+
 ## Execution (standard)
 
 ```bash
 WIN_PATH=$(wslpath -w "$FILE")
 
 timeout 10 "$AHK_EXE" /Headless /ErrorStdOut "$WIN_PATH" \
-    1>"$CLAUDE_JOB_DIR/ahk_run_out.txt" \
-    2>"$CLAUDE_JOB_DIR/ahk_run_err.txt"
+    1>"$JOB_DIR/ahk_run_out.txt" \
+    2>"$JOB_DIR/ahk_run_err.txt"
 
 EXIT_CODE=$?
 ```
@@ -34,8 +45,8 @@ EXIT_CODE=$?
 The fork adds two flags that survive launchers that swallow stderr (VSCode AHK extension, custom runners, scheduled tasks). Use them when a normal run produces no useful output:
 
 ```bash
-CRASH_LOG="$CLAUDE_JOB_DIR/ahk_run_crash.log"
-STDERR_FILE="$CLAUDE_JOB_DIR/ahk_run_stderr.txt"
+CRASH_LOG="$JOB_DIR/ahk_run_crash.log"
+STDERR_FILE="$JOB_DIR/ahk_run_stderr.txt"
 CRASH_LOG_WIN=$(wslpath -w "$CRASH_LOG")
 STDERR_FILE_WIN=$(wslpath -w "$STDERR_FILE")
 
@@ -101,6 +112,6 @@ Codes 11 (`Critical` vs `Fatal`) and 130 are fork additions. Don't conflate 10 (
 - Always use `/Headless` to suppress dialogs.
 - Always use `/ErrorStdOut` to put runtime errors on stderr.
 - Default timeout: 10 seconds. Use 5s for known-quick eval, 30s for known-slow setup.
-- Write temp/output files under `$CLAUDE_JOB_DIR` (never `/tmp` — parallel jobs collide).
+- Write temp/output files under `$JOB_DIR` (never a fixed name in `/tmp` — parallel jobs collide).
 - Report both stdout and stderr in the result.
 - Reach for the diagnostic flags when stderr is empty and the exit code is non-zero.

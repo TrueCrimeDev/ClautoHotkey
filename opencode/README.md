@@ -61,8 +61,8 @@ the clone each time OpenCode starts.
 | `chat.message` | `hooks/detect-v1-syntax.sh`; a hit becomes a one-time note in the next system prompt | `UserPromptSubmit` |
 | `tool.execute.before` on `bash` | `hooks/check-ahk-binary.sh`, `hooks/check-git-account.sh`; exit 2 throws, which blocks the command | `PreToolUse Bash` |
 | `tool.execute.before` on `edit`/`write` | `hooks/inject-rules.sh`; matching rules are held and appended to that edit's result | `PreToolUse Write\|Edit` |
-| `tool.execute.after` on `edit`/`write` | `hooks/ahk-post-edit.sh`; a failure is appended as `[ClautoHotkey] VALIDATION FAILED …` so the model fixes it next, a pass as one line; then `hooks/ahk-auto-reload.sh` | `PostToolUse Write\|Edit` |
-| `tool.execute.after` on `bash` | `skills/ahk-mistakes/hooks/error-logger.sh`, `hooks/ahk-auto-reload.sh` | `PostToolUse Bash` |
+| `tool.execute.after` on `edit`/`write` | `hooks/ahk-post-edit.sh`; a failure is appended as `[ClautoHotkey] VALIDATION FAILED …` so the model fixes it next, a pass as one line. On a pass the script itself restarts a running copy through `hooks/ahk-auto-reload.sh` | `PostToolUse Write\|Edit` |
+| `tool.execute.after` on `bash` | `skills/ahk-mistakes/hooks/error-logger.sh` (handed the exit code as `tool_output.exit_code`; OpenCode has no failure event), `hooks/ahk-auto-reload.sh` | `PostToolUseFailure`, `PostToolUse Bash` |
 
 The scripts are unchanged: the plugin builds the Claude Code hook payload they expect
 (`tool_name`, `tool_input.file_path`, `session_id`, …) and runs them with bash, with

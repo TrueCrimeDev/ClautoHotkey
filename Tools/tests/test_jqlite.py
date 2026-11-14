@@ -125,6 +125,42 @@ class HookFilterForms(unittest.TestCase):
         self.assertEqual(out, '{\n  "hookSpecificOutput": {\n    "hookEventName": "PreToolUse",\n'
                               '    "additionalContext": "rule\\nbody \u2014 \u25b8"\n  }\n}\n')
 
+    def test_nested_field_alternative_empty(self):
+        # error-logger: '.tool_output.exit_code // empty' - the OpenCode bridge's
+        # payload has it, Claude Code's has no tool_output at all, and 0 is a value.
+        f = ".tool_output.exit_code // empty"
+        self.assertEqual(run(["-r", f], '{"tool_output":{"exit_code":2}}')[1], "2\n")
+        self.assertEqual(run(["-r", f], '{"tool_output":{"exit_code":0}}')[1], "0\n")
+        self.assertEqual(run(["-r", f], '{"tool_input":{}}'), (0, "", ""))
+
+    def test_chained_field_alternatives(self):
+        # session-event-logger: '.agent_type // .subagent_type // empty'
+        f = ".agent_type // .subagent_type // empty"
+        self.assertEqual(run(["-r", f], '{"agent_type":"a","subagent_type":"b"}')[1], "a\n")
+        self.assertEqual(run(["-r", f], '{"subagent_type":"b"}')[1], "b\n")
+        self.assertEqual(run(["-r", f], "{}"), (0, "", ""))
+
+    def test_compact_alternative_of_any_shape(self):
+        # post-capture-guidance: jq -c '.tool_response // .tool_output // empty'
+        f = ".tool_response // .tool_output // empty"
+        self.assertEqual(run(["-c", f], '{"tool_response":[{"type":"text","text":"{\\"status\\":\\"timeout\\"}"}]}')[1],
+                         '[{"type":"text","text":"{\\"status\\":\\"timeout\\"}"}]\n')
+        self.assertEqual(run(["-c", f], '{"tool_output":{"success":true}}')[1], '{"success":true}\n')
+        self.assertEqual(run(["-c", f], "{}"), (0, "", ""))
+
+    def test_string_concatenation_with_defaults(self):
+        # inject-rules: what the edit writes - Write sends content, Edit new_string
+        f = '(.tool_input.content // "") + "\\n" + (.tool_input.new_string // "")'
+        self.assertEqual(run(["-r", f], json.dumps(POST_WRITE))[1], "x := 1\n\n")
+        self.assertEqual(run(["-r", f], '{"tool_input":{"new_string":"win := Gui()"}}')[1], "\nwin := Gui()\n")
+        self.assertEqual(run(["-r", f], '{"tool_input":{"file_path":"x.ahk"}}')[1], "\n\n")
+
+    def test_post_tool_use_context_object(self):
+        # post-capture-guidance: jq -nc --arg ctx "..." '{hookSpecificOutput: {...}}'
+        f = '{hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: $ctx}}'
+        self.assertEqual(run(["-nc", "--arg", "ctx", "next step", f])[1],
+                         '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":"next step"}}\n')
+
     def test_quoted_key(self):
         # post-compact-state: '{"additionalContext": $ctx}'
         self.assertEqual(run(["-nc", "--arg", "ctx", "x", '{"additionalContext": $ctx}'])[1],

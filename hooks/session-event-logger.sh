@@ -14,11 +14,14 @@ harness_need_jq || exit 1
 
 event=$(echo "$input"   | jq -r '.hook_event_name // "unknown"' 2>/dev/null)
 session=$(echo "$input" | jq -r '.session_id      // empty'     2>/dev/null)
-agent=$(echo "$input"   | jq -r '.subagent_type   // empty'     2>/dev/null)
-matcher=$(echo "$input" | jq -r '.matcher         // empty'     2>/dev/null)
-notif=$(echo "$input"   | jq -r '.notification    // empty'     2>/dev/null)
+# SubagentStop names the agent in agent_type and Notification carries its text in
+# message, with the kind in notification_type; the older spellings are kept as
+# fallbacks for hosts that send them.
+agent=$(echo "$input"   | jq -r '.agent_type // .subagent_type // empty' 2>/dev/null)
+matcher=$(echo "$input" | jq -r '.notification_type // .matcher // empty' 2>/dev/null)
+notif=$(echo "$input"   | jq -r '.message // .notification // empty' 2>/dev/null)
 
-log_file="${CLAUDE_PROJECT_DIR:-$(pwd)}/.claude/session-events.jsonl"
+log_file="$(harness_log_file session-events.jsonl)"
 ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 jq -nc \

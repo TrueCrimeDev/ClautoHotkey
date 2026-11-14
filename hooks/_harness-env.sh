@@ -277,6 +277,14 @@ if [[ -n "${AHK_BIN_WIN:-}" ]]; then
     AHK_BIN_WSL="$AHK_BIN_SH"
     [[ -f "$AHK_BIN_SH" ]] || AHK_BIN_MISSING=1
 fi
+# The name the skill snippets and the hooks call the interpreter by. An AHK_EXE the
+# user put in the environment wins, as it always has inside the hooks; one this
+# file derived is derived again, so a hook started from a shell that sourced a
+# different harness.env does not inherit that shell's interpreter.
+if [[ -z "${AHK_EXE:-}" || "${_HARNESS_AHK_EXE_DERIVED:-0}" == 1 ]]; then
+    AHK_EXE="$AHK_BIN_SH"
+    _HARNESS_AHK_EXE_DERIVED=1
+fi
 
 # PROJECT_DIR is optional: the project Claude Code opened, else the install root.
 # Kept in this shell's spelling; DEMO_DIR defaults to <project>\Demo, Windows form.
@@ -405,6 +413,15 @@ harness_need_ahk() {
     return 0
 }
 
+# harness_log_file NAME: the project's .claude/NAME, in this shell's spelling. The
+# folder is created first: a plugin install serves projects that have no .claude/
+# yet, and an append into a missing folder fails without a word.
+harness_log_file() {
+    local dir="${_HARNESS_PROJECT:-$PWD}/.claude"
+    [[ -d "$dir" ]] || mkdir -p "$dir" 2>/dev/null
+    printf '%s\n' "$dir/$1"
+}
+
 # Skill snippets written for WSL call wslpath after sourcing this; on Git Bash and
 # Cygwin, cygpath takes the same -u / -w / -m flags.
 if [[ "$HARNESS_PLATFORM" == msys || "$HARNESS_PLATFORM" == cygwin ]] \
@@ -412,7 +429,7 @@ if [[ "$HARNESS_PLATFORM" == msys || "$HARNESS_PLATFORM" == cygwin ]] \
     wslpath() { cygpath "$@"; }
 fi
 
-export AHK_BIN_WIN AHK_BIN_WSL AHK_BIN_SH AHK_BIN_MISSING AHK_AUTODETECTED AHK_DIAG_JSON \
+export AHK_BIN_WIN AHK_BIN_WSL AHK_BIN_SH AHK_EXE _HARNESS_AHK_EXE_DERIVED AHK_BIN_MISSING AHK_AUTODETECTED AHK_DIAG_JSON \
        PROJECT_DIR MAIN_SCRIPT DEPENDENCY_SCRIPTS NO_RUNTIME_CHECK NO_AUTO_RELOAD \
        RUNTIME_PROBE DEMO_DIR GIT_GUARD_ENABLED GIT_ALLOWED_IDENTITY GIT_BLOCKLIST \
        WIN_HOME HARNESS_PLATFORM

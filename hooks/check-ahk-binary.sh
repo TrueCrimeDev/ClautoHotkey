@@ -12,6 +12,11 @@
 # a token and nothing is glued to its end, so a neighbour such as
 # AutoHotkey64.exe.alpha29.bak is still blocked. Any other path ending in
 # /AutoHotkey*.exe is blocked.
+#
+# A bare AutoHotkey64.exe carries no path to compare: PATH decides what runs. It
+# is blocked when it stands where a command does (first word, or after ; & | ( or
+# a wrapper such as timeout) and PATH resolves it to something other than the
+# configured binary. A bare name inside prose is in neither position.
 
 set -u
 
@@ -118,6 +123,23 @@ elif [[ "$c" =~ $exe_re ]]; then
 fi
 
 if [[ -z "$reason" ]]; then
+    nl=$'\n'
+    bare_re="(^|[;&|(\`$nl]|\\\$\\()[[:space:]]*(([a-z_][a-z0-9_]*=[^[:space:]]*|timeout([[:space:]]+(-[^[:space:]]+|[0-9.]+[smhd]?))+|env|exec|command|nohup|time|winpty)[[:space:]]+)*[\"']?(autohotkey[a-z0-9._-]*\\.exe)"
+    if [[ "$c" =~ $bare_re ]]; then
+        bare="${BASH_REMATCH[${#BASH_REMATCH[@]}-1]}"
+        resolved="$(type -P "$bare" 2>/dev/null)"
+        if [[ -n "$resolved" ]]; then
+            # Compared in the Windows spelling: a shell can name one folder two ways
+            # (/tmp/x and /c/Users/you/AppData/Local/Temp/x under Git Bash), Windows
+            # names it once.
+            _flat resolved_flat "$(harness_to_win "$resolved")"
+            [[ "$resolved_flat" == "$v_win" ]] \
+                || reason="a bare $bare, which PATH resolves to another build ($resolved)"
+        fi
+    fi
+fi
+
+if [[ -z "$reason" ]]; then
     # Only the configured binary is used. If it is not there, the run will fail;
     # say why once instead of letting it look like a script problem.
     if [[ "$c" == *"$mark"* && "${AHK_BIN_MISSING:-0}" == 1 ]]; then
@@ -136,5 +158,5 @@ echo "  Windows:    $AHK_BIN_WIN" >&2
 [[ "${AHK_BIN_MISSING:-0}" == 1 ]] && echo "  (it does not exist on this machine - fix AHK_BIN_WIN in harness.local.env)" >&2
 echo "" >&2
 echo "Only the binary set in harness.env (AHK_BIN_WIN) is allowed." >&2
-echo "See the ahk-interpreter rule." >&2
+echo "Details: $_HARNESS_INSTALL_ROOT/rules/ahk-interpreter.md" >&2
 exit 2

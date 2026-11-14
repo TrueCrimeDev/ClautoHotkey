@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-# End-to-end smoke test for the hook layer. Feeds check-ahk-binary.sh and
-# ahk-post-edit.sh payloads shaped like Claude Code's and checks what they do:
-# exit status, the key line they print, and the side effects that must (or must
-# not) happen. Works under WSL, Git Bash and Cygwin.
+# End-to-end smoke test for the hook layer. Feeds the hooks payloads shaped like
+# Claude Code's and checks what they do: exit status, the key line they print, and
+# the side effects that must (or must not) happen. Works under WSL, Git Bash and
+# Cygwin. Every hook that answers the model or writes a log has a case here: a
+# hook that reads a field the host never sends, or answers in a shape the host
+# drops, fails without a sound in every session, and only a test notices.
 #
 #   bash Tools/tests/hooks_smoke.sh [HOOKS_DIR]
 #
@@ -49,7 +51,7 @@ scratch="$(mktemp -d "${TMPDIR:-/tmp}/clautohotkey-smoke.XXXXXX")"
 session="smoke-$$"
 cleanup() {
     rm -rf "$scratch"
-    rm -f "/tmp/ahk-edit-failed-$session" "/tmp/claude-rules-injected-$session"
+    rm -f "/tmp/claude-rules-injected-$session" /tmp/claude-rules-injected-"$session"-*
 }
 trap cleanup EXIT
 
@@ -221,11 +223,6 @@ if [[ -n "${AHK_BIN_WIN:-}" && "${AHK_BIN_MISSING:-0}" != 1 ]]; then
 
     edit_case 2 "blocks a syntax error (Claude Code path form)" "$e/broken.ahk" "syntax error"
     edit_case 2 "blocks a syntax error (shell path form)" "$e/broken.ahk" "syntax error" unix
-    if [[ -f "/tmp/ahk-edit-failed-$session" ]]; then
-        ok "failure sentinel left for ahk-auto-reload"
-    else
-        bad "no failure sentinel at /tmp/ahk-edit-failed-$session"
-    fi
     if [[ -s "$e/.claude/error-log.jsonl" ]] \
             && grep -q '"type":"syntax"' "$e/.claude/error-log.jsonl"; then
         ok "syntax error logged to the project's .claude/error-log.jsonl"
@@ -260,9 +257,37 @@ if [[ -n "${AHK_BIN_WIN:-}" && "${AHK_BIN_MISSING:-0}" != 1 ]]; then
 
         printf '%s\n' '#Requires AutoHotkey v2.0' '#Import AHK {FileDelete as RealDelete}' \
             "RealDelete(\"$sentinel_win\")" > "$e/importer.ahk"
-        edit_case 0 "skips the probe for #Import AHK" "$e/importer.ahk" "skipped: #Import AHK"
+        edit_case 0 "skips the probe for #Import AHK" "$e/importer.ahk" "skipped: #Import"
         [[ -f "$e/sentinel.txt" ]] && ok "#Import AHK script was not run" \
                                    || bad "#Import AHK script ran and deleted the sentinel"
+
+        # The other ways past the shim: the names-first spelling, the statement
+        # form, code inside a module of its own, and any of them one #Include away.
+        # Builds differ on the first two (alpha.38 reads neither as an import).
+        # Where the interpreter parses the file the probe must be skipped; where
+        # it does not, the syntax step blocks the edit. The file never runs.
+        import_spelling_case() { # DESCRIPTION FILE
+            if "$AHK_BIN_SH" check /Diag=json /ErrorStdOut "$(harness_to_win "$2")" >/dev/null 2>&1; then
+                edit_case 0 "skips the probe for $1" "$2" "skipped: #Import"
+            else
+                edit_case 2 "blocks $1, which this build does not parse" "$2" "syntax error"
+            fi
+        }
+        printf '%s\n' '#Requires AutoHotkey v2.1-alpha.30' '#Import {FileDelete as RealDelete} from AHK' \
+            "RealDelete(\"$sentinel_win\")" > "$e/importer2.ahk"
+        import_spelling_case "#Import {...} from AHK" "$e/importer2.ahk"
+        printf '%s\n' '#Requires AutoHotkey v2.1-alpha.30' 'Import {FileDelete as RealDelete} from AHK' \
+            "RealDelete(\"$sentinel_win\")" > "$e/importer3.ahk"
+        import_spelling_case "an Import statement" "$e/importer3.ahk"
+        printf '%s\n' '#Requires AutoHotkey v2.1-alpha.30' '#Import Worker {Wipe}' 'Wipe()' \
+            '#Module Worker' "Wipe() => FileDelete(\"$sentinel_win\")" > "$e/modular.ahk"
+        edit_case 0 "skips the probe for a script with a #Module section" "$e/modular.ahk" "skipped: #Import"
+        mkdir -p "$e/inc"
+        printf '%s\n' '#Import AHK {FileDelete as RealDelete}' "RealDelete(\"$sentinel_win\")" > "$e/inc/real.ahk"
+        printf '%s\n' '#Requires AutoHotkey v2.1-alpha.30' '#Include inc\real.ahk' > "$e/viainclude.ahk"
+        edit_case 0 "skips the probe when an included file imports from AHK" "$e/viainclude.ahk" "skipped: #Import"
+        [[ -f "$e/sentinel.txt" ]] && ok "no module-using script was run" \
+                                   || bad "a module-using script ran and deleted the sentinel"
 
         printf '%s\n' '#Requires AutoHotkey v2.0' 'FileDelete(p) {' '    return 0' '}' 'FileDelete("x")' > "$e/redefines.ahk"
         edit_case 0 "a script redefining a shimmed built-in is not blocked" "$e/redefines.ahk" "skipped"
@@ -292,6 +317,151 @@ if [[ -n "${AHK_BIN_WIN:-}" && "${AHK_BIN_MISSING:-0}" != 1 ]]; then
 else
     bad "post-edit cases skipped: no interpreter configured or it is missing (${AHK_BIN_WIN:-none})"
 fi
+
+# hook_out HOOK PAYLOAD [VAR=value ...]: run a hook on a payload in the scratch
+# project "$quiet_project"; stdout lands in HOOK_OUT, stderr in HOOK_ERR, the exit
+# status in HOOK_RC.
+quiet_project="$scratch/quiet"
+mkdir -p "$quiet_project"
+hook_out() {
+    local hook="$1" payload="$2"; shift 2
+    HOOK_OUT="$(printf '%s' "$payload" \
+        | env "$@" CLAUDE_PROJECT_DIR="$(tool_path "$quiet_project")" bash "$hook" 2>"$scratch/hook.err")"
+    HOOK_RC=$?
+    HOOK_ERR="$(cat "$scratch/hook.err")"
+}
+# expect DESCRIPTION CONDITION...: the condition is a command; its status decides.
+expect() {
+    local what="$1"; shift
+    if "$@"; then ok "$what"; else bad "$what" "rc=$HOOK_RC out=${HOOK_OUT:0:200} err=${HOOK_ERR:0:200}"; fi
+}
+has() { [[ "$1" == *"$2"* ]]; }
+lacks() { [[ "$1" != *"$2"* ]]; }
+
+echo
+echo "check-ahk-binary: a bare name is judged by what PATH resolves it to"
+# Stand-in binaries; lower-case names so the lookup also works where names are
+# case-sensitive. Nothing runs them: the hook only asks where the name leads.
+mkdir -p "$scratch/conf" "$scratch/other" "$scratch/bareproj"
+printf '#!/bin/sh\n' > "$scratch/conf/autohotkey64.exe"
+printf '#!/bin/sh\n' > "$scratch/other/autohotkey64.exe"
+chmod +x "$scratch/conf/autohotkey64.exe" "$scratch/other/autohotkey64.exe"
+printf 'AHK_BIN_WIN=%s\n' "'$(tool_path "$scratch/conf/autohotkey64.exe")'" > "$scratch/bareproj/harness.env"
+bare_case() { # EXPECTED_EXIT DESCRIPTION COMMAND PATH_DIR
+    local rc
+    printf '{"tool_name":"Bash","tool_input":{"command":%s}}' "$(json_str "$3")" \
+        | PATH="$4:$PATH" CLAUDE_PROJECT_DIR="$(tool_path "$scratch/bareproj")" bash "$HOOKS/check-ahk-binary.sh" >/dev/null 2>&1
+    rc=$?
+    [[ $rc -eq $1 ]] && ok "check-ahk-binary $1: $2" || bad "check-ahk-binary $2 (exit $rc, want $1): $3"
+}
+bare_case 2 "bare name, PATH leads to another build" 'AutoHotkey64.exe /ErrorStdOut x.ahk' "$scratch/other"
+bare_case 2 "bare name after cd &&" 'cd /tmp && AutoHotkey64.exe x.ahk' "$scratch/other"
+bare_case 2 "bare name behind timeout" 'timeout -k 2 10s "AutoHotkey64.exe" x.ahk' "$scratch/other"
+bare_case 2 "bare name inside \$( )" 'out=$(AutoHotkey64.exe x.ahk)' "$scratch/other"
+bare_case 0 "bare name, PATH leads to the configured build" 'AutoHotkey64.exe /ErrorStdOut x.ahk' "$scratch/conf"
+bare_case 0 "bare name in prose" 'echo "use AutoHotkey64.exe for this"' "$scratch/other"
+bare_case 0 "bare name in a commit message" 'git commit -m "fix AutoHotkey64.exe detection"' "$scratch/other"
+
+echo
+echo "inject-rules"
+# Two copies of the rules: as the repo stores them, and with the CRLF endings a
+# core.autocrlf=true checkout produces. Both must behave the same.
+rules_src="$(cd "$HOOKS/../rules" 2>/dev/null && pwd)"
+if [[ -n "$rules_src" && -f "$rules_src/ahk-v2-syntax.md" && -f "$rules_src/gui-work.md" ]]; then
+    mkdir -p "$quiet_project/Lib"
+    printf '%s\n' 'x := 1' > "$quiet_project/plain.ahk"
+    printf '%s\n' 'win := Gui()' 'win.Show()' > "$quiet_project/app.ahk"
+    for flavour in lf crlf; do
+        root="$scratch/rules-$flavour"
+        mkdir -p "$root"
+        cp -R "$HOOKS" "$root/hooks"
+        cp -R "$rules_src" "$root/rules"
+        if [[ "$flavour" == crlf ]]; then
+            for f in "$root"/rules/*.md; do sed -i 's/\r$//; s/$/\r/' "$f"; done
+        fi
+        inject="$root/hooks/inject-rules.sh"
+        rule_payload() { # SESSION_SUFFIX FILE [EXTRA_TOOL_INPUT_JSON]
+            printf '{"session_id":"%s-%s","tool_name":"Write","tool_input":{"file_path":%s%s}}' \
+                "$session" "$1" "$(json_str "$(tool_path "$2")")" "${3:-}"
+        }
+        hook_out "$inject" "$(rule_payload "$flavour-a" "$quiet_project/plain.ahk")" AHK_DIAG_JSON=0
+        expect "$flavour rules: an .ahk edit loads ahk-v2-syntax and ahk-target" \
+            eval 'has "$HOOK_OUT" "Rule: ahk-v2-syntax" && has "$HOOK_OUT" "Rule: ahk-target" && has "$HOOK_OUT" "hookSpecificOutput"'
+        expect "$flavour rules: a stock build is not handed the fork notes" lacks "$HOOK_OUT" "Rule: ahk-fork-features"
+        expect "$flavour rules: a script with no Gui call does not load gui-work" lacks "$HOOK_OUT" "Rule: gui-work"
+        hook_out "$inject" "$(rule_payload "$flavour-a" "$quiet_project/plain.ahk")" AHK_DIAG_JSON=0
+        expect "$flavour rules: nothing is injected twice in one session" test -z "$HOOK_OUT"
+        hook_out "$inject" "$(rule_payload "$flavour-b" "$quiet_project/plain.ahk")" AHK_DIAG_JSON=1
+        expect "$flavour rules: the fork build gets ahk-fork-features" has "$HOOK_OUT" "Rule: ahk-fork-features"
+        hook_out "$inject" "$(rule_payload "$flavour-c" "$quiet_project/app.ahk")" AHK_DIAG_JSON=0
+        expect "$flavour rules: a file that calls Gui( loads gui-work whatever its name" has "$HOOK_OUT" "Rule: gui-work"
+        hook_out "$inject" "$(rule_payload "$flavour-d" "$quiet_project/fresh.ahk" ',"content":"win := gui(\"+Resize\")"')" AHK_DIAG_JSON=0
+        expect "$flavour rules: a new file loads gui-work from the text being written" has "$HOOK_OUT" "Rule: gui-work"
+        hook_out "$inject" "$(rule_payload "$flavour-e" "$quiet_project/sub/SETTINGSDIALOG.AHK")" AHK_DIAG_JSON=0
+        expect "$flavour rules: path globs ignore case" has "$HOOK_OUT" "Rule: gui-work"
+        hook_out "$inject" "$(rule_payload "$flavour-f" "$quiet_project/Lib/util.ahk")" AHK_DIAG_JSON=0
+        expect "$flavour rules: a Lib/ file loads lib-development" has "$HOOK_OUT" "Rule: lib-development"
+        hook_out "$inject" "$(rule_payload "$flavour-g" "$quiet_project/notes.md" ',"content":"Gui( in prose"')" AHK_DIAG_JSON=0
+        expect "$flavour rules: a non-.ahk file loads nothing" test -z "$HOOK_OUT"
+    done
+else
+    bad "inject-rules cases skipped: no rules/ beside $HOOKS"
+fi
+
+echo
+echo "error-logger (PostToolUseFailure)"
+logger="$HOOKS/../skills/ahk-mistakes/hooks/error-logger.sh"
+if [[ -f "$logger" ]]; then
+    log="$quiet_project/.claude/error-log.jsonl"
+    rm -rf "$quiet_project/.claude"
+    hook_out "$logger" '{"session_id":"s","hook_event_name":"PostToolUseFailure","tool_name":"Bash","tool_input":{"command":"\"$AHK_BIN_WSL\" /ErrorStdOut x.ahk"},"error":"Exit code 2\nC:\\Scripts\\x.ahk (12) : ==> This variable has not been assigned a value.\nSpecifically: foo"}'
+    expect "a failed interpreter run is logged, and .claude/ is created for it" \
+        eval '[[ -s "$log" ]] && grep -q "\"line\":12" "$log" && grep -q "has not been assigned" "$log"'
+    expect "the logged message leaves out the Exit code line" eval '! grep -q "Exit code" "$log"'
+    : > "$log"
+    hook_out "$logger" '{"session_id":"s","tool_name":"Bash","tool_input":{"command":"\"/c/AHK/AutoHotkey64.exe\" x.ahk"},"tool_output":{"stdout":"C:\\S\\y.ahk (3) : ==> TypeError: boom","exit_code":1}}'
+    expect "the OpenCode bridge's payload (tool_output.exit_code) is logged too" grep -q '"type":"TypeError"' "$log"
+    : > "$log"
+    hook_out "$logger" '{"session_id":"s","tool_name":"Bash","tool_input":{"command":"\"$AHK_BIN_WSL\" Tools/harness/GateStatic.ahk a.ahk"},"error":"Exit code 1"}'
+    hook_out "$logger" '{"session_id":"s","tool_name":"Bash","tool_input":{"command":"git status"},"error":"Exit code 128\nfatal"}'
+    hook_out "$logger" '{"session_id":"s","tool_name":"Bash","tool_input":{"command":"\"$AHK_EXE\" ok.ahk"},"tool_output":{"stdout":"fine","exit_code":0}}'
+    expect "a gate's exit 1, an unrelated failure and a clean run are not logged" test ! -s "$log"
+    hook_out "$logger" '{"session_id":"s","tool_name":"Edit","tool_input":{"file_path":"C:\\S\\z.ahk"},"error":"String to replace not found"}'
+    expect "a failed .ahk edit is logged" grep -q '"tool":"Edit"' "$log"
+else
+    bad "error-logger cases skipped: $logger not found"
+fi
+
+echo
+echo "The quiet hooks answer where the host listens"
+hook_out "$HOOKS/detect-v1-syntax.sh" '{"prompt":"MsgBox, hello\nStringLeft, out, var, 3"}'
+expect "detect-v1-syntax warns on stdout, which is what reaches the model" has "$HOOK_OUT" "AutoHotkey v1 syntax"
+expect "detect-v1-syntax keeps the stderr line the OpenCode bridge reads" has "$HOOK_ERR" "v1 patterns found:"
+hook_out "$HOOKS/detect-v1-syntax.sh" '{"prompt":"add a MsgBox(\"hi\") to the script"}'
+expect "detect-v1-syntax says nothing about v2 code" test -z "$HOOK_OUT"
+
+marker="/tmp/claude-rules-injected-$session-compact"
+echo "ahk-v2-syntax.md" > "$marker"
+hook_out "$HOOKS/post-compact-state.sh" "{\"session_id\":\"$session-compact\",\"hook_event_name\":\"SessionStart\",\"source\":\"compact\"}"
+expect "post-compact-state prints the session state as plain text" \
+    eval 'has "$HOOK_OUT" "AHK Session State" && lacks "$HOOK_OUT" "additionalContext"'
+expect "post-compact-state clears the rules marker so rules load again" test ! -e "$marker"
+
+hook_out "$HOOKS/post-capture-guidance.sh" '{"tool_name":"mcp__autohotkey-debug__capture_error","tool_response":[{"type":"text","text":"{\"status\": \"timeout\"}"}]}'
+expect "post-capture-guidance reads tool_response and answers under hookSpecificOutput" \
+    eval 'has "$HOOK_OUT" "\"hookSpecificOutput\"" && has "$HOOK_OUT" "timed out"'
+hook_out "$HOOKS/post-capture-guidance.sh" '{"tool_name":"mcp__autohotkey-debug__apply_fix","tool_response":{"success":false}}'
+expect "post-capture-guidance tells a failed fix from an applied one" has "$HOOK_OUT" "Fix failed"
+hook_out "$HOOKS/check-ahk-connection.sh" '{"tool_name":"mcp__autohotkey-debug__debug_status"}'
+expect "check-ahk-connection answers under hookSpecificOutput" \
+    eval 'printf "%s" "$HOOK_OUT" | jq -e ".hookSpecificOutput.additionalContext | length > 0" >/dev/null 2>&1'
+
+rm -rf "$quiet_project/.claude"
+hook_out "$HOOKS/session-event-logger.sh" '{"hook_event_name":"SubagentStop","session_id":"s","agent_type":"ahk-analysis"}'
+hook_out "$HOOKS/session-event-logger.sh" '{"hook_event_name":"Notification","session_id":"s","message":"Claude needs your permission","notification_type":"permission_prompt"}'
+events="$quiet_project/.claude/session-events.jsonl"
+expect "session-event-logger records agent_type and the notification message" \
+    eval 'grep -q "\"agent\":\"ahk-analysis\"" "$events" && grep -q "\"notification\":\"Claude needs your permission\"" "$events"'
 
 echo
 printf '%d passed, %d failed\n' "$pass" "$fail"

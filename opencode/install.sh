@@ -116,9 +116,16 @@ try:
     cfg = json.loads(text) if text.strip() else {}
 except json.JSONDecodeError:
     # JSONC: drop // and /* */ comments and trailing commas, then try again.
-    stripped = re.sub(r"//[^\n]*|/\*.*?\*/", "", text, flags=re.S)
-    stripped = re.sub(r",(\s*[}\]])", r"\1", stripped)
+    # Strings are matched first and kept, so the // in "https://opencode.ai/..."
+    # is not taken for a comment.
+    string = r'"(?:\\.|[^"\\])*"'
+    stripped = re.sub(string + r"|//[^\n]*|/\*.*?\*/",
+                      lambda m: m.group(0) if m.group(0).startswith('"') else "", text, flags=re.S)
+    stripped = re.sub(string + r"|,(?=\s*[}\]])",
+                      lambda m: m.group(0) if m.group(0).startswith('"') else "", stripped, flags=re.S)
     cfg = json.loads(stripped)
+    # json.dump below cannot write the comments back.
+    sys.stderr.write("WARNING: %s had comments; they are not kept in the rewritten file\n" % path)
 plugins = [p for p in cfg.get("plugin", []) if not str(p).endswith("clautohotkey.ts")]
 if action == "add":
     plugins.append(url)

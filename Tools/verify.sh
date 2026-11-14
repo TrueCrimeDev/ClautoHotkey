@@ -174,7 +174,6 @@ else
     else
         bad "ahk-post-edit checks skipped — the interpreter does not run"
     fi
-    rm -f "/tmp/ahk-edit-failed-$session"
     rm -rf "$live"
 fi
 

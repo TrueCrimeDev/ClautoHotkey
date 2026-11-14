@@ -157,7 +157,7 @@ It lives in four directories at the repo root, which is also the plugin layout:
 |-----------|----------|
 | `skills/` | 25 skills — 15 that load a knowledge module, 10 that drive the interpreter |
 | `agents/` | 9 fresh-context investigators |
-| `rules/` | 11 path-triggered rules, injected on first edit of a matching file |
+| `rules/` | 11 rules: 8 injected on the first edit of a matching file, 3 reference rules the session primer points to |
 | `hooks/` | 12 lifecycle hooks, wired by `hooks/hooks.json` |
 
 A leaner, AHK-agnostic version of the same harness is published separately as
@@ -201,12 +201,20 @@ Fresh-context investigators — launched when a task needs its own window:
 
 ### Rules
 
-Path-scoped notes in `rules/` that auto-load when you edit a matching file:
+Eight notes in `rules/` load themselves when you edit a matching file:
 `ahk-v2-syntax` (any `.ahk`), `ahk-target` (keeps generated code on the build you have),
-`gui-work` (GUI files), `lib-development` (`Lib/`), `main-script`, `test-scripts`,
-`demo-location`, `no-banner-comments`, `ahk-interpreter`, `ahk-fork-features`
-(the +Console fork), and `harness-surface` (editing the harness itself: the cost order
-for new instruction and the lint that must pass).
+`ahk-fork-features` (any `.ahk`, on the +Console fork only), `gui-work` (GUI files, matched
+by name or because the file calls `Gui(`), `lib-development` (`Lib/`), `main-script`,
+`test-scripts`, and `harness-surface` (editing the harness itself: the cost order for new
+instruction and the lint that must pass).
+
+Three more are reference rules that no edit loads: `ahk-interpreter`, `demo-location` and
+`no-banner-comments`. The session primer carries a line for each and the path to the full
+text.
+
+A rule's frontmatter says when it fires: `paths:` globs (matched without regard to case),
+`contains:` strings looked for in the `.ahk` file being edited, and `build: fork` to keep a
+rule off stock AutoHotkey.
 
 ### Hooks
 
@@ -215,17 +223,17 @@ Fire automatically across the Claude Code lifecycle:
 | Event | Hook | What it does |
 |-------|------|--------------|
 | SessionStart | `ahk-session-primer` | Loads AHK context + the skill/agent routing table |
+| SessionStart · compact | `post-compact-state` | After compaction: lists the scripts still running and lets the rules load again |
 | UserPromptSubmit | `detect-v1-syntax` | Warns when your prompt contains AHK v1 syntax |
 | PreToolUse · edit | `inject-rules` | Auto-loads the rule matching the edited file (once per session) |
-| PreToolUse · Bash | `check-ahk-binary` | Blocks any AutoHotkey binary other than the configured one |
+| PreToolUse · Bash | `check-ahk-binary` | Blocks any AutoHotkey binary other than the configured one, including a bare name that PATH resolves elsewhere |
 | PreToolUse · Bash | `check-git-account` | Opt-in guard against pushing as a blocklisted identity |
-| PostToolUse · edit | `ahk-post-edit` | Syntax + runtime validation; **blocks** a broken edit |
-| PostToolUse · edit | `ahk-auto-reload` | Restarts a running script after you edit it |
-| PostToolUse | `error-logger` | Appends failures to `error-log.jsonl` (feeds `/ahk-mistakes`) |
-| PreCompact | `post-compact-state` | Snapshots running scripts before context compaction |
+| PostToolUse · edit | `ahk-post-edit` | Syntax + runtime validation; **blocks** a broken edit, and restarts a running copy once the edit passes |
+| PostToolUse · Bash | `ahk-auto-reload` | Restarts a running script that the command modified (naming a script is not enough) |
+| PostToolUseFailure | `error-logger` | Appends failed interpreter runs and edits to `error-log.jsonl` (feeds `/ahk-mistakes`) |
 | Stop / Notification | `session-event-logger` | Session-event logging |
 
-(`check-ahk-connection` and `post-capture-guidance` add hints for the optional debug MCP; `_harness-env.sh` is the shared config loader every hook sources.)
+(`check-ahk-connection` and `post-capture-guidance` add hints for the optional debug MCP; `_harness-env.sh` is the shared config loader every hook sources. `Tools/tests/hooks_smoke.sh` feeds every one of them a payload and checks what comes back; `Tools/tests/reload_logic.sh` does the same for the reload's PowerShell.)
 
 ### Analysis Harness
 
@@ -234,6 +242,10 @@ The static-analysis core lives in `Lib/` and the tiered grading gates in
 toolchain. Scripts move through four tiers in order — **static → pure →
 dry-run → live** — and a failed tier ends that script's branch.
 
+The gates and the `Lib/` analysis need the **+Console fork** (v2.1-alpha.30 or
+later): they are written with `#Import` and `Print` and call the fork's `check`.
+On stock AutoHotkey the hooks still validate every edit; the gates do not load.
+
 | Piece | What it is |
 |-------|------------|
 | `Lib/TreeSitter.ahk` | Native binding to the holy-tao tree-sitter-autohotkey grammar (`Lib/tree-sitter-ahk.dll`, x64, kept next to it) |
@@ -241,10 +253,10 @@ dry-run → live** — and a failed tier ends that script's branch.
 | `Lib/CodeIntel.ahk` | Scope-aware semantics: symbol table, call graph, references, plus diagnostics (`unused-function`, `undefined-call`, `property-called-as-method`, opt-in `unknown-member`) with built-in member sets read off the running interpreter |
 | `Tools/harness/GateStatic.ahk` | Tier 1: fork `check` + `/validate` + Lint + CodeIntel + a v1-API scan, one NDJSON result per script |
 | `Tools/harness/GatePure.ahk` + `TestKit.ahk` | Tier 2: finds a script's unit tests (`<name>.test.ahk`, `Test_<name>.ahk`, `<name>_Test.ahk`, beside it or in `Tests\`) and runs them under the shim. `TestKit` (`Assert.ahk` alias) is the assertion library |
-| `Tools/harness/GateDryRun.ahk` + `DryRunShim.ahk` + `ShimRun.ahk` | Tier 3: runs each candidate **in place** with the shim injected — input, windows, messages, `Gui`, dialogs, hotkeys, `Run`, `Shutdown`, and file/registry/download writes are recorded instead of performed; `FileOpen` writes go to a sink; risky `DllCall`/`ComObject` targets get stand-ins — inside a kill-on-close job with a memory cap, while a window watch and a clipboard guard catch what no shadow can |
+| `Tools/harness/GateDryRun.ahk` + `DryRunShim.ahk` + `ShimRun.ahk` | Tier 3: runs each candidate **in place** with the shim injected — input, windows, messages, `Gui`, dialogs, hotkeys, `Run`, `Shutdown`, and file/registry/download writes are recorded instead of performed; `FileOpen` writes go to a sink; risky `DllCall`/`ComObject` targets get stand-ins — inside a kill-on-close job with a memory cap, while a window watch and a clipboard guard catch what no shadow can. A candidate that uses `#Import`, `#Module` or an `Import` statement is refused, not run: module code calls the real built-ins past the shim |
 | `Tools/harness/GateLive.ahk` | Tier 4: an adapter over [ahkh](https://github.com/owhs/AHKTestHarness)'s hidden desktop, pinned to the same interpreter and serialised by lock. Reports `error` (never `pass`) until ahkh is built and `AHKH_HOME` points at it |
 | `Tools/harness/HarnessCore.ahk` | The shared result emitter plus the containment every tier uses: job objects, file-backed stdio, deadlines, the window watch and the clipboard guard |
-| `Tools/harness/CheckResults.py` | Drops empty, timed-out, contradictory and malformed results before synthesis; reports scripts with no unit tests |
+| `Tools/harness/CheckResults.py` | Drops empty, timed-out, contradictory and malformed results before synthesis; reports scripts with no unit tests and, given `--expect-tiers` and `--expect-count`, scripts that stopped short of a tier without failing or never got a row |
 | `Tools/harness/Report.py` | SARIF 2.1.0, JUnit XML, GitHub annotations or Markdown, with baselines that survive line shifts |
 | `Tools/harness/Reduce.ahk` | Delta-debugs a failing script down to the fewest lines that still fail the same way |
 | `Tools/harness/SelfTest.ahk` | `--run` proves the harness works on this machine: every gate against canaries with known verdicts, including that their attempted side effects never landed |

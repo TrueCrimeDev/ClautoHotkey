@@ -1,6 +1,7 @@
 ---
 paths:
   - "**/*.ahk"
+build: fork
 ---
 
 # AHK v2.1-alpha.30+Console — Fork Features Reference

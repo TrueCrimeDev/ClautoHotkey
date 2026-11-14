@@ -36,12 +36,31 @@ running zero test files is honest: the script has no unit tests. That is a
 coverage gap, not a flag, so it is reported beside the verdict in text mode
 and as "uncovered" (script paths) in --json, and never changes the exit code.
 
-    CheckResults.py <results.ndjson> [more.ndjson ...] [--out clean.ndjson]
-                    [--json] [--quiet]
+The rules above judge the rows that exist. Two options judge the ones that do
+not, for a caller that knows what the run was supposed to cover:
 
-Exit codes: 0 = every result survived, 1 = at least one result flagged,
-2 = usage or tool error (bad arguments, unreadable input file, unwritable
---out). Data problems inside a readable file are flags (exit 1), not errors.
+    --expect-tiers static,pure,dryrun
+        The tiers every script was meant to pass through. A script whose
+        rows all passed but stop short of the last expected tier has no
+        verdict there and no failure to explain why: its later gate was never
+        run, or the result was lost on the way. It is listed as "unfinished"
+        (script, the tiers it reached, the tiers missing). A branch that ended
+        at a failing, timed-out or errored row is finished, however early.
+    --expect-count N
+        How many scripts the run was handed. Reported as "expected" beside
+        "covered", the number of distinct scripts with any row at all; a
+        script dropped before its first gate shows up only as that gap.
+
+Neither withholds a row - the rows that exist are sound - but both are holes in
+the denominator, so either one makes the exit code 1.
+
+    CheckResults.py <results.ndjson> [more.ndjson ...] [--out clean.ndjson]
+                    [--json] [--quiet] [--expect-tiers T1,T2,...] [--expect-count N]
+
+Exit codes: 0 = every result survived, 1 = at least one result flagged, or an
+expectation was not met, 2 = usage or tool error (bad arguments, unreadable
+input file, unwritable --out). Data problems inside a readable file are flags
+(exit 1), not errors.
 """
 
 import argparse
@@ -409,16 +428,53 @@ def uncovered_scripts(clean):
     return [zero[key] for key in order if key not in covered]
 
 
+def unfinished_branches(seen, expected):
+    """Scripts that passed every tier they reached and still stopped before the
+    last expected one. `seen` maps (run, script key) to {"script": first
+    spelling, "run": run id, "tiers": {tier: set of statuses}} and is built
+    from every readable row, withheld ones included: a dry-run row that timed
+    out is flagged, but it is also the reason that branch has no live row."""
+    out = []
+    for entry in seen.values():
+        tiers = entry["tiers"]
+        if any(status != "pass" for statuses in tiers.values() for status in statuses):
+            continue
+        missing = [t for t in expected if t not in tiers]
+        if missing:
+            out.append({"script": entry["script"], "run": entry["run"],
+                        "reached": [t for t in TIER_ORDER if t in tiers],
+                        "missing": missing})
+    return out
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Check harness NDJSON results.")
     ap.add_argument("paths", nargs="+", help="NDJSON files, or - for stdin")
     ap.add_argument("--out", help="write surviving results here as NDJSON")
     ap.add_argument("--json", action="store_true", help="emit the report as JSON")
     ap.add_argument("--quiet", action="store_true", help="only print the verdict")
+    ap.add_argument("--expect-tiers", default="",
+                    help="comma-separated tiers every script was meant to pass through")
+    ap.add_argument("--expect-count", type=int, default=None,
+                    help="how many scripts the run was handed")
     args = ap.parse_args(argv)
+
+    expected_tiers = [t.strip() for t in args.expect_tiers.split(",") if t.strip()]
+    unknown = [t for t in expected_tiers if t not in TIER_ORDER]
+    if unknown:
+        print(f"--expect-tiers: unknown tier(s) {', '.join(unknown)} "
+              f"(expected {'/'.join(TIER_ORDER)})", file=sys.stderr)
+        return 2
+    expected_tiers = [t for t in TIER_ORDER if t in expected_tiers]
+    if args.expect_count is not None and args.expect_count < 0:
+        print("--expect-count: must be 0 or more", file=sys.stderr)
+        return 2
 
     flagged, clean, groups = [], [], defaultdict(list)
     run_tiers = defaultdict(set)
+    # Every readable row that names a script and a tier, flagged or not: what
+    # the run touched, as opposed to what it can vouch for.
+    seen = {}
     tool_error = False
 
     for path, lineno, raw, obj, err in load(args.paths):
@@ -432,6 +488,12 @@ def main(argv=None):
                 flagged.append({"where": where, "script": None, "reasons": [err],
                                 "raw": raw[:300]})
             continue
+        if (isinstance(obj, dict) and isinstance(obj.get("script"), str)
+                and obj.get("tier") in TIER_ORDER):
+            key = (_group_key(obj.get("run")), script_key(obj["script"]))
+            entry = seen.setdefault(key, {"script": obj["script"], "run": obj.get("run"),
+                                          "tiers": defaultdict(set)})
+            entry["tiers"][obj["tier"]].add(_group_key(obj.get("status")))
         problems = structural_flags(obj)
         if problems:
             script = obj.get("script") if isinstance(obj, dict) else None
@@ -463,9 +525,17 @@ def main(argv=None):
             return 2
 
     uncovered = uncovered_scripts(clean)
+    unfinished = unfinished_branches(seen, expected_tiers) if expected_tiers else []
+    covered = len({script for _run, script in seen})
+    short = args.expect_count is not None and covered != args.expect_count
     if args.json:
-        print(json.dumps({"clean": len(clean), "flagged": flagged,
-                          "uncovered": uncovered}, indent=2))
+        report = {"clean": len(clean), "flagged": flagged, "uncovered": uncovered}
+        if expected_tiers:
+            report["unfinished"] = unfinished
+        if args.expect_count is not None:
+            report["expected"] = args.expect_count
+            report["covered"] = covered
+        print(json.dumps(report, indent=2))
     else:
         if flagged and not args.quiet:
             print(f"FLAGGED {len(flagged)} result(s) — withheld from synthesis\n")
@@ -477,11 +547,22 @@ def main(argv=None):
             print()
         if uncovered and not args.quiet:
             print(f"{len(uncovered)} script(s) have no unit tests (pure tier ran 0 tests)")
+        if unfinished:
+            print(f"UNFINISHED {len(unfinished)} script(s) passed what they reached but "
+                  f"never got to {'/'.join(expected_tiers)}")
+            if not args.quiet:
+                for item in unfinished:
+                    name = str(item["script"]).replace("/", "\\").split("\\")[-1]
+                    print(f"  {name}: reached {', '.join(item['reached']) or 'nothing'}; "
+                          f"no row for {', '.join(item['missing'])}")
+        if short:
+            print(f"COVERAGE the run was handed {args.expect_count} script(s); "
+                  f"results exist for {covered}")
         print(f"{len(clean)} clean, {len(flagged)} flagged")
 
     if tool_error:
         return 2
-    return 1 if flagged else 0
+    return 1 if (flagged or unfinished or short) else 0
 
 
 if __name__ == "__main__":

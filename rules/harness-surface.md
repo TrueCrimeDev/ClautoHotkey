@@ -26,6 +26,8 @@ Where new instruction goes, in this order: a **hook** for a mechanical check the
 
 Change only what evidence argues for: a `lessons/` entry, error-log rows, or a run that went wrong. No evidence, no change; leaving the tree as it is counts as an answer.
 
-Before finishing, `python Tools/lint_harness.py` must report no errors. It checks that each skill's name matches its directory and is advertised, that every script a hook or skill names exists, that rules declare paths, that lessons carry cue, lesson, evidence and confidence, and that the counts quoted in the docs match the tree.
+Before finishing, `python Tools/lint_harness.py` must report no errors. It checks that each skill's name matches its directory and is advertised, that the session primer routes every skill and agent, that every script a hook or skill names exists, that each rule has a trigger (`paths:` or `contains:`) or is named by the primer, that lessons carry cue, lesson, evidence and confidence, and that the counts quoted in the docs match the tree.
+
+A hook that reads a field the host does not send, or answers in a shape the host drops, passes that lint and does nothing in every session. After touching `hooks/`, run `bash Tools/tests/hooks_smoke.sh`: it feeds each hook the payload Claude Code sends and checks what comes back.
 
 A change that comes out of a mistake gets a lesson (`python Tools/lessons.py add ...`, format in `lessons/INDEX.md`). A recurring error whose cause is not verified stays a `Tools/lessons.py propose` row, not a lesson.

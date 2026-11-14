@@ -15,7 +15,9 @@
 ;   - between wait slices a window watch catches dialogs that got past the
 ;     shim, and a clipboard guard protects the user's clipboard;
 ;   - a candidate that imports from the AHK module reaches the original
-;     built-ins and walks past every shadow, so it is refused, not run.
+;     built-ins and walks past every shadow, and code in a module of its own
+;     never sees the shadows in the first place, so a candidate that uses
+;     the module system at all is refused, not run.
 ;
 ; A candidate may define one of the shadowed names itself (its own MsgBox
 ; wrapper, say). Two definitions of one name will not load, and the
@@ -65,6 +67,12 @@ class ShimRun {
         if (scan["importsAhk"] && !noShim) {
             run["refused"] := "the candidate imports from the AHK module, which reaches the original "
                 . "built-ins and bypasses every shadow — it cannot be dry-run safely"
+            return run
+        }
+        if (scan["modules"] && !noShim) {
+            run["refused"] := "the candidate uses modules (#Module or Import). The shim's shadows live in "
+                . "the main module, so code in any other module calls the real built-ins — it cannot "
+                . "be dry-run safely"
             return run
         }
         if !noShim {

@@ -16,7 +16,7 @@ case "$TOOL_NAME" in
     echo -e "\x1b[1;92m┌─ HOOK ▸ check-ahk-connection ───────────────────────────\x1b[0m" >&2
     echo -e "\x1b[1;92m│\x1b[0m Pre-check for: \x1b[36m$TOOL_NAME\x1b[0m" >&2
     echo -e "\x1b[1;92m└─────────────────────────────────────────────────────────\x1b[0m" >&2
-    echo '{"additionalContext": "If this tool returns a connection error, tell the user to run their script with: AutoHotkey64.exe /Debug script.ahk (using the custom engine path from CLAUDE.md)"}'
+    echo '{"hookSpecificOutput": {"hookEventName": "PreToolUse", "additionalContext": "If this tool returns a connection error, tell the user to run their script with the configured interpreter and /Debug: \"$AHK_BIN_WSL\" /Debug script.ahk (source hooks/_harness-env.sh for the path)."}}'
     ;;
   *)
     echo '{}'

@@ -17,7 +17,8 @@ the lesson where every later session will read it.
 ## Error Log Location
 
 `.claude/error-log.jsonl` in the project, populated by `skills/ahk-mistakes/hooks/error-logger.sh`
-(bundled with this skill) and by direct writes from the post-edit validator on validation failures.
+(bundled with this skill, run on failed tool calls) and by direct writes from the post-edit
+validator on validation failures.
 
 Each line is a JSON object:
 ```json
@@ -32,6 +33,11 @@ lesson already covers:
 ```bash
 python "${CLAUDE_PLUGIN_ROOT}/Tools/lessons.py" propose --min 2
 ```
+
+The list under "Already covered by a lesson" matters as much as the table. A signature
+matches a headline, not a cause, so when the proposer says some of a lesson's rows came
+"after it was recorded", open those rows: either the fix did not hold, or something new
+fails with the same message and needs a lesson of its own with a narrower signature.
 
 Report the top patterns in this form:
 
@@ -95,10 +101,19 @@ python "${CLAUDE_PLUGIN_ROOT}/Tools/lessons.py" add \
 ```
 
 The tool refuses an entry missing any of cue, lesson, evidence or confidence, and
-rebuilds `lessons/INDEX.md`. Mark it `adopted` only once the component change is made.
-`python Tools/lint_harness.py` must stay clean afterwards.
+rebuilds the folder's `INDEX.md`. Mark it `adopted` only once the component change is made.
+
+Where the entry lands depends on where the harness lives. Run from inside a clone of
+the harness, it joins `lessons/` there and `python Tools/lint_harness.py` must stay clean
+afterwards. Installed as a plugin, the harness folder is replaced on every update, so the
+entry goes to the plugin's data folder or, failing that, to `.claude/lessons/` in the
+project. `lessons.py where` prints both folders.
 
 ## Reading the library
 
-`lessons/INDEX.md` lists every lesson by cue. Scan the cues before diagnosing a recurring
-error; if one matches, apply its lesson instead of rediscovering it.
+```bash
+python "${CLAUDE_PLUGIN_ROOT}/Tools/lessons.py" where
+```
+
+Each folder it prints has an `INDEX.md` listing its lessons by cue. Scan the cues before
+diagnosing a recurring error; if one matches, apply its lesson instead of rediscovering it.
