@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ClautoHotkey</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="How ClautoHotkey works and why it is built the way it is: a Claude Code harness for AutoHotkey v2 that validates every edit, loads only the knowledge a task needs, and grades scripts without letting them touch the machine.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" href="autohotkey-logo.png">
+  <style>
+    :root {
+      --bg-primary: #171717;
+      --bg-secondary: #141414;
+      --bg-soft: #1d1d1d;
+      --bg-elevated: #232323;
+      --border: #363636;
+      --border-muted: #2a2a2a;
+      --gutter: #101010;
+      --text-primary: #f0f0f0;
+      --text-body: #e2e2e2;
+      --text-secondary: #b6b6b6;
+      --text-muted: #999999;
+      --accent: #95bc43;
+      --accent-hover: #a1c471;
+      --accent-dim: rgba(149, 188, 67, 0.12);
+      --accent-red: #e5534b;
+      --accent-red-dim: rgba(229, 83, 75, 0.10);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --header-height: 64px;
+      --layout-max: 1180px;
+      --font-sans: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Cascadia Code', Consolas, Monaco, monospace;
+      color-scheme: dark;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    html { overflow-x: hidden; scroll-padding-top: calc(var(--header-height) + 16px); }
+
+    * { scrollbar-width: thin; scrollbar-color: #3a3a3a var(--bg-secondary); }
+
+    body {
+      font-family: var(--font-sans);
+      font-feature-settings: 'cv11', 'ss01';
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--accent); text-decoration: none; transition: color 0.15s; }
+    a:hover { color: var(--accent-hover); }
+    a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+    h1, h2, h3, h4 { letter-spacing: -0.02em; }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 16px;
+      font-size: 10.5px;
+      font-weight: 760;
+      letter-spacing: 1.8px;
+      line-height: 1.7;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+    .eyebrow::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--gutter);
+      padding: 0 32px;
+    }
+    .header-inner {
+      max-width: var(--layout-max);
+      margin: 0 auto;
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .logo { display: flex; align-items: center; gap: 11px; flex-shrink: 0; color: var(--text-primary); }
+    .logo:hover { color: var(--text-primary); }
+    .logo img { width: 34px; height: 34px; display: block; }
+    .logo-text { font-size: 15px; font-weight: 730; letter-spacing: -0.3px; white-space: nowrap; }
+    .logo-mark {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--accent);
+      letter-spacing: 0.5px;
+    }
+    .nav { display: flex; align-items: center; gap: 2px; margin-left: auto; }
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      height: var(--header-height);
+      padding: 0 10px;
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .nav-link:hover { color: var(--text-secondary); }
+    .nav-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 30px;
+      margin-left: 6px;
+      padding: 0 12px 0 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(149, 188, 67, 0.05);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .nav-chip:hover { color: var(--text-primary); border-color: rgba(149, 188, 67, 0.55); background: var(--accent-dim); }
+    .nav-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 3px rgba(149, 188, 67, 0.16);
+    }
+
+    main { flex: 1; width: 100%; }
+
+    .page {
+      max-width: 784px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    .hero { padding: 72px 0 48px; border-bottom: 1px solid var(--border); }
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(32px, 4.6vw, 50px);
+      font-weight: 740;
+      line-height: 1.06;
+      letter-spacing: -1.8px;
+      text-wrap: balance;
+    }
+    .hero h1 em { font-style: normal; color: var(--text-secondary); }
+    .lede {
+      margin: 22px 0 0;
+      max-width: 640px;
+      font-size: 17.5px;
+      line-height: 1.7;
+      color: var(--text-secondary);
+    }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 40px;
+      padding: 0 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 650;
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      background: var(--bg-soft);
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .button:hover { color: var(--text-primary); border-color: #4a4a4a; background: var(--bg-elevated); }
+    .button.primary { background: var(--accent); border-color: var(--accent); color: #17210f; }
+    .button.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #17210f; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 1px;
+      margin-top: 44px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: var(--border);
+    }
+    .stat { background: var(--bg-secondary); padding: 14px 14px 12px; }
+    .stat b { display: block; font-size: 24px; font-weight: 720; letter-spacing: -0.8px; color: var(--text-primary); }
+    .stat span { font-size: 12px; color: var(--text-muted); }
+
+    .toc {
+      margin: 36px 0 0;
+      padding: 18px 20px;
+      border: 1px solid var(--border-muted);
+      border-radius: var(--radius-md);
+      background: var(--bg-secondary);
+    }
+    .toc ol { margin: 0; padding-left: 1.3em; columns: 2; column-gap: 28px; font-size: 14px; }
+    .toc li { margin: 0 0 6px; break-inside: avoid; }
+    .toc li::marker { color: var(--text-muted); }
+    .toc a { color: var(--text-body); }
+    .toc a:hover { color: var(--accent); }
+
+    .article { font-size: 16px; line-height: 1.75; color: var(--text-body); padding-bottom: 80px; }
+    .article h2 {
+      margin: 56px 0 16px;
+      padding-top: 28px;
+      border-top: 1px solid var(--border);
+      font-size: 26px;
+      font-weight: 690;
+      line-height: 1.25;
+      letter-spacing: -0.7px;
+      color: var(--text-primary);
+    }
+    .article section:first-child h2 { border-top: 0; padding-top: 0; }
+    .article h3 { margin: 34px 0 10px; font-size: 19px; font-weight: 650; letter-spacing: -0.4px; color: var(--text-primary); }
+    .article p { margin: 0 0 18px; }
+    .article ul, .article ol { margin: 0 0 18px; padding-left: 1.4em; }
+    .article li { margin: 6px 0; }
+    .article li::marker { color: var(--text-muted); }
+    .article strong { color: var(--text-primary); font-weight: 650; }
+    .article p a, .article li a, .article td a {
+      color: var(--text-primary);
+      text-decoration: underline;
+      text-decoration-color: #5f5f5f;
+      text-underline-offset: 3px;
+    }
+    .article p a:hover, .article li a:hover, .article td a:hover { color: #fff; text-decoration-color: var(--accent); }
+
+    code, pre { font-variant-ligatures: none; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.86em;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-muted);
+      color: #dcdcdc;
+      overflow-wrap: anywhere;
+    }
+    pre {
+      margin: 20px 0 24px;
+      padding: 16px 18px;
+      overflow-x: auto;
+      background: #141414;
+      border: 1px solid var(--border-muted);
+      border-radius: var(--radius-md);
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: #d4d4d4;
+    }
+    pre code { padding: 0; border: 0; background: none; font-size: inherit; overflow-wrap: normal; }
+    .c { color: #6a9955; }
+    .k { color: #569cd6; }
+    .s { color: #ce9178; }
+
+    blockquote {
+      margin: 26px 0;
+      padding: 2px 0 2px 18px;
+      border-left: 2px solid var(--accent);
+      color: var(--text-secondary);
+      font-size: 17px;
+    }
+
+    .table-wrap { margin: 20px 0 26px; overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-md); }
+    table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.55; }
+    th, td { padding: 10px 14px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border-muted); }
+    th { font-size: 11px; font-weight: 720; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-muted); background: var(--bg-secondary); }
+    tr:last-child td { border-bottom: 0; }
+    td:first-child { white-space: nowrap; color: var(--text-primary); }
+
+    .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 22px 0 26px; }
+    .card {
+      padding: 18px 18px 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg-secondary);
+    }
+    .card .tag {
+      display: inline-block;
+      margin-bottom: 8px;
+      font-size: 10.5px;
+      font-weight: 760;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .card h4 { margin: 0 0 6px; font-size: 16px; font-weight: 680; color: var(--text-primary); }
+    .card p { margin: 0; font-size: 14.5px; line-height: 1.6; color: var(--text-secondary); }
+
+    .flow { margin: 26px 0 30px; }
+    .flow-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; counter-reset: step; }
+    .step {
+      position: relative;
+      padding: 14px 14px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg-secondary);
+      counter-increment: step;
+    }
+    .step::before {
+      content: counter(step);
+      display: inline-grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      margin-bottom: 8px;
+      border-radius: 50%;
+      background: var(--accent-dim);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 720;
+    }
+    .step + .step::after {
+      content: '';
+      position: absolute;
+      left: -10px;
+      top: 25px;
+      width: 10px;
+      height: 1px;
+      background: var(--border);
+    }
+    .step b { display: block; font-size: 14px; font-weight: 680; color: var(--text-primary); line-height: 1.35; }
+    .step code { font-size: 11.5px; padding: 1px 5px; }
+    .step p { margin: 6px 0 0; font-size: 13px; line-height: 1.5; color: var(--text-secondary); }
+    .flow-split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; position: relative; }
+    .outcome { padding: 14px 16px; border-radius: var(--radius-md); border: 1px solid; }
+    .outcome b { display: block; font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .outcome p { margin: 0; font-size: 13px; line-height: 1.55; color: var(--text-secondary); }
+    .outcome.fail { border-color: rgba(229, 83, 75, 0.45); background: var(--accent-red-dim); }
+    .outcome.fail b { color: #f08a84; }
+    .outcome.pass { border-color: rgba(149, 188, 67, 0.45); background: var(--accent-dim); }
+    .outcome.pass b { color: var(--accent); }
+    .flow-note { margin-top: 10px; font-size: 13px; color: var(--text-muted); text-align: center; }
+
+    .tiers { display: grid; gap: 0; margin: 22px 0 26px; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+    .tier { display: grid; grid-template-columns: 120px 1fr; gap: 16px; padding: 16px 18px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-muted); }
+    .tier:last-child { border-bottom: 0; }
+    .tier-name { font-family: var(--font-mono); font-size: 13px; color: var(--accent); padding-top: 2px; }
+    .tier-name small { display: block; font-family: var(--font-sans); font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .tier p { margin: 0; font-size: 14.5px; line-height: 1.6; color: var(--text-secondary); }
+    .tier p strong { color: var(--text-primary); }
+
+    .principle { margin: 30px 0; padding-left: 18px; border-left: 2px solid var(--border); }
+    .principle h3 { margin-top: 0; }
+    .principle .why { font-size: 13px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--accent); margin: 0 0 4px; }
+
+    .site-footer {
+      border-top: 1px solid var(--gutter);
+      background: var(--bg-secondary);
+      padding: 28px 32px;
+    }
+    .footer-inner {
+      max-width: var(--layout-max);
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      font-size: 12.5px;
+      color: var(--text-muted);
+    }
+    .footer-links { display: flex; flex-wrap: wrap; gap: 18px; }
+    .footer-links a { color: var(--text-secondary); font-weight: 500; }
+    .footer-links a:hover { color: var(--text-primary); }
+
+    @media (max-width: 900px) {
+      .nav .nav-link.optional { display: none; }
+      .stats { grid-template-columns: repeat(3, 1fr); }
+      .flow-steps { grid-template-columns: repeat(2, 1fr); }
+      .step:nth-child(3)::after { display: none; }
+    }
+    @media (max-width: 640px) {
+      .site-header { padding: 0 16px; }
+      .page { padding: 0 16px; }
+      .logo-mark { display: none; }
+      .nav .nav-link { display: none; }
+      .hero { padding: 48px 0 36px; }
+      .lede { font-size: 16px; }
+      .toc ol { columns: 1; }
+      .cards, .flow-steps, .flow-split { grid-template-columns: 1fr; }
+      .step + .step::after { display: none; }
+      .tier { grid-template-columns: 1fr; gap: 6px; }
+      td:first-child { white-space: normal; }
+      .site-footer { padding: 24px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="./">
+        <img src="autohotkey-logo.png" alt="" width="34" height="34">
+        <span class="logo-text">ClautoHotkey</span>
+        <span class="logo-mark">v2</span>
+      </a>
+      <nav class="nav" aria-label="Sections">
+        <a class="nav-link optional" href="#what">What it is</a>
+        <a class="nav-link" href="#loop">How it works</a>
+        <a class="nav-link" href="#why">Why</a>
+        <a class="nav-link optional" href="#harness">Grading</a>
+        <a class="nav-link" href="#install">Install</a>
+        <a class="nav-chip" href="https://github.com/TrueCrimeDev/ClautoHotkey"><span class="nav-dot"></span>GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="page">
+      <section class="hero">
+        <p class="eyebrow">AutoHotkey v2 &middot; Claude Code plugin &middot; MIT</p>
+        <h1>A coding harness that won't let a broken AutoHotkey edit land. <em>How it works, and why it's built this way.</em></h1>
+        <p class="lede">ClautoHotkey turns Claude Code into an AutoHotkey v2 environment. Every <code>.ahk</code> edit is checked by the real interpreter before the model moves on, the right rules load when a file needs them, and scripts can be graded without being allowed to touch your desktop.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="#install">Install the plugin</a>
+          <a class="button" href="https://github.com/TrueCrimeDev/ClautoHotkey">Browse the source</a>
+        </div>
+        <div class="stats" role="list">
+          <div class="stat" role="listitem"><b>12</b><span>hooks</span></div>
+          <div class="stat" role="listitem"><b>19</b><span>skills</span></div>
+          <div class="stat" role="listitem"><b>9</b><span>agents</span></div>
+          <div class="stat" role="listitem"><b>11</b><span>rules</span></div>
+          <div class="stat" role="listitem"><b>23</b><span>modules</span></div>
+          <div class="stat" role="listitem"><b>4</b><span>grading tiers</span></div>
+        </div>
+        <nav class="toc" aria-label="Contents">
+          <ol>
+            <li><a href="#what">What it is</a></li>
+            <li><a href="#loop">The edit loop</a></li>
+            <li><a href="#layers">Three layers of help</a></li>
+            <li><a href="#why">Why it's built this way</a></li>
+            <li><a href="#harness">Grading scripts safely</a></li>
+            <li><a href="#lessons">How it learns from mistakes</a></li>
+            <li><a href="#engine">The console engine</a></li>
+            <li><a href="#install">Install</a></li>
+          </ol>
+        </nav>
+      </section>
+
+      <div class="article">
+        <section id="what">
+          <h2>What it is</h2>
+          <p>Language models write AutoHotkey v2 badly in predictable ways. They mix in v1 syntax, reach for JavaScript habits like object literals as dictionaries or <code>new ClassName()</code>, forget that arrays start at 1, and use alpha-only features on a build that doesn't have them. Most of these mistakes are invisible until the script runs, and a wrong AutoHotkey script can send keystrokes, move windows or delete files.</p>
+          <p>ClautoHotkey closes that gap by making the interpreter part of the conversation. It has four parts:</p>
+          <div class="cards">
+            <div class="card">
+              <span class="tag">Tooling</span>
+              <h4>The harness</h4>
+              <p>Hooks, rules, skills and agents for Claude Code. It validates each edit and routes AHK work. This is the main feature, and it installs as a plugin.</p>
+            </div>
+            <div class="card">
+              <span class="tag">Engine</span>
+              <h4>The +Console fork</h4>
+              <p>A console-enabled AutoHotkey v2 build with real stdout, <code>Print</code>, <code>Eval</code>, JSON diagnostics and structured exit codes. Stock v2 works too.</p>
+            </div>
+            <div class="card">
+              <span class="tag">Knowledge</span>
+              <h4>Modules</h4>
+              <p>23 Markdown modules: classes, GUI, errors, text, DllCall, COM, WinAPI, versions and more. A corpus lint keeps out v1 and removed alpha syntax.</p>
+            </div>
+            <div class="card">
+              <span class="tag">Docs</span>
+              <h4>ahk-mcp (optional)</h4>
+              <p>An MCP server for documentation search, completion and diagnostics. Useful, but nothing depends on it.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="loop">
+          <h2>The edit loop</h2>
+          <p>The center of the design is what happens around a single file edit. Claude Code fires hooks before and after each tool call, and ClautoHotkey puts its checks there, where the model can't skip them.</p>
+          <div class="flow" aria-label="The edit loop, step by step">
+            <div class="flow-steps">
+              <div class="step">
+                <b>Session starts</b>
+                <p><code>ahk-session-primer</code> loads the AHK context and a routing table: which skill or agent fits which task.</p>
+              </div>
+              <div class="step">
+                <b>First edit of a file</b>
+                <p><code>inject-rules</code> loads the rule matching the file (v2 syntax, GUI work, <code>Lib/</code>), once per session.</p>
+              </div>
+              <div class="step">
+                <b>Edit is written</b>
+                <p>The model writes the <code>.ahk</code> file with an Edit or Write call, as it would in any project.</p>
+              </div>
+              <div class="step">
+                <b>Interpreter checks it</b>
+                <p><code>ahk-post-edit</code> runs a syntax check, then briefly runs a standalone script to catch runtime errors.</p>
+              </div>
+            </div>
+            <div class="flow-split">
+              <div class="outcome fail">
+                <b>Broken: the edit is blocked</b>
+                <p>The interpreter's error goes back to the model as a blocking message, so the next step is a fix rather than more code on top. The failure goes into <code>error-log.jsonl</code>.</p>
+              </div>
+              <div class="outcome pass">
+                <b>Clean: the edit stands</b>
+                <p>If a copy of the script is already running, it is restarted so the running version matches the file. The model carries on.</p>
+              </div>
+            </div>
+            <p class="flow-note">On the fork the check is <code>check /Diag=json</code>; on stock AutoHotkey it falls back to <code>/validate</code>.</p>
+          </div>
+          <p>A few more hooks fill in around that loop. <code>check-ahk-binary</code> blocks any Bash call that would run a different AutoHotkey build than the configured one. <code>detect-v1-syntax</code> warns when a prompt contains v1 code. <code>post-compact-state</code> lists the scripts still running after the conversation is compacted and lets the rules load again. <code>check-git-account</code> is an opt-in guard against pushing as the wrong identity.</p>
+          <p>If the interpreter can't be found, the hook says so. It never reports a pass it didn't earn.</p>
+        </section>
+
+        <section id="layers">
+          <h2>Three layers of help</h2>
+          <p>Beyond the hooks, help comes in three forms, used in this order:</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Layer</th><th>When it loads</th><th>What it's for</th></tr></thead>
+              <tbody>
+                <tr><td>Rules</td><td>The first time you edit a matching file</td><td>Short, binding notes: v2 syntax, staying on the build you have, GUI layout, library conventions. Eleven in all; eight load themselves.</td></tr>
+                <tr><td>Skills</td><td>When invoked as <code>/ahk-gui</code>, <code>/ahk-fix</code> and so on</td><td>The default entry point. Nine load a knowledge module; ten drive the tooling: run, REPL, convert v1, scaffold a class, audit error handling.</td></tr>
+                <tr><td>Agents</td><td>In their own context window</td><td>Bounded investigations: dependency graphs, profiling, UI Automation trees, COM introspection, test generation.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>The order isn't arbitrary. It follows what each layer costs, which is the subject of the next section.</p>
+        </section>
+
+        <section id="why">
+          <h2>Why it's built this way</h2>
+          <p>Every design choice comes back to one idea: <strong>the model's attention is the scarce resource, so anything that can be enforced mechanically should be, and everything else should cost nothing until it's needed.</strong></p>
+
+          <div class="principle">
+            <p class="why">Principle 1</p>
+            <h3>Checks belong in hooks, not in instructions</h3>
+            <p>A model can read "always validate your script" and still not do it. It cannot skip a hook. So the things that must happen every time run as hooks: validating each edit, blocking the wrong interpreter, restarting a running script. Hooks also cost no context at all, since they run inside the tool loop rather than in the prompt.</p>
+          </div>
+
+          <div class="principle">
+            <p class="why">Principle 2</p>
+            <h3>Context is a budget, and every component has a price</h3>
+            <p>Text that's always in context is paid for on every turn of every session. A skill costs nothing until someone invokes it. The harness writes this down as a cost order, and new guidance goes into the cheapest place that works:</p>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Component</th><th>In context</th><th>Cost</th></tr></thead>
+                <tbody>
+                  <tr><td>Hook</td><td>Inside the tool loop</td><td>Can't be skipped; no context cost</td></tr>
+                  <tr><td>Script in <code>Tools/</code></td><td>On demand</td><td>None</td></tr>
+                  <tr><td>Skill</td><td>When invoked</td><td>Nothing until used</td></tr>
+                  <tr><td>Agent</td><td>Its own context window</td><td>A start-up cost per launch</td></tr>
+                  <tr><td>Narrow rule</td><td>First edit of a matching file</td><td>Paid when it fires</td></tr>
+                  <tr><td><code>CLAUDE.md</code>, rules on every <code>.ahk</code></td><td>Every session, every edit</td><td>Paid on every run</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>The harness lint measures that always-on text, about 25,600 characters today, and warns once it passes its cap. To add always-on text, you cut something else to pay for it.</p>
+          </div>
+
+          <div class="principle">
+            <p class="why">Principle 3</p>
+            <h3>Load knowledge by file and by task, not all at once</h3>
+            <p>A GUI rule is useless while editing a regex helper. Rules declare when they fire: path globs, strings the file contains (a file that calls <code>Gui(</code> gets the GUI rule even if it isn't named like one), or <code>build: fork</code> to stay off stock AutoHotkey. Each one loads once per session. Skills carry trigger-rich descriptions, so the model finds the right one from the task itself and no hand-kept routing table goes stale.</p>
+          </div>
+
+          <div class="principle">
+            <p class="why">Principle 4</p>
+            <h3>Write for the build the user actually has</h3>
+            <p>The modules are verified against the v2.1-alpha +Console fork and use its features freely. Most users run stock v2.0. The <code>ahk-target</code> rule keeps generated code on the user's build, and the knowledge carries a portable substitute for every gated construct. The same harness works on both, and the fork just gives richer diagnostics.</p>
+          </div>
+
+          <div class="principle">
+            <p class="why">Principle 5</p>
+            <h3>No silent passes</h3>
+            <p>A check that quietly does nothing is worse than no check, because people trust it. So a missing interpreter is reported, a timeout is a failed result rather than a skip, a tier that didn't run is recorded as <code>"skipped"</code> rather than a zero, and the live tier reports <code>error</code> until its backend is installed. A hook that reads a field Claude Code doesn't send would pass a code review and do nothing in every session, so a smoke test feeds every hook the real payload and checks the answer.</p>
+          </div>
+
+          <div class="principle">
+            <p class="why">Principle 6</p>
+            <h3>Change it only when there's evidence</h3>
+            <p>It's tempting to keep adding rules whenever something goes wrong once. The harness only changes when a recorded mistake, an error-log pattern or a failed run argues for it, and "leave it as it is" counts as an answer. That discipline has its own section below.</p>
+          </div>
+        </section>
+
+        <section id="harness">
+          <h2>Grading scripts safely</h2>
+          <p>Checking that a script parses is easy. Checking that it works is dangerous, because running an AutoHotkey script means letting it type, click and write files. The grading harness solves this with four tiers that a script passes through in order. A failed tier ends that script's branch, and each tier is riskier than the one before it.</p>
+          <div class="tiers">
+            <div class="tier">
+              <div class="tier-name">static<small>Tier 1</small></div>
+              <p>The fork's <code>check</code> and <code>/validate</code>, then a structural lint (empty catches, v1-isms) and scope-aware analysis (a symbol table, a call graph, undefined calls, properties called as methods), both built on a <strong>tree-sitter</strong> grammar.</p>
+            </div>
+            <div class="tier">
+              <div class="tier-name">pure<small>Tier 2</small></div>
+              <p>Finds the script's unit tests (<code>Name.test.ahk</code>, <code>Test_Name.ahk</code>, beside it or under <code>Tests\</code>) and runs them with the <code>TestKit</code> assertion library. Deterministic, and it costs no model time.</p>
+            </div>
+            <div class="tier">
+              <div class="tier-name">dry-run<small>Tier 3</small></div>
+              <p>Runs the real script <strong>in place</strong> with a shim injected. Input, window control, messages, <code>Gui</code>, dialogs, hotkeys, <code>Run</code>, <code>Shutdown</code> and file, registry and download writes are <strong>recorded instead of performed</strong>. It all happens in a kill-on-close job with a memory cap, while a window watch and a clipboard guard catch what no shim can.</p>
+            </div>
+            <div class="tier">
+              <div class="tier-name">live<small>Tier 4</small></div>
+              <p>The only tier that touches a desktop, and it uses a <strong>hidden</strong> one. Live runs share focus and synthetic input, so they run one at a time under a lock, never in parallel.</p>
+            </div>
+          </div>
+          <h3>One result shape for everything</h3>
+          <p>Every tier writes the same NDJSON object, emitted by one shared core. Every field is always present, so a consumer never has to tell "absent" from "empty", and an end sentinel shows the line wasn't cut off mid-write. A checker drops empty, timed-out and contradictory results before anyone draws conclusions from them. A reporter turns what's left into SARIF, JUnit, GitHub annotations or Markdown.</p>
+          <pre><code>{ <span class="s">"tier"</span>: <span class="s">"static"</span>, <span class="s">"status"</span>: <span class="s">"pass"</span>, <span class="s">"parse"</span>: <span class="s">"clean"</span>,
+  <span class="s">"findings"</span>: [ { <span class="s">"rule"</span>: <span class="s">"empty-catch"</span>, <span class="s">"line"</span>: <span class="k">88</span>, <span class="s">"severity"</span>: <span class="s">"high"</span> } ],
+  <span class="s">"sentinel"</span>: <span class="s">"AHKHARNESS-END"</span> }</code></pre>
+          <p>Two tools round it out. <code>SelfTest.ahk --run</code> proves the gates still protect the machine by running canaries with known verdicts and confirming their attempted side effects never landed. <code>Reduce.ahk</code> delta-debugs a failing script down to the fewest lines that still fail the same way.</p>
+        </section>
+
+        <section id="lessons">
+          <h2>How it learns from mistakes</h2>
+          <p>Every failed interpreter run and blocked edit goes into an error log. <code>/ahk-mistakes</code> reads it for recurring patterns, and <code>Tools/lessons.py propose</code> turns those rows into candidate lessons. A lesson is only accepted with four fields:</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Field</th><th>Example, from a real lesson</th></tr></thead>
+              <tbody>
+                <tr><td>Cue</td><td>A fat-arrow callback whose body is a call that returns nothing, like <code>(*) =&gt; this.Toggle()</code>, on the +Console fork</td></tr>
+                <tr><td>Lesson</td><td>The change it argues for, on a named component (here, <code>rules/ahk-v2-syntax.md</code>)</td></tr>
+                <tr><td>Evidence</td><td>The log rows and runs that showed it</td></tr>
+                <tr><td>Confidence</td><td>High, medium or low</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>An entry missing any field is refused. A recurring error whose cause hasn't been verified stays a proposal and doesn't become a lesson. The method is adapted from Google Research's <a href="https://github.com/google-research/harness2">Harness²</a> (design only, no code). The cheap parts are built: the lesson library and the lint below. The full loop, which spends model time, is written up in <code>Tools/harness/ADAPT.md</code> but not yet run by a script. In that loop you propose a change, probe it in a separate worktree, pick blindly between the results, and keep the base harness when nothing wins.</p>
+          <p>A second lint, <code>lint_harness.py</code>, keeps the harness honest about itself. It checks that every skill is wired and advertised, every script a hook names exists, every rule has a trigger, the counts quoted in the docs match the tree, and the always-on budget holds.</p>
+        </section>
+
+        <section id="engine">
+          <h2>The console engine</h2>
+          <p>Stock AutoHotkey is a GUI program: its errors appear in message boxes, which a model can't read. The <a href="https://github.com/TrueCrimeDev/AutoHotkey">+Console fork</a> makes the interpreter talk to machines:</p>
+          <ul>
+            <li><strong>Real stdout and stderr</strong>, plus <code>Print(fmt, values*)</code>, so a script's output reaches the model directly.</li>
+            <li><strong><code>Eval(expr)</code></strong> and a <code>repl</code> subcommand, which <code>/ahk-eval</code> drives for quick checks without writing a file.</li>
+            <li><strong>JSON diagnostics</strong> from <code>check /Diag=json</code>, which the post-edit hook parses into exact line and message.</li>
+            <li><strong>Structured exit codes</strong> and crash logs: 12 for a parse failure, 10 for an uncaught error, 130 for Ctrl+C.</li>
+          </ul>
+          <p>Stock AutoHotkey v2 still works. The hooks fall back to <code>/validate</code>, and you lose <code>Print</code>, <code>Eval</code> and JSON diagnostics. The grading gates do need the fork.</p>
+        </section>
+
+        <section id="install">
+          <h2>Install</h2>
+          <h3>As a Claude Code plugin</h3>
+          <pre><code>/plugin marketplace add TrueCrimeDev/ClautoHotkey
+/plugin install clautohotkey@clautohotkey</code></pre>
+          <p>That's all. The skills, rules and validation now apply to your scripts wherever they live, and on first use the harness finds your AutoHotkey install. To pin an interpreter or switch on the fork's diagnostics, put a <code>harness.env</code> in your project root:</p>
+          <pre><code><span class="c"># every key is optional</span>
+AHK_BIN_WIN=<span class="s">"${WIN_HOME}\Documents\AutoHotkey\bin\AutoHotkey64.exe"</span>
+AHK_DIAG_JSON=<span class="k">1</span>   <span class="c"># only on the +Console fork</span></code></pre>
+          <h3>As a clone, or in OpenCode</h3>
+          <pre><code>git clone https://github.com/TrueCrimeDev/ClautoHotkey.git
+cd ClautoHotkey &amp;&amp; ./setup.sh          <span class="c"># Claude Code, files in your tree</span>
+./opencode/install.sh                  <span class="c"># OpenCode 1.x, same hooks and skills</span>
+./Tools/verify.sh                      <span class="c"># proves the hooks really block a broken edit</span></code></pre>
+          <p>Needs Git Bash or WSL, AutoHotkey v2, and <code>jq</code> or Python 3.8+. The full walkthrough is in <a href="https://github.com/TrueCrimeDev/ClautoHotkey/blob/main/GETTING-STARTED.md">GETTING-STARTED.md</a>, and the <a href="https://github.com/TrueCrimeDev/ClautoHotkey#readme">README</a> lists every skill, agent and hook.</p>
+          <blockquote>AutoHotkey v2 only. There is no v1 support, on purpose: the harness's job is to keep v1 out.</blockquote>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span>ClautoHotkey &middot; MIT licensed &middot; by TrueCrimeDev</span>
+      <div class="footer-links">
+        <a href="https://github.com/TrueCrimeDev/ClautoHotkey">Repository</a>
+        <a href="https://github.com/TrueCrimeDev/AutoHotkey">+Console fork</a>
+        <a href="https://github.com/TrueCrimeDev/ahk-mcp">ahk-mcp</a>
+        <a href="https://truecrimedev.github.io/AHKv2_LLMs/">AHKv2 &amp; LLMs blog</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

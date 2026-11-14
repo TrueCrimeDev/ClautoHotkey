@@ -5,6 +5,8 @@ All notable changes to the ClautoHotkey project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Project site** (`docs/`, served by GitHub Pages): one page on how the harness
+  works and why it is built the way it is, styled after the AHKv2 & LLMs blog.
 - **OpenCode install** (`opencode/`): `install.sh` writes one `plugin` entry into
   `opencode.json` (global, or `--project DIR` with an `AGENTS.md` and `harness.env`)
   and copies the skills where OpenCode's skill tool reads them. The plugin,
