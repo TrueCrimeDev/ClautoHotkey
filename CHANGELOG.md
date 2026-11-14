@@ -98,7 +98,7 @@ All notable changes to the ClautoHotkey project will be documented in this file.
 - `gui-work` matches GUI files by generic name globs and by content instead of
   one project's folder names; path globs ignore case.
 - The session primer lists every self-loading rule, carries a line and a path for
-  the three reference rules, and routes all 19 skills and 9 agents;
+  the three reference rules, and routes all 25 skills and 9 agents;
   `lint_harness.py` now requires both.
 - `_harness-env.sh` exports `AHK_EXE` and defines `harness_log_file`; `/ahk-run`,
   `/ahk-eval` and `/ahk-fix` open with the two setup lines their snippets need.
