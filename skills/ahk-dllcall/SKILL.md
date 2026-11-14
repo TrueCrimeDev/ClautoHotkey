@@ -17,7 +17,6 @@ The native-call and memory-marshalling foundation.
 ## How to use
 
 1. Load the full reference from `${CLAUDE_PLUGIN_ROOT}/Modules/Module_DllCall.md` — type list, Buffer/NumPut/NumGet, StrPut/StrGet, CallbackCreate, typed Struct.
-   For struct layout and alignment, block memory, HRESULT and `A_LastError` checks, handle ownership, or hook procedures, also load `${CLAUDE_PLUGIN_ROOT}/Modules/Module_DllCallMemory.md`.
 2. Always specify parameter and return types explicitly: `DllCall("user32\Func", "Ptr", h, "Int")`.
 3. Allocate with `Buffer(bytes, 0)` (zero-init); pass a Buffer directly for a `Ptr` arg; read fields with `NumGet(buf, offset, "Type")`.
 4. Free every `CallbackCreate` pointer with `CallbackFree`; keep a Buffer alive as long as an API holds its pointer.
@@ -28,4 +27,4 @@ The native-call and memory-marshalling foundation.
 - **Strings across the boundary:** `StrGet(buf, len, "UTF-16")` / `StrPut(s, buf, "UTF-8")`.
 - **Typed Struct (fork / alpha.30):** `Struct POINT { x: Int32, y: Int32 }`; v2.0 fallback is `Buffer` + `NumPut`/`NumGet`.
 
-For the full type table and the CallbackCreate pattern, read `${CLAUDE_PLUGIN_ROOT}/Modules/Module_DllCall.md`. For x86/x64 offsets, `Rtl*` and `VirtualAlloc` memory, and leak-proof handles, read `${CLAUDE_PLUGIN_ROOT}/Modules/Module_DllCallMemory.md`.
+For the full type table and the CallbackCreate pattern, read `${CLAUDE_PLUGIN_ROOT}/Modules/Module_DllCall.md`.

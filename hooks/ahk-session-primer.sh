@@ -79,12 +79,6 @@ Skills are the default entry point for routine work. Reach for an agent only whe
 | DllCall, Buffer, Struct, callbacks | `/ahk-dllcall` skill |
 | Window messages, subclassing, DWM, WinRT | `/ahk-winapi` skill |
 | Version and portability questions | `/ahk-versions` skill |
-| Timers, debounce, non-blocking work, closures | `/ahk-async` skill |
-| Hotkeys, hotstrings, Send, window and control automation | `/ahk-input` skill |
-| Pixels, ImageSearch, monitors, DPI, screen capture | `/ahk-screen` skill |
-| Files, clipboard, Run, registry, tray, elevation | `/ahk-system` skill |
-| HTTP requests and downloads | `/ahk-net` skill |
-| Review a script / defensive validation | `/ahk-review` skill |
 | Run a script headlessly | `/ahk-run` skill |
 | Evaluate an expression | `/ahk-eval` skill |
 | Convert v1 to v2 | `/ahk-convert` skill |

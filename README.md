@@ -155,7 +155,7 @@ It lives in four directories at the repo root, which is also the plugin layout:
 
 | Directory | Contents |
 |-----------|----------|
-| `skills/` | 25 skills — 15 that load a knowledge module, 10 that drive the interpreter |
+| `skills/` | 19 skills — 9 that load a knowledge module, 10 that drive the interpreter |
 | `agents/` | 9 fresh-context investigators |
 | `rules/` | 11 rules: 8 injected on the first edit of a matching file, 3 reference rules the session primer points to |
 | `hooks/` | 12 lifecycle hooks, wired by `hooks/hooks.json` |
@@ -178,10 +178,7 @@ Invoke with `/<name>`:
 | `/ahk-eval` | Live REPL via the fork's `repl` subcommand | `/ahk-mistakes` | Recurring mistakes from the log, recorded as lessons |
 | `/ahk-com` | COM automation (Excel / WMI / events) | `/ahk-debug-dashboard` | Live debug state in a session |
 | `/ahk-dllcall` | DllCall, Buffer, Struct, callbacks | `/ahk-winapi` | Messages, subclassing, DWM, WinRT |
-| `/ahk-versions` | Version / portability, fork features | `/ahk-async` | Timers, debounce, Critical, closures |
-| `/ahk-input` | Hotkeys, Send, InputHook, windows and controls | `/ahk-screen` | Pixels, images, monitors, DPI, capture |
-| `/ahk-system` | Files, clipboard, Run, registry, tray | `/ahk-net` | HTTP, downloads, JSON over the wire |
-| `/ahk-review` | Script review, guard clauses, validation | | |
+| `/ahk-versions` | Version / portability, fork features | | |
 
 ### Agents
 

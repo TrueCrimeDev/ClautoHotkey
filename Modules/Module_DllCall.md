@@ -5,10 +5,8 @@ description: 'Native-call and memory-marshalling foundation for AHK v2 — DllCa
   alpha.30 typed Struct. TRIGGER when the request involves: DllCall, Buffer, NumPut, NumGet, StrPut,
   StrGet, CallbackCreate, CallbackFree, Struct, VarSetStrCapacity, A_LastError, "call a Windows API",
   "call a native function", "pointer", "struct", "marshal", "raw memory", "pass a struct", "output parameter",
-  "winapi", "user32", "kernel32", "Ptr type", HRESULT, "return type", "truncated handle", SIZE_T, UPtr.
-  Not covered: struct layout with A_PtrSize, Rtl* block memory, handle cleanup, hook callbacks - see
-  Module_DllCallMemory.md; COM/IDispatch automation and vtable ComCall - see Module_COM.md; window
-  messages, subclassing and WinRT activation - see Module_WinAPI.md.'
+  "winapi", "user32", "kernel32", "Ptr type". Not covered: COM/IDispatch automation and vtable ComCall -
+  see Module_COM.md; window messages, subclassing and WinRT activation - see Module_WinAPI.md.'
 ---
 
 # Module_DllCall
@@ -31,8 +29,7 @@ _AHK v2.0+ (typed Struct requires v2.1-alpha.30 — upstream or the +Console for
 | `Int64` | 64-bit | No `UInt64` type — use `Int64` and mask the sign |
 | `Short`/`UShort`, `Char`/`UChar` | 16 / 8-bit | |
 | `Float`, `Double` | 32 / 64-bit | |
-| `Ptr` / `UPtr` | pointer-sized | Handles, addresses, struct pointers; `UPtr` for `SIZE_T`/`WPARAM`; pass a `Buffer` directly for a `Ptr` arg |
-| `HRESULT` | 32-bit | Return type only; a failure code throws `OSError` instead of returning |
+| `Ptr` / `UPtr` | pointer-sized | Handles, addresses, struct pointers; pass a `Buffer` directly for a `Ptr` arg |
 | `Str` / `WStr` / `AStr` | string | `Str` is native (UTF-16); pass a variable for in/out string buffers |
 | `Type*` | by-address | Output scalar — pass `&var := 0`; value lands in `var` after the call |
 
@@ -60,9 +57,6 @@ _AHK v2.0+ (typed Struct requires v2.1-alpha.30 — upstream or the +Console for
   `"Int*", &out := 0`. On alpha.30 a `&var` whose variable has never been assigned throws
   "This global variable has not been assigned a value." before the call runs (the wording
   varies with scope — "local variable", "global variable") — always seed it with `:= 0`.
-- The default return type is `Int` (32-bit). Name `"Ptr"` (or `"UInt"`, `"UPtr"`) explicitly for any
-  function returning a handle, pointer, `DWORD` or `SIZE_T`, or the upper 32 bits are lost on x64.
-- `NumGet`'s `Type` is mandatory; there is no default width.
 - Check `A_LastError` immediately after a call when the API sets last-error; an
   intervening AHK statement can overwrite it.
 - There is no `UInt64`. Read a 64-bit unsigned value as `Int64` and correct the sign.
@@ -124,10 +118,6 @@ NumPut("Int", 0, "Int", 0, "Int", 800, "Int", 600, rc)   ; left, top, right, bot
 right  := NumGet(rc, 8,  "Int")
 bottom := NumGet(rc, 12, "Int")
 ```
-
-On v2.1-alpha.33 (fork or upstream) the type argument may be the class instead of the string,
-`NumPut(Int32, 800, rc, 8)` and `NumGet(rc, 8, Int32)`; the string form is the v2.0-portable one.
-Struct layout with pointer-sized fields (padding on x64) is in Module_DllCallMemory.md.
 
 ## TIER 3 — Strings across the boundary: StrPut / StrGet
 > COVERED: StrPut · StrGet · encodings · in/out string buffers
@@ -210,10 +200,7 @@ the typeless `Struct X { buf: 16 }` form is rejected on alpha.30.
 > This module does NOT cover: calling COM/IDispatch objects or vtable `ComCall` → see Module_COM.md
 > This module does NOT cover: Windows messages, subclassing, and WinRT activation → see Module_WinAPI.md
 
-- `Module_DllCallMemory.md` — Win32 type mapping, `A_PtrSize` struct offsets, `Rtl*`/`VirtualAlloc` memory, error and HRESULT handling, owning handles, hook callbacks.
 - `Module_COM.md` — `ComCall` is `DllCall` for COM vtables; `ComValue` wraps the typed values you marshal here.
 - `Module_WinAPI.md` — applies these primitives to window messages, subclassing, owner-draw, and WinRT factory activation.
 - `Module_Errors.md` — `OSError`/`A_LastError` patterns and try/catch wrapping for failed native calls.
 - `Module_DataStructures.md` — when a `Map()`/Array is the right container vs. a raw `Buffer`/`Struct`.
-
-<!-- Adapted in part from hsinming/AutoHotkey-V2-vibe-coding-tools (no license file upstream); see THIRD-PARTY.md -->

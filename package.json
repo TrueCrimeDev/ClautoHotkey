@@ -1,6 +1,6 @@
 {
   "name": "opencode-clautohotkey",
-  "version": "1.4.0",
+  "version": "1.3.0",
   "description": "AutoHotkey v2 companion for OpenCode: knowledge modules, /ahk-* commands, investigation agents, path-scoped rules, and a validator that catches a broken .ahk edit before you run it.",
   "keywords": ["opencode", "opencode-plugin", "autohotkey", "ahk", "ahk-v2", "windows", "automation"],
   "homepage": "https://github.com/TrueCrimeDev/ClautoHotkey#readme",
