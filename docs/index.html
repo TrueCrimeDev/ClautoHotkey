@@ -431,8 +431,8 @@
     <div class="page">
       <section class="hero">
         <p class="eyebrow">AutoHotkey v2 &middot; Claude Code plugin &middot; MIT</p>
-        <h1>A coding harness that won't let a broken AutoHotkey edit land. <em>How it works, and why it's built this way.</em></h1>
-        <p class="lede">ClautoHotkey turns Claude Code into an AutoHotkey v2 environment. Every <code>.ahk</code> edit is checked by the real interpreter before the model moves on, the right rules load when a file needs them, and scripts can be graded without being allowed to touch your desktop.</p>
+        <h1>An AutoHotkey v2 plugin for Claude Code that checks every edit.</h1>
+        <p class="lede">ClautoHotkey runs the real interpreter on each <code>.ahk</code> file Claude writes and sends any error straight back to it. It loads the rules a file needs the first time that file is edited, and it can grade scripts without letting them touch your desktop. This page explains how each part works and why it's built this way.</p>
         <div class="hero-actions">
           <a class="button primary" href="#install">Install the plugin</a>
           <a class="button" href="https://github.com/TrueCrimeDev/ClautoHotkey">Browse the source</a>
@@ -462,13 +462,13 @@
       <div class="article">
         <section id="what">
           <h2>What it is</h2>
-          <p>Language models write AutoHotkey v2 badly in predictable ways. They mix in v1 syntax, reach for JavaScript habits like object literals as dictionaries or <code>new ClassName()</code>, forget that arrays start at 1, and use alpha-only features on a build that doesn't have them. Most of these mistakes are invisible until the script runs, and a wrong AutoHotkey script can send keystrokes, move windows or delete files.</p>
-          <p>ClautoHotkey closes that gap by making the interpreter part of the conversation. It has four parts:</p>
+          <p>Language models make the same mistakes in AutoHotkey v2 again and again. They mix in v1 syntax, use JavaScript habits such as object literals as dictionaries or <code>new ClassName()</code>, forget that arrays start at 1, and use alpha-only features on builds that don't have them. Most of these errors only show up when the script runs, and a broken AutoHotkey script can send keystrokes, move windows or delete files.</p>
+          <p>ClautoHotkey runs the interpreter after every edit, so these errors are caught as soon as they're written. It has four parts:</p>
           <div class="cards">
             <div class="card">
               <span class="tag">Tooling</span>
               <h4>The harness</h4>
-              <p>Hooks, rules, skills and agents for Claude Code. It validates each edit and routes AHK work. This is the main feature, and it installs as a plugin.</p>
+              <p>Hooks, rules, skills and agents for Claude Code. It checks each edit and sends AHK tasks to the right skill or agent. It installs as a plugin.</p>
             </div>
             <div class="card">
               <span class="tag">Engine</span>
@@ -483,14 +483,14 @@
             <div class="card">
               <span class="tag">Docs</span>
               <h4>ahk-mcp (optional)</h4>
-              <p>An MCP server for documentation search, completion and diagnostics. Useful, but nothing depends on it.</p>
+              <p>An MCP server for documentation search, completion and diagnostics. Nothing else depends on it.</p>
             </div>
           </div>
         </section>
 
         <section id="loop">
           <h2>The edit loop</h2>
-          <p>The center of the design is what happens around a single file edit. Claude Code fires hooks before and after each tool call, and ClautoHotkey puts its checks there, where the model can't skip them.</p>
+          <p>Claude Code runs hooks before and after each tool call. ClautoHotkey puts its checks in those hooks, so the model can't skip them. This is what happens around one edit:</p>
           <div class="flow" aria-label="The edit loop, step by step">
             <div class="flow-steps">
               <div class="step">
@@ -512,23 +512,23 @@
             </div>
             <div class="flow-split">
               <div class="outcome fail">
-                <b>Broken: the edit is blocked</b>
-                <p>The interpreter's error goes back to the model as a blocking message, so the next step is a fix rather than more code on top. The failure goes into <code>error-log.jsonl</code>.</p>
+                <b>Broken: the error goes back to Claude</b>
+                <p>The hook returns the interpreter's error as a blocking message, so Claude fixes the file before writing more code. The failure is logged to <code>error-log.jsonl</code>.</p>
               </div>
               <div class="outcome pass">
-                <b>Clean: the edit stands</b>
-                <p>If a copy of the script is already running, it is restarted so the running version matches the file. The model carries on.</p>
+                <b>Clean: Claude carries on</b>
+                <p>If the script is already running, it is restarted so it runs the new code.</p>
               </div>
             </div>
             <p class="flow-note">On the fork the check is <code>check /Diag=json</code>; on stock AutoHotkey it falls back to <code>/validate</code>.</p>
           </div>
-          <p>A few more hooks fill in around that loop. <code>check-ahk-binary</code> blocks any Bash call that would run a different AutoHotkey build than the configured one. <code>detect-v1-syntax</code> warns when a prompt contains v1 code. <code>post-compact-state</code> lists the scripts still running after the conversation is compacted and lets the rules load again. <code>check-git-account</code> is an opt-in guard against pushing as the wrong identity.</p>
-          <p>If the interpreter can't be found, the hook says so. It never reports a pass it didn't earn.</p>
+          <p>Other hooks cover the rest. <code>check-ahk-binary</code> blocks any Bash call that would run a different AutoHotkey build than the configured one. <code>detect-v1-syntax</code> warns when a prompt contains v1 code. <code>post-compact-state</code> lists the scripts still running after the conversation is compacted and lets the rules load again. <code>check-git-account</code> is an opt-in guard against pushing as the wrong identity.</p>
+          <p>If the interpreter can't be found, the hook says so instead of reporting a pass.</p>
         </section>
 
         <section id="layers">
           <h2>Three layers of help</h2>
-          <p>Beyond the hooks, help comes in three forms, used in this order:</p>
+          <p>Apart from the hooks, the harness gives Claude three kinds of help:</p>
           <div class="table-wrap">
             <table>
               <thead><tr><th>Layer</th><th>When it loads</th><th>What it's for</th></tr></thead>
@@ -539,23 +539,23 @@
               </tbody>
             </table>
           </div>
-          <p>The order isn't arbitrary. It follows what each layer costs, which is the subject of the next section.</p>
+          <p>Each one takes up a different amount of context, which is what the next section is about.</p>
         </section>
 
         <section id="why">
           <h2>Why it's built this way</h2>
-          <p>Every design choice comes back to one idea: <strong>the model's attention is the scarce resource, so anything that can be enforced mechanically should be, and everything else should cost nothing until it's needed.</strong></p>
+          <p>Most of the design follows from one limit: <strong>the model has a fixed amount of context. Anything a script can check is checked by a script, and everything else stays out of context until a task needs it.</strong></p>
 
           <div class="principle">
             <p class="why">Principle 1</p>
             <h3>Checks belong in hooks, not in instructions</h3>
-            <p>A model can read "always validate your script" and still not do it. It cannot skip a hook. So the things that must happen every time run as hooks: validating each edit, blocking the wrong interpreter, restarting a running script. Hooks also cost no context at all, since they run inside the tool loop rather than in the prompt.</p>
+            <p>A model can read "always validate your script" and still not do it, but it can't skip a hook. So everything that must happen every time is a hook: checking each edit, blocking the wrong interpreter, restarting a running script. Hooks also use no context, because they run outside the prompt.</p>
           </div>
 
           <div class="principle">
             <p class="why">Principle 2</p>
-            <h3>Context is a budget, and every component has a price</h3>
-            <p>Text that's always in context is paid for on every turn of every session. A skill costs nothing until someone invokes it. The harness writes this down as a cost order, and new guidance goes into the cheapest place that works:</p>
+            <h3>Every component costs context</h3>
+            <p>Text that's always loaded takes up context in every session. A skill takes none until it's used. The harness ranks the options by cost, and new guidance goes in the cheapest one that works:</p>
             <div class="table-wrap">
               <table>
                 <thead><tr><th>Component</th><th>In context</th><th>Cost</th></tr></thead>
@@ -569,37 +569,37 @@
                 </tbody>
               </table>
             </div>
-            <p>The harness lint measures that always-on text, about 25,600 characters today, and warns once it passes its cap. To add always-on text, you cut something else to pay for it.</p>
+            <p><code>lint_harness.py</code> measures the always-loaded text (about 25,600 characters now) and warns when it goes over its cap, so adding to it means cutting something else.</p>
           </div>
 
           <div class="principle">
             <p class="why">Principle 3</p>
-            <h3>Load knowledge by file and by task, not all at once</h3>
-            <p>A GUI rule is useless while editing a regex helper. Rules declare when they fire: path globs, strings the file contains (a file that calls <code>Gui(</code> gets the GUI rule even if it isn't named like one), or <code>build: fork</code> to stay off stock AutoHotkey. Each one loads once per session. Skills carry trigger-rich descriptions, so the model finds the right one from the task itself and no hand-kept routing table goes stale.</p>
+            <h3>Load knowledge only when a file or task needs it</h3>
+            <p>A GUI rule doesn't help while you're editing a regex helper. Each rule says when it loads: a path pattern, a string the file contains (a file that calls <code>Gui(</code> gets the GUI rule whatever it's called), or <code>build: fork</code> to skip stock AutoHotkey. Each one loads once per session. Each skill's description lists the tasks it covers, so Claude can match a task to a skill on its own.</p>
           </div>
 
           <div class="principle">
             <p class="why">Principle 4</p>
             <h3>Write for the build the user actually has</h3>
-            <p>The modules are verified against the v2.1-alpha +Console fork and use its features freely. Most users run stock v2.0. The <code>ahk-target</code> rule keeps generated code on the user's build, and the knowledge carries a portable substitute for every gated construct. The same harness works on both, and the fork just gives richer diagnostics.</p>
+            <p>The modules are tested on the v2.1-alpha +Console fork and use its features, but most users run stock v2.0. The <code>ahk-target</code> rule limits generated code to what the user's build supports, and the modules give a stock v2.0 alternative for each feature it lacks. The harness works on both; the fork adds better diagnostics.</p>
           </div>
 
           <div class="principle">
             <p class="why">Principle 5</p>
             <h3>No silent passes</h3>
-            <p>A check that quietly does nothing is worse than no check, because people trust it. So a missing interpreter is reported, a timeout is a failed result rather than a skip, a tier that didn't run is recorded as <code>"skipped"</code> rather than a zero, and the live tier reports <code>error</code> until its backend is installed. A hook that reads a field Claude Code doesn't send would pass a code review and do nothing in every session, so a smoke test feeds every hook the real payload and checks the answer.</p>
+            <p>A check that quietly does nothing is worse than no check, because people trust it. So a missing interpreter is reported, a timeout is a failed result rather than a skip, a tier that didn't run is recorded as <code>"skipped"</code> rather than a zero, and the live tier reports <code>error</code> until its backend is installed. A hook that reads a field Claude Code never sends would look fine in review and do nothing, so a smoke test sends every hook a real payload and checks its response.</p>
           </div>
 
           <div class="principle">
             <p class="why">Principle 6</p>
             <h3>Change it only when there's evidence</h3>
-            <p>It's tempting to keep adding rules whenever something goes wrong once. The harness only changes when a recorded mistake, an error-log pattern or a failed run argues for it, and "leave it as it is" counts as an answer. That discipline has its own section below.</p>
+            <p>A mistake that happens once isn't a reason to add a rule. The harness changes only when a recorded mistake, a pattern in the error log or a failed run supports it, and leaving it unchanged is an acceptable outcome. <a href="#lessons">How it learns from mistakes</a> covers the process.</p>
           </div>
         </section>
 
         <section id="harness">
           <h2>Grading scripts safely</h2>
-          <p>Checking that a script parses is easy. Checking that it works is dangerous, because running an AutoHotkey script means letting it type, click and write files. The grading harness solves this with four tiers that a script passes through in order. A failed tier ends that script's branch, and each tier is riskier than the one before it.</p>
+          <p>Checking that a script parses is safe. Checking that it works means running it, and a running AutoHotkey script can type, click and write files. The grading harness runs a script through four tiers in order, each riskier than the last, and stops at the first one it fails.</p>
           <div class="tiers">
             <div class="tier">
               <div class="tier-name">static<small>Tier 1</small></div>
@@ -607,28 +607,28 @@
             </div>
             <div class="tier">
               <div class="tier-name">pure<small>Tier 2</small></div>
-              <p>Finds the script's unit tests (<code>Name.test.ahk</code>, <code>Test_Name.ahk</code>, beside it or under <code>Tests\</code>) and runs them with the <code>TestKit</code> assertion library. Deterministic, and it costs no model time.</p>
+              <p>Finds the script's unit tests (<code>Name.test.ahk</code>, <code>Test_Name.ahk</code>, beside it or under <code>Tests\</code>) and runs them with the <code>TestKit</code> assertion library. The results are deterministic and no model is involved.</p>
             </div>
             <div class="tier">
               <div class="tier-name">dry-run<small>Tier 3</small></div>
-              <p>Runs the real script <strong>in place</strong> with a shim injected. Input, window control, messages, <code>Gui</code>, dialogs, hotkeys, <code>Run</code>, <code>Shutdown</code> and file, registry and download writes are <strong>recorded instead of performed</strong>. It all happens in a kill-on-close job with a memory cap, while a window watch and a clipboard guard catch what no shim can.</p>
+              <p>Runs the real script <strong>in place</strong> with a shim injected. Input, window control, messages, <code>Gui</code>, dialogs, hotkeys, <code>Run</code>, <code>Shutdown</code> and file, registry and download writes are <strong>recorded instead of performed</strong>. The script runs in a job with a memory cap that is killed when the run ends, and a window watcher and a clipboard guard catch anything the shim misses.</p>
             </div>
             <div class="tier">
               <div class="tier-name">live<small>Tier 4</small></div>
               <p>The only tier that touches a desktop, and it uses a <strong>hidden</strong> one. Live runs share focus and synthetic input, so they run one at a time under a lock, never in parallel.</p>
             </div>
           </div>
-          <h3>One result shape for everything</h3>
-          <p>Every tier writes the same NDJSON object, emitted by one shared core. Every field is always present, so a consumer never has to tell "absent" from "empty", and an end sentinel shows the line wasn't cut off mid-write. A checker drops empty, timed-out and contradictory results before anyone draws conclusions from them. A reporter turns what's left into SARIF, JUnit, GitHub annotations or Markdown.</p>
+          <h3>One result format</h3>
+          <p>Every tier writes the same NDJSON object through one shared module, <code>HarnessCore.ahk</code>. Every field is always present, so a reader never has to tell a missing field from an empty one, and an end marker shows the line wasn't cut off. <code>CheckResults.py</code> drops empty, timed-out and contradictory results, and <code>Report.py</code> turns the rest into SARIF, JUnit, GitHub annotations or Markdown.</p>
           <pre><code>{ <span class="s">"tier"</span>: <span class="s">"static"</span>, <span class="s">"status"</span>: <span class="s">"pass"</span>, <span class="s">"parse"</span>: <span class="s">"clean"</span>,
   <span class="s">"findings"</span>: [ { <span class="s">"rule"</span>: <span class="s">"empty-catch"</span>, <span class="s">"line"</span>: <span class="k">88</span>, <span class="s">"severity"</span>: <span class="s">"high"</span> } ],
   <span class="s">"sentinel"</span>: <span class="s">"AHKHARNESS-END"</span> }</code></pre>
-          <p>Two tools round it out. <code>SelfTest.ahk --run</code> proves the gates still protect the machine by running canaries with known verdicts and confirming their attempted side effects never landed. <code>Reduce.ahk</code> delta-debugs a failing script down to the fewest lines that still fail the same way.</p>
+          <p><code>SelfTest.ahk --run</code> checks that the gates still protect the machine: it runs test scripts with known results and confirms none of their side effects happened. <code>Reduce.ahk</code> cuts a failing script down to the fewest lines that still fail the same way.</p>
         </section>
 
         <section id="lessons">
           <h2>How it learns from mistakes</h2>
-          <p>Every failed interpreter run and blocked edit goes into an error log. <code>/ahk-mistakes</code> reads it for recurring patterns, and <code>Tools/lessons.py propose</code> turns those rows into candidate lessons. A lesson is only accepted with four fields:</p>
+          <p>Every failed interpreter run and blocked edit goes into an error log. <code>/ahk-mistakes</code> reads it for recurring patterns, and <code>Tools/lessons.py propose</code> turns those rows into candidate lessons. A lesson needs all four of these fields:</p>
           <div class="table-wrap">
             <table>
               <thead><tr><th>Field</th><th>Example, from a real lesson</th></tr></thead>
@@ -640,13 +640,13 @@
               </tbody>
             </table>
           </div>
-          <p>An entry missing any field is refused. A recurring error whose cause hasn't been verified stays a proposal and doesn't become a lesson. The method is adapted from Google Research's <a href="https://github.com/google-research/harness2">Harness²</a> (design only, no code). The cheap parts are built: the lesson library and the lint below. The full loop, which spends model time, is written up in <code>Tools/harness/ADAPT.md</code> but not yet run by a script. In that loop you propose a change, probe it in a separate worktree, pick blindly between the results, and keep the base harness when nothing wins.</p>
-          <p>A second lint, <code>lint_harness.py</code>, keeps the harness honest about itself. It checks that every skill is wired and advertised, every script a hook names exists, every rule has a trigger, the counts quoted in the docs match the tree, and the always-on budget holds.</p>
+          <p>An entry missing any field is refused. A recurring error whose cause hasn't been verified stays a proposal and doesn't become a lesson. The approach is adapted from Google Research's <a href="https://github.com/google-research/harness2">Harness²</a> (the design only, not its code). The lesson library and the lint below are built. The full loop, which uses model time, is described in <code>Tools/harness/ADAPT.md</code>, but no script runs it yet. In that loop a change is proposed, tested in a separate worktree, compared blind against the current harness, and dropped if it doesn't do better.</p>
+          <p><code>lint_harness.py</code> checks the harness itself. It confirms that every skill is wired up and listed, every script a hook names exists, every rule has a trigger, the counts in the README and <code>CLAUDE.md</code> match the files, and the always-loaded text is under its cap.</p>
         </section>
 
         <section id="engine">
           <h2>The console engine</h2>
-          <p>Stock AutoHotkey is a GUI program: its errors appear in message boxes, which a model can't read. The <a href="https://github.com/TrueCrimeDev/AutoHotkey">+Console fork</a> makes the interpreter talk to machines:</p>
+          <p>Stock AutoHotkey is a GUI program, so its errors appear in message boxes that a model can't read. The <a href="https://github.com/TrueCrimeDev/AutoHotkey">+Console fork</a> adds output that a program can read:</p>
           <ul>
             <li><strong>Real stdout and stderr</strong>, plus <code>Print(fmt, values*)</code>, so a script's output reaches the model directly.</li>
             <li><strong><code>Eval(expr)</code></strong> and a <code>repl</code> subcommand, which <code>/ahk-eval</code> drives for quick checks without writing a file.</li>
@@ -661,7 +661,7 @@
           <h3>As a Claude Code plugin</h3>
           <pre><code>/plugin marketplace add TrueCrimeDev/ClautoHotkey
 /plugin install clautohotkey@clautohotkey</code></pre>
-          <p>That's all. The skills, rules and validation now apply to your scripts wherever they live, and on first use the harness finds your AutoHotkey install. To pin an interpreter or switch on the fork's diagnostics, put a <code>harness.env</code> in your project root:</p>
+          <p>The skills, rules and edit checks then apply in any project, and the harness finds your AutoHotkey install the first time it runs. To pin an interpreter or switch on the fork's diagnostics, put a <code>harness.env</code> in your project root:</p>
           <pre><code><span class="c"># every key is optional</span>
 AHK_BIN_WIN=<span class="s">"${WIN_HOME}\Documents\AutoHotkey\bin\AutoHotkey64.exe"</span>
 AHK_DIAG_JSON=<span class="k">1</span>   <span class="c"># only on the +Console fork</span></code></pre>
@@ -671,7 +671,7 @@ cd ClautoHotkey &amp;&amp; ./setup.sh          <span class="c"># Claude Code, fi
 ./opencode/install.sh                  <span class="c"># OpenCode 1.x, same hooks and skills</span>
 ./Tools/verify.sh                      <span class="c"># proves the hooks really block a broken edit</span></code></pre>
           <p>Needs Git Bash or WSL, AutoHotkey v2, and <code>jq</code> or Python 3.8+. The full walkthrough is in <a href="https://github.com/TrueCrimeDev/ClautoHotkey/blob/main/GETTING-STARTED.md">GETTING-STARTED.md</a>, and the <a href="https://github.com/TrueCrimeDev/ClautoHotkey#readme">README</a> lists every skill, agent and hook.</p>
-          <blockquote>AutoHotkey v2 only. There is no v1 support, on purpose: the harness's job is to keep v1 out.</blockquote>
+          <blockquote>AutoHotkey v2 only. There is no v1 support, because part of the harness's job is keeping v1 syntax out.</blockquote>
         </section>
       </div>
     </div>
