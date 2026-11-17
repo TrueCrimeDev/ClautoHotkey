@@ -7,6 +7,8 @@ All notable changes to the ClautoHotkey project will be documented in this file.
 ### Added
 - **Project site** (`docs/`, served by GitHub Pages): one page on how the harness
   works and why it is built the way it is, styled after the AHKv2 & LLMs blog.
+  `lint_harness.py` warns when its stat tiles or always-on figure no longer
+  match the tree.
 - **OpenCode install** (`opencode/`): `install.sh` writes one `plugin` entry into
   `opencode.json` (global, or `--project DIR` with an `AGENTS.md` and `harness.env`)
   and copies the skills where OpenCode's skill tool reads them. The plugin,

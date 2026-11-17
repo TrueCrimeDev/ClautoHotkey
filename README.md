@@ -259,7 +259,7 @@ On stock AutoHotkey the hooks still validate every edit; the gates do not load.
 | `Tools/harness/SelfTest.ahk` | `--run` proves the harness works on this machine: every gate against canaries with known verdicts, including that their attempted side effects never landed |
 | `Tools/harness/CONTRACT.md` | The result schema every tier obeys |
 | `Tools/harness/ADAPT.md` | How the harness improves from evidence: propose, probe, compose over the runway benchmark, with lessons as the library |
-| `Tools/lint_harness.py` | Validates the harness tree itself: skill and agent wiring, hook scripts that exist, rule paths, lesson fields, doc counts and the always-on budget |
+| `Tools/lint_harness.py` | Validates the harness tree itself: skill and agent wiring, hook scripts that exist, rule paths, lesson fields, the counts in the docs and on the Pages site, and the always-on budget |
 | `Tools/lessons.py` | The lesson library under `lessons/`: `propose` turns the error log into candidate rows, `add` refuses an entry without cue, lesson, evidence and confidence, `index` rebuilds `lessons/INDEX.md` |
 
 ```bash

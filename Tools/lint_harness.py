@@ -29,6 +29,7 @@ Checks:
   always-on chars that reach every session (CLAUDE.md) plus every .ahk edit
             (rules whose globs match any .ahk) against a cap
   counts    the skill, agent and rule counts the docs quote match the tree
+  site      the stat tiles and the always-on figure on docs/index.html match the tree
 
 Exit 0 = clean, 1 = errors, 2 = warnings only. Notes never affect the exit code.
 """
@@ -47,6 +48,7 @@ import lessons  # noqa: E402
 
 DOCS = ("CLAUDE.md", "README.md", "index.md")
 PRIMER = "hooks/ahk-session-primer.sh"
+SITE = "docs/index.html"
 HOOK_EVENTS = {
     "SessionStart", "SessionEnd", "UserPromptSubmit", "PreToolUse", "PostToolUse",
     "PostToolUseFailure", "Notification", "Stop", "SubagentStart", "SubagentStop",
@@ -296,6 +298,26 @@ def check_counts(rep: Report, docs: str, skills: int, agents: int, rules: int) -
             rep.warn("docs", f"quote {', '.join(wrong)} {kind} but the tree has {actual[kind]}")
 
 
+def check_site(rep: Report, actual: dict[str, int], always_on: int) -> None:
+    """The Pages site is hand-written HTML, so nothing else notices when its
+    numbers fall behind the tree."""
+    site = ROOT / SITE
+    if not site.is_file():
+        return
+    html = site.read_text(encoding="utf-8", errors="replace")
+    tiles = re.findall(r"<b>(\d+)</b><span>([^<]+)</span>", html)
+    if not tiles:
+        rep.warn(SITE, "no stat tiles found; the site check has nothing to compare")
+    for quoted, label in tiles:
+        if label not in actual:
+            rep.warn(SITE, f"stat tile `{label}` has no count to check it against")
+        elif int(quoted) != actual[label]:
+            rep.warn(SITE, f"stat tile says {quoted} {label} but the tree has {actual[label]}")
+    m = re.search(r"about ([\d,]+) characters", html)
+    if m and abs(int(m.group(1).replace(",", "")) - always_on) > 500:
+        rep.warn(SITE, f"quotes about {m.group(1)} always-on chars but the lint measures {always_on:,}")
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--summary", action="store_true")
@@ -321,6 +343,16 @@ def main(argv: list[str] | None = None) -> int:
     if always_on > args.always_on_max:
         rep.warn("always-on", f"{always_on:,} chars reach every .ahk edit (cap {args.always_on_max:,}); "
                               "move something to a skill, a narrower rule or a hook")
+
+    modules = ROOT / "Modules"
+    check_site(rep, {
+        "hooks": n_hooks,
+        "skills": n_skills,
+        "agents": n_agents,
+        "rules": n_rules,
+        "modules": len(list(modules.glob("Module_*.md"))) + len(list((modules / "Supplemental").glob("Module_*.md"))),
+        "grading tiers": len(list((ROOT / "Tools" / "harness").glob("Gate*.ahk"))),
+    }, always_on)
 
     if not args.summary:
         for level, where, msg in rep.rows:
